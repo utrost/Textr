@@ -13,6 +13,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.BySelector
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import org.junit.Assert.*
@@ -36,14 +37,13 @@ class AccessibilityLayoutTest {
             ActivityScenario.launch<MainActivity>(intent).use { scenario ->
                 for (landscape in listOf(false, true)) {
                     if (landscape) device.setOrientationLeft()
-                    ready(scenario)
+                    ready(scenario, landscape)
                     scenario.onActivity {
                         assertTrue(it.resources.configuration.fontScale >= 1.99f)
                         checkButtons(it.window.decorView, it.resources.displayMetrics.density)
                         assertTrue("Reader has visible space", it.findViewById<WebView>(R.id.reader).height > 48 * it.resources.displayMetrics.density)
                     }
-                    val find = device.wait(Until.findObject(By.desc("Find")), 5000)!!
-                    find.click()
+                    click(By.desc("Find"))
                     scenario.onActivity { activity ->
                         val query = activity.findViewById<EditText>(R.id.search_query)
                         query.setText("Textr")
@@ -56,11 +56,11 @@ class AccessibilityLayoutTest {
                         assertEquals(View.ACCESSIBILITY_LIVE_REGION_POLITE, it.findViewById<TextView>(R.id.search_count).accessibilityLiveRegion)
                         assertTrue("Document remains visible with search", it.findViewById<WebView>(R.id.reader).height > 0)
                     }
-                    device.findObject(By.desc("Close search")).click()
+                    click(By.desc("Close search"))
                 }
-                device.findObject(By.desc("Reading settings")).click()
+                click(By.desc("Reading settings"))
                 assertNotNull("Scrollable settings retain their confirmation action", device.wait(Until.findObject(By.res("android", "button1")), 5000))
-                device.findObject(By.res("android", "button1")).click()
+                click(By.res("android", "button1"))
             }
         } finally {
             device.executeShellCommand("settings put system font_scale ${previousScale.takeIf { it.toFloatOrNull() != null } ?: "1.0"}")
@@ -81,11 +81,31 @@ class AccessibilityLayoutTest {
         }
         if (view is ViewGroup && view !is WebView) for (index in 0 until view.childCount) checkButtons(view.getChildAt(index), density)
     }
-    private fun ready(scenario: ActivityScenario<MainActivity>) {
+    private fun click(selector: BySelector) {
+        repeat(3) { attempt ->
+            device.waitForIdle()
+            val target = device.wait(Until.findObject(selector), 5000)
+            assertNotNull("Visible accessibility control: $selector", target)
+            try {
+                target!!.click()
+                device.waitForIdle()
+                return
+            } catch (error: androidx.test.uiautomator.StaleObjectException) {
+                if (attempt == 2) throw error
+            }
+        }
+    }
+    private fun ready(scenario: ActivityScenario<MainActivity>, landscape: Boolean) {
         val deadline = System.nanoTime() + 30_000_000_000L
         while (System.nanoTime() < deadline) {
             var ready = false
-            scenario.onActivity { ready = it.findViewById<WebView>(R.id.reader)?.tag == true }
+            scenario.onActivity {
+                val expected = if (landscape) android.content.res.Configuration.ORIENTATION_LANDSCAPE
+                    else android.content.res.Configuration.ORIENTATION_PORTRAIT
+                ready = it.resources.configuration.orientation == expected &&
+                    it.resources.configuration.fontScale >= 1.99f &&
+                    it.findViewById<WebView>(R.id.reader)?.tag == true
+            }
             if (ready) return
             Thread.sleep(100)
         }
