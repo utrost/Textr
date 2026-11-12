@@ -9,7 +9,10 @@ import android.webkit.WebView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.Configurator
+import org.junit.After
 import org.junit.Assert.*
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -19,6 +22,21 @@ class AccessibilityNavigationTest {
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val context = instrumentation.targetContext
     private val automation get() = instrumentation.getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES)
+    private var previousAutomationFlags = 0
+
+    @Before fun preserveAccessibilityServices() {
+        val configuration = Configurator.getInstance()
+        previousAutomationFlags = configuration.uiAutomationFlags
+        configuration.uiAutomationFlags = UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES
+        automation
+    }
+
+    @After fun restoreAutomationConnection() {
+        Configurator.getInstance().uiAutomationFlags = previousAutomationFlags
+        // Changing flags reconnects UiAutomation. Complete that transition before
+        // another test creates its WebView, not during its first node lookup.
+        instrumentation.getUiAutomation(previousAutomationFlags)
+    }
 
     @Test fun accessibilityFocusAndActionsReachReaderHistoryAndRecovery() {
         val services = android.provider.Settings.Secure.getString(context.contentResolver, "enabled_accessibility_services")
