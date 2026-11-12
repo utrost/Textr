@@ -14,6 +14,8 @@
     <string name="next_match">Next match</string>
     <string name="close_search">Close search</string>
     <string name="matches">%1$d / %2$d</string>
+    <string name="matches_spoken">Match %1$d of %2$d</string>
+    <string name="mode_description">Display mode: %1$s</string>
     <string name="no_matches">No matches</string>
     <string name="plain_text">Plain text</string>
     <string name="highlighted">Highlighted</string>
@@ -30,6 +32,11 @@
     <string name="shared_text_name">Shared text.txt</string>
     <string name="invalid_json">JSON preview unavailable. The source is still readable.</string>
     <string name="preview_unavailable">This document could not be previewed. Plain text is available.</string>
+    <string name="markdown_limit">Markdown preview is limited to 512 Ki characters. The full source is available.</string>
+    <string name="json_limit">JSON preview is limited to 1 MiB files. The full source is available.</string>
+    <string name="highlight_limit">Highlighting is limited to 512 Ki characters. The full plain text is available.</string>
+    <string name="render_failed">The document view stopped working. You can retry using plain text or open another file.</string>
+    <string name="retry_plain">Retry as plain text</string>
     <string name="no_link_handler">No app is available to open this link.</string>
     <string name="unsupported_link">Only web and email links can be opened.</string>
     <string name="font_size">Text size</string>

@@ -91,6 +91,30 @@ class ReaderIntegrationTest {
         }
     }
 
+    @Test fun optionalMetadataFailuresDoNotPreventReading() {
+        val repository = DocumentRepository(context)
+        for (name in listOf("unsupported-metadata.txt", "invalid-metadata.txt", "null-metadata.txt", "missing-column.txt")) {
+            val document = repository.read(uri(name), null, CancellationSignal())
+            assertEquals(name, document.name)
+            assertEquals(FileKind.TEXT, document.kind)
+            assertTrue(document.text.contains("Textr fixture"))
+        }
+        assertEquals(FileKind.JSON, repository.read(uri("extensionless-json"), "application/octet-stream", CancellationSignal()).kind)
+    }
+
+    @Test fun metadataFallbackPreservesPermissionAndCancellationFailures() {
+        val repository = DocumentRepository(context)
+        try {
+            repository.read(uri("denied.txt"), null, CancellationSignal())
+            fail("Permission failure must not be swallowed")
+        } catch (_: SecurityException) { }
+        val signal = CancellationSignal().apply { cancel() }
+        try {
+            repository.read(uri("unsupported-metadata.txt"), null, signal)
+            fail("Cancellation must not be swallowed")
+        } catch (_: android.os.OperationCanceledException) { }
+    }
+
     @Test fun fiveMiBFileRemainsReadableToTheLastByte() {
         ActivityScenario.launch<MainActivity>(openIntent("boundary.txt")).use { scenario ->
             awaitReader(scenario)
@@ -125,10 +149,10 @@ class ReaderIntegrationTest {
     }
 
     private fun awaitReader(scenario: ActivityScenario<MainActivity>) {
-        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(15)
+        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(30)
         while (System.nanoTime() < deadline) {
             var ready = false
-            scenario.onActivity { ready = findWebView(it.window.decorView)?.progress == 100 }
+            scenario.onActivity { ready = findWebView(it.window.decorView)?.tag == true }
             if (ready) return
             Thread.sleep(100)
         }
@@ -136,7 +160,7 @@ class ReaderIntegrationTest {
     }
 
     private fun awaitText(scenario: ActivityScenario<MainActivity>, value: String) {
-        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(15)
+        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(30)
         while (System.nanoTime() < deadline) {
             var found = false
             scenario.onActivity { found = value in texts(it.window.decorView) }

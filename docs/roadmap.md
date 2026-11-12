@@ -1,6 +1,6 @@
 # Roadmap to the first public Textr release
 
-The goal is a signed, downloadable 0.1.0 APK with matching source, preserving Textr's minimal, offline, read-only scope.
+The roadmap leads to a signed, downloadable 0.1.0 APK with matching source, preserving Textr's minimal, offline, read-only scope. On 2026-11-12 the owner requested completion of implementation and deferred public release. Issue #13 remains open; no production signing key is created as part of implementation.
 
 **Live tracker:** [Roadmap #14](https://github.com/utrost/Textr/issues/14). Individual GitHub issues are the source of truth for progress, acceptance criteria, and verification evidence.
 
@@ -31,7 +31,7 @@ Validate Android integration and the app's reading, reliability, accessibility, 
 | Issue | Work | Priority | Depends on |
 | --- | --- | --- | --- |
 | [#4](https://github.com/utrost/Textr/issues/4) | Validate Open with, Share, and default-handler behavior across file types | P0 | #1, #3 |
-| [#5](https://github.com/utrost/Textr/issues/5) | Complete Android 10–16 compatibility and physical-device validation | P0 | #1 |
+| [#5](https://github.com/utrost/Textr/issues/5) | Complete Android 10–16 emulator compatibility validation | P0 | #1 |
 | [#6](https://github.com/utrost/Textr/issues/6) | Automate reader controls and restoration across lifecycle changes | P1 | #1 |
 | [#7](https://github.com/utrost/Textr/issues/7) | Test recent-file persistence, grant cleanup, and unavailable-file recovery | P1 | #1 |
 | [#8](https://github.com/utrost/Textr/issues/8) | Validate accessible reading controls and layouts | P1 | #1 |
@@ -53,6 +53,8 @@ Signing setup can proceed once CI exists. Publication waits for all foundation a
 The release must come from the tested source commit, pass signature/checksum verification, include matching source and license notices, and pass a downloaded-artifact installation check. A signing identity must be supplied and retained by the repository owner; keys and passwords stay outside source control.
 
 ## Scope and upkeep
+
+The owner confirmed emulator-only validation on 2026-11-12 because no physical device is available. API 29, 35, and 36 emulator evidence satisfies the compatibility release gate; physical-device checks remain follow-up coverage.
 
 Android 10+, text files up to 5 MiB, read-only behavior, and no app network permission remain fixed. Editing, tabs, file management, huge-log support, direct cloud integrations, Markdown images/embedded HTML, and store publication remain outside v1. New features require a separate scope decision.
 

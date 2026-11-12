@@ -10,15 +10,15 @@ Use JDK 17, Android SDK Platform 36, and Build Tools 36.0.0. Configure `ANDROID_
 
 The Gradle wrapper pins version 9.3.1 and verifies its distribution checksum. Android Gradle Plugin 9.1.0 provides built-in Kotlin support. Production dependencies are pinned in `app/build.gradle.kts`. Initial dependency downloads require internet access on the build machine; the app has no network permission.
 
-Install `app/build/outputs/apk/debug/app-debug.apk` with `adb install -r`. This is a development build using a local debug key. No release signing configuration or published release exists yet.
+Install `app/build/outputs/apk/debug/app-debug.apk` with `adb install -r`. This is a development build using a local debug key. Owner-provided release signing is supported; see [release signing](releasing.md). No production signing credentials are committed.
 
 ## Structure
 
 - `MainActivity` provides the home screen, reader controls, settings, file-picker integration, incoming intents, and background loading. AndroidX Activity handles results and back navigation. An in-memory ViewModel retains the current document through configuration changes.
 - `DocumentRepository` reads Android content/file URIs using read-only descriptors and a cancellation signal. It records at most 30 recent URI/name/timestamp entries in private preferences, retaining read grants where offered and releasing them when entries are removed. It stores no document contents.
 - `TextDocuments` enforces the 5 MiB byte limit while streaming, validates UTF-8 or BOM-marked UTF-16, rejects binary control characters, and classifies supported syntax from filenames or MIME types.
-- `DocumentRenderer` and `SyntaxHighlighter` are plain Kotlin/JVM components. Previews never alter source. JSON formatting preserves duplicate keys and numeric spelling; malformed or overly nested JSON falls back to source. Highlighting stops adding spans after 50,000 tokens to bound the WebView node count.
-- The WebView receives generated HTML only. JavaScript, network loading, images, file access, content access, and DOM storage are disabled. A restrictive content security policy and request interception provide additional isolation. External web/email links require a user tap.
+- `DocumentRenderer` and `SyntaxHighlighter` are plain Kotlin/JVM components. Previews never alter source. JSON formatting preserves duplicate keys and numeric spelling; malformed or overly nested JSON falls back to source. Highlighting accepts up to 512 Ki characters and stops adding spans after 10,000 tokens to bound the WebView node count.
+- The WebView receives generated HTML through an intercepted in-memory HTTPS response, avoiding oversized data URLs. Source is escaped as a stream to avoid allocating its full HTML expansion; soft-break elements at safe ASCII boundaries bound old WebView layout work without adding source characters. Cross-boundary search and full copying have regression coverage. Controls become available after a visual-state callback confirms layout, and renderer termination offers a plain-text retry. JavaScript, network loading, images, file access, content access, and DOM storage are disabled. A restrictive content security policy and request interception provide additional isolation. External web/email links require a user tap.
 
 Reading preferences and recent metadata stay on the device and are excluded from backup/transfer rules. Source text is not written to saved-instance bundles or preferences. URI-based documents can be reloaded after process recreation when access remains valid; unreferenced shared text is session-only.
 
@@ -36,7 +36,9 @@ Device tests use a separate test-only content provider. They cover external file
 
 Reports are generated under `app/build/reports/tests/`, `app/build/reports/androidTests/`, and `app/build/reports/lint-results-debug.html`.
 
-The initial build was checked with JVM tests, Android lint, and device tests on an Android 15 (API 35) emulator. A manual system-picker check confirmed a retained read-only grant and reopening from Recents after a force-stop. Light/dark Markdown rendering and document retention across a theme change were also checked. Android 10 and physical-device checks remain necessary before a release.
+Validation uses clean Android 10, 15, and 16 emulators (API 29, 35, and 36). The owner explicitly selected emulator validation because no physical device is available. Physical-device coverage is follow-up work, not a release gate. CI runs build, unit tests, lint, and API 29/36 instrumentation for pull requests and the default branch.
+
+Completed configurations and evidence are recorded in [validation](validation.md).
 
 ## Manual acceptance checklist
 
@@ -52,6 +54,6 @@ The initial build was checked with JVM tests, Android lint, and device tests on 
 
 ## Release work
 
-Choose and securely retain a release signing key, finish the device compatibility checklist, and publish the corresponding source alongside any distributed GPLv3 APK. Keep keystores and local SDK paths out of Git. Store publication remains outside v1 scope.
+Use the [documented signing inputs and upgrade procedure](releasing.md), complete the compatibility checklist, and publish the corresponding source alongside any distributed GPLv3 APK. Keep keystores and local SDK paths out of Git. Store publication remains outside v1 scope.
 
 The [release roadmap](roadmap.md) tracks this work through three milestones and individual GitHub issues with acceptance criteria and dependencies.

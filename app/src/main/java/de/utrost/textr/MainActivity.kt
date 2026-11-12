@@ -19,6 +19,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.webkit.RenderProcessGoneDetail
 import android.widget.*
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
@@ -107,6 +108,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun buildLayout() {
+        val wide = resources.configuration.screenWidthDp >= 600
         root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(background())
@@ -126,6 +128,7 @@ class MainActivity : ComponentActivity() {
         val header = row().apply { setPadding(dp(8), dp(4), dp(8), dp(4)) }
         header.addView(button(R.string.home) { showHome() })
         titleView = TextView(this).apply {
+            isAccessibilityHeading = true
             textSize = 20f
             setTextColor(foreground())
             maxLines = 1
@@ -137,15 +140,22 @@ class MainActivity : ComponentActivity() {
         root.addView(header)
 
         toolbar = row().apply { setPadding(dp(12), 0, dp(12), 0) }
-        modeButton = button(R.string.plain_text) { showModes() }
+        modeButton = button(R.string.plain_text) { showModes() }.apply { id = R.id.display_mode }
         toolbar.addView(modeButton, LinearLayout.LayoutParams(0, -2, 1f))
+        val actions = row()
         findButton = button(R.string.find) { toggleSearch() }
-        toolbar.addView(findButton)
-        toolbar.addView(button(R.string.open_file) { openPicker() })
+        actions.addView(findButton)
+        actions.addView(button(R.string.open_file) { openPicker() })
+        if (!wide && (resources.configuration.fontScale > 1.3f || resources.configuration.screenWidthDp < 360)) {
+            toolbar.orientation = LinearLayout.VERTICAL
+            modeButton.layoutParams = LinearLayout.LayoutParams(-1, -2)
+        }
+        toolbar.addView(actions)
         root.addView(toolbar)
 
-        searchRow = row().apply { visibility = View.GONE; setPadding(dp(12), 0, dp(12), 0) }
+        searchRow = row().apply { orientation = if (wide) LinearLayout.HORIZONTAL else LinearLayout.VERTICAL; visibility = View.GONE; setPadding(dp(12), 0, dp(12), 0) }
         searchField = EditText(this).apply {
+            id = R.id.search_query
             hint = getString(R.string.find_hint)
             textSize = 16f
             isSingleLine = true
@@ -155,18 +165,25 @@ class MainActivity : ComponentActivity() {
             addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    if (s.isNullOrEmpty()) searchCount.text = ""
                     webView?.findAllAsync(s?.toString().orEmpty())
                 }
                 override fun afterTextChanged(s: Editable?) = Unit
             })
             setOnEditorActionListener { _, _, _ -> webView?.findNext(true); true }
         }
-        searchRow.addView(searchField, LinearLayout.LayoutParams(0, -2, 1f))
-        searchCount = TextView(this).apply { textSize = 12f; setTextColor(foreground()) }
-        searchRow.addView(searchCount)
-        searchRow.addView(button(R.string.previous_match, "↑") { webView?.findNext(false) })
-        searchRow.addView(button(R.string.next_match, "↓") { webView?.findNext(true) })
-        searchRow.addView(button(R.string.close_search, "×") { closeSearch() })
+        searchRow.addView(searchField, if (wide) LinearLayout.LayoutParams(0, -2, 1f) else LinearLayout.LayoutParams(-1, -2))
+        val searchActions = row()
+        searchCount = TextView(this).apply {
+            id = R.id.search_count
+            textSize = 14f; setTextColor(foreground())
+            accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+        }
+        searchActions.addView(searchCount, if (wide) LinearLayout.LayoutParams(-2, -2) else LinearLayout.LayoutParams(0, -2, 1f))
+        searchActions.addView(button(R.string.previous_match, "↑") { webView?.findNext(false) })
+        searchActions.addView(button(R.string.next_match, "↓") { webView?.findNext(true) })
+        searchActions.addView(button(R.string.close_search, "×") { closeSearch() })
+        searchRow.addView(searchActions, LinearLayout.LayoutParams(if (wide) -2 else -1, -2))
         root.addView(searchRow)
         content = FrameLayout(this)
         root.addView(content, LinearLayout.LayoutParams(-1, 0, 1f))
@@ -194,10 +211,10 @@ class MainActivity : ComponentActivity() {
         work?.cancel(true)
     }
 
-    private fun clearContent() {
+    private fun clearContent(stopLoading: Boolean = true) {
         webView?.let { view ->
             content.removeView(view)
-            view.stopLoading()
+            if (stopLoading) view.stopLoading()
             view.destroy()
         }
         webView = null
@@ -283,8 +300,9 @@ class MainActivity : ComponentActivity() {
     private fun handleIntent(intent: Intent): Boolean {
         val uri = when (intent.action) {
             Intent.ACTION_VIEW -> intent.data
-            Intent.ACTION_SEND -> if (Build.VERSION.SDK_INT >= 33) intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
-                else @Suppress("DEPRECATION") (intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM))
+            Intent.ACTION_SEND -> (if (Build.VERSION.SDK_INT >= 33) intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+                else @Suppress("DEPRECATION") (intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)))
+                ?: intent.clipData?.takeIf { it.itemCount == 1 }?.getItemAt(0)?.uri
             else -> return false
         }
         pendingScroll = 0
@@ -371,30 +389,68 @@ class MainActivity : ComponentActivity() {
         showProgress(R.string.rendering)
         val selectedMode = mode
         work = worker.submit {
-            val html = DocumentRenderer.html(prepared, selectedMode, dark, wrap)
+            val page = try {
+                DocumentRenderer.page(prepared, selectedMode, dark, wrap)
+            } catch (_: java.util.concurrent.CancellationException) {
+                return@submit
+            } catch (_: RuntimeException) {
+                runOnUiThread { if (request == generation && !isDestroyed) showRenderRecovery() }
+                return@submit
+            }
             runOnUiThread {
                 if (request != generation || isDestroyed) return@runOnUiThread
                 clearContent()
                 titleView.text = prepared.source.name
                 modeButton.text = getString(modeLabel(selectedMode))
-                modeButton.isEnabled = prepared.modes.size > 1
-                findButton.isEnabled = true
-                val view = createWebView(scroll)
+                modeButton.contentDescription = getString(R.string.mode_description, getString(modeLabel(selectedMode)))
+                modeButton.isEnabled = false
+                findButton.isEnabled = false
+                val view = createWebView(scroll, page)
                 webView = view
                 content.addView(view, FrameLayout.LayoutParams(-1, -1))
-                view.loadDataWithBaseURL("https://textr.invalid/", html, "text/html", "UTF-8", null)
+                content.addView(ProgressBar(this).apply { id = R.id.reader_loading },
+                    FrameLayout.LayoutParams(dp(48), dp(48), Gravity.CENTER))
+                // Stream in-memory content rather than embedding multi-MiB text in a data URL.
+                view.loadUrl(DOCUMENT_URL)
                 pendingScroll = 0
-                if (prepared.preview == null && prepared.source.kind in setOf(FileKind.JSON, FileKind.MARKDOWN)) {
-                    Toast.makeText(this, if (prepared.source.kind == FileKind.JSON) R.string.invalid_json else R.string.preview_unavailable, Toast.LENGTH_LONG).show()
+                if (prepared.notice != PreviewNotice.NONE) {
+                    Toast.makeText(this, if (prepared.notice == PreviewNotice.MARKDOWN_LIMIT) R.string.markdown_limit
+                        else if (prepared.notice == PreviewNotice.JSON_LIMIT) R.string.json_limit
+                        else if (prepared.notice == PreviewNotice.HIGHLIGHT_LIMIT) R.string.highlight_limit
+                        else if (prepared.source.kind == FileKind.JSON) R.string.invalid_json else R.string.preview_unavailable, Toast.LENGTH_LONG).show()
                 }
             }
         }
     }
 
-    private fun createWebView(scroll: Int) = WebView(this).apply {
+    private fun showRenderRecovery(rendererGone: Boolean = false) {
+        cancelWork()
+        clearContent(stopLoading = !rendererGone)
+        toolbar.visibility = View.GONE
+        closeSearch()
+        titleView.text = document?.source?.name ?: getString(R.string.app_name)
+        val body = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(dp(24), dp(24), dp(24), dp(24))
+        }
+        body.addView(TextView(this).apply {
+            text = getString(R.string.render_failed)
+            textSize = 18f
+            setTextColor(foreground())
+        })
+        body.addView(button(R.string.retry_plain) { mode = DisplayMode.PLAIN; pendingScroll = 0; render() })
+        body.addView(button(R.string.open_file) { openPicker() })
+        content.addView(body, FrameLayout.LayoutParams(-1, -1))
+    }
+
+    private fun createWebView(scroll: Int, page: HtmlPage) = WebView(this).apply {
+        id = R.id.reader
+        tag = false
         setBackgroundColor(background())
         settings.apply {
             javaScriptEnabled = false
+            safeBrowsingEnabled = false
             allowFileAccess = false
             allowContentAccess = false
             blockNetworkLoads = true
@@ -411,27 +467,50 @@ class MainActivity : ComponentActivity() {
         }
         importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
         setFindListener { active, total, done ->
-            if (done) searchCount.text = if (total == 0) getString(R.string.no_matches) else getString(R.string.matches, active + 1, total)
+            if (done) {
+                searchCount.text = if (searchField.text.isEmpty()) "" else if (total == 0) getString(R.string.no_matches) else getString(R.string.matches, active + 1, total)
+                searchCount.contentDescription = if (searchField.text.isEmpty()) "" else if (total == 0) getString(R.string.no_matches) else getString(R.string.matches_spoken, active + 1, total)
+            }
         }
         webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse =
-                WebResourceResponse("text/plain", "UTF-8", ByteArrayInputStream(ByteArray(0)))
+                if (request.isForMainFrame && request.url.toString().substringBefore('#') == DOCUMENT_URL) {
+                    WebResourceResponse("text/html", "UTF-8", page.openStream())
+                } else WebResourceResponse("text/plain", "UTF-8", ByteArrayInputStream(ByteArray(0)))
+
+            override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
+                if (webView === view) showRenderRecovery(rendererGone = true)
+                else view.destroy()
+                return true
+            }
 
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 if (request.hasGesture() && request.isForMainFrame) {
                     val uri = request.url
-                    if (uri.host == "textr.invalid" && uri.fragment != null) return false
+                    if (uri.toString().substringBefore('#') == DOCUMENT_URL && uri.fragment != null) return false
                     if (uri.scheme in setOf("https", "http", "mailto") && uri.host != "textr.invalid") {
                         try { startActivity(Intent(Intent.ACTION_VIEW, uri).addCategory(Intent.CATEGORY_BROWSABLE)) }
                         catch (_: ActivityNotFoundException) { Toast.makeText(this@MainActivity, R.string.no_link_handler, Toast.LENGTH_SHORT).show() }
+                        catch (_: SecurityException) { Toast.makeText(this@MainActivity, R.string.no_link_handler, Toast.LENGTH_SHORT).show() }
                     } else Toast.makeText(this@MainActivity, R.string.unsupported_link, Toast.LENGTH_SHORT).show()
                 }
                 return true
             }
 
             override fun onPageFinished(view: WebView, url: String) {
-                view.post { if (webView === view) view.scrollTo(0, scroll) }
-                if (searchRow.visibility == View.VISIBLE) view.findAllAsync(searchField.text.toString())
+                // progress == 100 can precede layout on older WebViews. Wait for
+                // the displayed document before enabling search or restoring scroll.
+                view.postVisualStateCallback(0, object : WebView.VisualStateCallback() {
+                    override fun onComplete(requestId: Long) {
+                        if (webView !== view) return
+                        view.tag = true
+                        content.findViewById<View>(R.id.reader_loading)?.let(content::removeView)
+                        modeButton.isEnabled = (document?.modes?.size ?: 0) > 1
+                        findButton.isEnabled = true
+                        view.scrollTo(0, scroll)
+                        if (searchRow.visibility == View.VISIBLE) view.findAllAsync(searchField.text.toString())
+                    }
+                })
             }
         }
     }
@@ -472,6 +551,7 @@ class MainActivity : ComponentActivity() {
         body.addView(sizeLabel)
         var selectedSize = fontSize
         body.addView(SeekBar(this).apply {
+            id = R.id.font_size
             max = 16; progress = fontSize - 12
             minimumHeight = dp(48)
             contentDescription = getString(R.string.font_size)
@@ -482,8 +562,9 @@ class MainActivity : ComponentActivity() {
                 override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
                 override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
             })
-        })
+        }, LinearLayout.LayoutParams(-1, dp(48)))
         val wrapping = CheckBox(this).apply {
+            id = R.id.line_wrap
             text = getString(R.string.wrap_lines)
             isChecked = wrap
             minimumHeight = dp(48)
@@ -492,13 +573,15 @@ class MainActivity : ComponentActivity() {
         body.addView(TextView(this).apply { text = getString(R.string.theme) })
         val themeValues = listOf("system", "light", "dark")
         val themes = Spinner(this).apply {
+            id = R.id.theme_choice
+            minimumHeight = dp(48)
             adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
                 listOf(getString(R.string.theme_system), getString(R.string.theme_light), getString(R.string.theme_dark)))
             setSelection(themeValues.indexOf(preferences.getString("theme", "system")).coerceAtLeast(0))
             contentDescription = getString(R.string.theme)
         }
         body.addView(themes)
-        AlertDialog.Builder(this).setTitle(R.string.settings).setView(body).setNegativeButton(R.string.cancel, null)
+        AlertDialog.Builder(this).setTitle(R.string.settings).setView(ScrollView(this).apply { addView(body) }).setNegativeButton(R.string.cancel, null)
             .setPositiveButton(R.string.done) { _, _ ->
                 val theme = themeValues[themes.selectedItemPosition]
                 val themeChanged = theme != preferences.getString("theme", "system")
@@ -511,7 +594,9 @@ class MainActivity : ComponentActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putString("uri", currentUri?.toString())
-        outState.putString("mode", mode.name)
+        // While loading, mode still belongs to the previous document (or the initial
+        // plain-text default). Let the new document choose its automatic mode.
+        if (document != null) outState.putString("mode", mode.name)
         outState.putInt("scroll", webView?.scrollY ?: pendingScroll)
         outState.putString("query", searchField.text.toString())
         outState.putBoolean("search", searchRow.visibility == View.VISIBLE)
@@ -528,5 +613,9 @@ class MainActivity : ComponentActivity() {
         worker.shutdownNow()
         clearContent()
         super.onDestroy()
+    }
+
+    companion object {
+        const val DOCUMENT_URL = "https://textr.invalid/document"
     }
 }

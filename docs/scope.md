@@ -1,6 +1,6 @@
 # Textr v1 scope
 
-**Status: v1 scope implemented in the initial 0.1.0 development build.** This document records the agreed product boundaries. See the [README](../README.md) for current functionality and implementation limits, and [development notes](development.md) for build and validation instructions. Release signing and publication are still pending.
+**Status: v1 scope implemented in the initial 0.1.0 development build.** This document records the agreed product boundaries. See the [README](../README.md) for current functionality and implementation limits, and [development notes](development.md) for build and validation instructions. Release signing support is implemented; selection of the production signing identity and publication are still pending.
 
 ## Purpose
 
@@ -29,6 +29,7 @@ Choose the initial display automatically and allow manual switching between appl
 - Initial syntax highlighting covers JSON, Markdown source, INI, YAML, TOML, and XML. Generic configuration files use plain text unless their syntax is recognized.
 - Markdown preview supports headings, lists, links, quotes, code blocks, and tables. Images and embedded HTML are outside v1. Links open externally only when tapped.
 - JSON preview adds indentation without modifying the underlying file. Invalid JSON remains readable as source.
+- Preview budgets bound expensive rendering: JSON accepts up to 1 MiB of input and 5 Mi characters of formatted output; Markdown accepts up to 512 Ki characters, 20,000 nodes, and depth 64. Exceeding a preview budget leaves the complete source readable and explains the fallback. The source limit remains 5 MiB.
 - CSV stays a text view, with no spreadsheet interface.
 - Provide search, text selection and copying, adjustable font size, line wrapping, and light/dark themes.
 - Keep the reader focused on the document with a small toolbar. Viewing and switching modes must never modify the source file.

@@ -1,0 +1,10 @@
+<resources>
+    <item name="reader" type="id" />
+    <item name="reader_loading" type="id" />
+    <item name="display_mode" type="id" />
+    <item name="search_query" type="id" />
+    <item name="search_count" type="id" />
+    <item name="font_size" type="id" />
+    <item name="line_wrap" type="id" />
+    <item name="theme_choice" type="id" />
+</resources>

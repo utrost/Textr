@@ -4,6 +4,22 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class DocumentRendererTest {
+    @Test fun `streamed HTML preserves Unicode across chunk boundaries and escapes source`() {
+        val source = "a".repeat(8191) + "\uD83D\uDE80<&>\"'" + "&".repeat(20_000)
+        val page = DocumentRenderer.page(prepare(source, FileKind.TEXT), DisplayMode.PLAIN, false, true)
+        val first = page.openStream().bufferedReader(Charsets.UTF_8).use { it.readText() }
+        assertTrue(first.replace("<wbr>", "").contains("<pre>${SyntaxHighlighter.escape(source)}</pre>"))
+        assertEquals(first, page.openStream().bufferedReader(Charsets.UTF_8).use { it.readText() })
+    }
+    @org.junit.Test fun largeJsonKeepsSourceWithoutExpandingItsPreview() {
+        val text = "[" + "0,".repeat(600_000) + "1]"
+        val source = TextDocument("large.json", text, FileKind.JSON, text.length)
+        val prepared = DocumentRenderer.prepare(source)
+        org.junit.Assert.assertNull(prepared.preview)
+        org.junit.Assert.assertEquals(PreviewNotice.JSON_LIMIT, prepared.notice)
+        org.junit.Assert.assertEquals(text, prepared.source.text)
+        org.junit.Assert.assertTrue(DisplayMode.PLAIN in prepared.modes)
+    }
     private fun prepare(text: String, kind: FileKind) = DocumentRenderer.prepare(TextDocument("file", text, kind, text.toByteArray().size))
 
     @Test fun `automatic modes and manual alternatives depend on the document`() {
@@ -39,6 +55,27 @@ class DocumentRendererTest {
         val prepared = prepare(source, FileKind.JSON)
         assertNull(prepared.preview)
         assertEquals(source, prepared.source.text)
+    }
+
+    @Test fun `oversized and excessively nested Markdown retains complete source`() {
+        val source = "a".repeat(RenderPolicy.MAX_MARKDOWN_CHARS + 1)
+        val prepared = prepare(source, FileKind.MARKDOWN)
+        assertNull(prepared.preview)
+        assertEquals(PreviewNotice.MARKDOWN_LIMIT, prepared.notice)
+        assertEquals(source, prepared.source.text)
+        val nested = prepare("> ".repeat(100) + "deep", FileKind.MARKDOWN)
+        assertNull(nested.preview)
+        assertTrue(nested.source.text.endsWith("deep"))
+    }
+
+    @Test fun `cancelled rendering stops rather than producing a stale page`() {
+        Thread.currentThread().interrupt()
+        try {
+            try {
+                DocumentRenderer.prepare(TextDocument("test.md", "# Heading", FileKind.MARKDOWN, 9))
+                fail("Expected cancellation")
+            } catch (_: java.util.concurrent.CancellationException) { }
+        } finally { Thread.interrupted() }
     }
 
     @Test fun `Markdown renders supported structures but excludes images and embedded HTML`() {
@@ -90,7 +127,7 @@ class DocumentRendererTest {
         val source = "x: 1\n".repeat(30_000)
         val html = SyntaxHighlighter.highlight(source, FileKind.YAML)
         assertEquals(source, html.replace(Regex("</?span[^>]*>"), ""))
-        assertTrue(Regex("<span").findAll(html).count() <= 50_000)
+        assertTrue(Regex("<span").findAll(html).count() <= 10_000)
         val longString = "\"" + "\\x".repeat(100_000) + "\""
         assertTrue(SyntaxHighlighter.highlight(longString, FileKind.JSON).endsWith("</span>"))
     }
