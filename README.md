@@ -20,6 +20,8 @@ Markdown previews support headings, lists, links, quotes, code blocks, and table
 
 ## Opening files and choosing a default
 
+See the [installation and default-app guide](docs/installing.md) for screenshots and step-by-step instructions.
+
 Use **Open file** to select a document through Android's system picker, or choose Textr in another app's **Open with** or **Share** menu. Shared text can also be read; text without a file reference is not added to recent history. Long-press document text to select and copy it. **Find** searches the currently displayed view.
 
 Android's default-app behavior depends on the sending app and the reported file type, including its MIME type. Where Android offers the choice, you can select Textr as the default handler. Textr cannot guarantee a default association for every filename extension in every app. The file picker provides another way to select text files.
@@ -32,7 +34,7 @@ See Android's documentation on [intents and file-type matching](https://develope
 
 ## Privacy and boundaries
 
-Textr is read-only, with no editing, accounts, ads, analytics, or network permission. External document providers used through the system picker may independently use network access. Document rendering disables JavaScript, network loads, images, and WebView file/content access. History and settings are excluded from app backups.
+Textr is read-only, with no editing, accounts, ads, analytics, or network permission. External document providers used through the system picker may independently use network access. Document rendering disables JavaScript, network loads, images, and WebView file/content access. History and settings are excluded from app backups. Textr opts out of WebView usage metrics. Android/WebView crash diagnostics remain governed by the device and provider settings; see [Android’s WebView privacy documentation](https://developer.android.com/develop/ui/views/layout/webapps/webview-privacy).
 
 File management, tabs, huge-log support, direct cloud integrations, and store publication are outside the first version. See the [v1 scope](docs/scope.md) for the agreed requirements and acceptance criteria, and the [roadmap](docs/roadmap.md) for milestones and individual GitHub issues leading to the first public APK.
 
@@ -52,15 +54,16 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ./gradlew :app:connectedDebugAndroidTest
 ```
 
-On Windows, use `gradlew.bat`. Debug APKs use a local development key; downloadable release APKs and release signing remain future work. No signing keys are committed.
+On Windows, use `gradlew.bat`. Debug APKs use a local development key; production release downloads remain pending; [release signing support](docs/releasing.md) is available. No signing keys are committed.
 
 The app uses Kotlin, AndroidX Activity, native Android controls, and an offline WebView. CommonMark handles Markdown and tables; Jackson Core formats JSON while preserving number spelling and duplicate keys. See [development and testing](docs/development.md) for architecture, checks, and manual test scenarios.
 
 ## Current limits
 
 - Text decoding supports UTF-8, UTF-8 with a BOM, and UTF-16 LE/BE with a BOM. Other encodings produce an explanatory message.
-- Highlighting is lightweight rather than a complete language parser. It decorates up to 50,000 tokens; remaining source stays readable without colors.
-- JSON preview has a nesting limit of 128 and a formatted-output limit of 20 MiB. Documents exceeding preview limits remain available as source.
+- Highlighting is lightweight rather than a complete language parser. It is available for sources up to 512 Ki characters and decorates up to 10,000 tokens; remaining source stays readable without colors.
+- JSON preview accepts files up to 1 MiB and has a nesting limit of 128 and a formatted-output limit of 5 Mi characters. Documents exceeding preview limits remain available as source.
+- Markdown preview accepts up to 512 Ki characters, 20,000 nodes, and nesting depth 64; larger or more complex documents remain readable as source.
 - Markdown images, embedded HTML, and relative file links are not supported. Web links and email links require an external handler.
 - Search operates on visible text, so preview and source searches can differ. Shared text without a URI survives rotation but is not restored after process termination.
 

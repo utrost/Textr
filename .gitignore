@@ -6,5 +6,8 @@ local.properties
 *.iml
 *.jks
 *.keystore
+*.p12
+*.pfx
+signing.properties
 captures/
 .local/

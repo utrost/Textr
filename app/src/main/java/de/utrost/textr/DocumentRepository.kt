@@ -7,6 +7,10 @@ import android.os.CancellationSignal
 import android.provider.OpenableColumns
 import org.json.JSONArray
 import org.json.JSONObject
+import android.system.Os
+import android.system.OsConstants
+import android.system.StructPollfd
+import java.io.FilterInputStream
 
 data class RecentFile(val uri: String, val name: String, val openedAt: Long)
 
@@ -16,21 +20,54 @@ class DocumentRepository(private val context: Context) {
 
     fun read(uri: Uri, mime: String?, cancellation: CancellationSignal): TextDocument {
         if (uri.scheme !in setOf("content", "file")) throw DocumentException(ReadFailure.SOURCE)
+        cancellation.throwIfCanceled()
         var name = uri.lastPathSegment?.substringAfterLast('/') ?: "Text file"
         if (uri.scheme == "content") {
-            resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null, cancellation)?.use { cursor ->
-                if (cursor.moveToFirst()) {
-                    val column = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                    if (column >= 0 && !cursor.isNull(column)) name = cursor.getString(column)
+            optionalMetadata {
+                resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null, cancellation)?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val column = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                        if (column >= 0 && !cursor.isNull(column)) name = cursor.getString(column)
+                    }
                 }
             }
         }
         name = name.replace(Regex("[\\p{Cntrl}]"), " ").take(256).ifBlank { "Text file" }
-        val type = mime ?: resolver.getType(uri)
+        val declaredType = mime?.substringBefore(';')?.trim()?.lowercase(java.util.Locale.ROOT)?.takeIf { it.isNotBlank() }
+        val type = if (declaredType == null || declaredType in setOf("*/*", "application/octet-stream", "text/plain")) {
+            optionalMetadata { resolver.getType(uri) } ?: declaredType
+        } else declaredType
+        cancellation.throwIfCanceled()
         return resolver.openAssetFileDescriptor(uri, "r", cancellation)?.use { descriptor ->
-            descriptor.createInputStream().use { TextDocuments.read(it, name, type) }
+            descriptor.createInputStream().use { stream ->
+                // A provider may return a pipe and pause indefinitely. Poll before each
+                // read so replacing a document can cancel without waiting for its writer.
+                val poll = StructPollfd().apply {
+                    fd = descriptor.fileDescriptor
+                    events = OsConstants.POLLIN.toShort()
+                }
+                val interruptible = object : FilterInputStream(stream) {
+                    override fun read(bytes: ByteArray, offset: Int, length: Int): Int {
+                        do {
+                            cancellation.throwIfCanceled()
+                            RenderPolicy.checkCancellation()
+                            val available = Os.poll(arrayOf(poll), 100)
+                        } while (available == 0)
+                        cancellation.throwIfCanceled()
+                        return super.read(bytes, offset, length)
+                    }
+                }
+                TextDocuments.read(interruptible, name, type)
+            }
         } ?: throw DocumentException(ReadFailure.ACCESS)
     }
+
+    // Optional provider methods are not universally implemented. Do not swallow
+    // SecurityException, OperationCanceledException, or failures reading the actual stream.
+    private fun <T> optionalMetadata(block: () -> T): T? = try {
+        block()
+    } catch (_: UnsupportedOperationException) { null }
+      catch (_: IllegalArgumentException) { null }
 
     fun retainReadAccess(uri: Uri, flags: Int) {
         if (flags and Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION != 0 &&

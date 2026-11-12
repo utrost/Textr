@@ -7,17 +7,21 @@ object SyntaxHighlighter {
     fun escape(text: String): String = buildString(text.length) { appendEscaped(text, 0, text.length) }
 
     private fun StringBuilder.appendEscaped(text: String, start: Int, end: Int) {
-        for (i in start until end) append(when (text[i]) {
-            '&' -> "&amp;"
-            '<' -> "&lt;"
-            '>' -> "&gt;"
-            '"' -> "&quot;"
-            '\'' -> "&#39;"
-            else -> text[i].toString()
-        })
+        for (i in start until end) {
+            if (i % 4096 == 0) RenderPolicy.checkCancellation()
+            when (val c = text[i]) {
+                '&' -> append("&amp;")
+                '<' -> append("&lt;")
+                '>' -> append("&gt;")
+                '"' -> append("&quot;")
+                '\'' -> append("&#39;")
+                else -> append(c)
+            }
+        }
     }
 
     fun highlight(text: String, kind: FileKind): String {
+        if (text.length > RenderPolicy.MAX_HIGHLIGHT_CHARS) return escape(text)
         if (kind == FileKind.TEXT) return escape(text)
         return buildString(text.length) {
             var index = 0
@@ -27,7 +31,7 @@ object SyntaxHighlighter {
                     throw java.util.concurrent.CancellationException()
                 }
                 // Avoid generating millions of DOM nodes for pathological inputs.
-                if (tokens >= 50_000) {
+                if (tokens >= RenderPolicy.MAX_HIGHLIGHT_TOKENS) {
                     appendEscaped(text, index, text.length)
                     break
                 }

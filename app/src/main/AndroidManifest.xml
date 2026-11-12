@@ -10,6 +10,9 @@
         android:theme="@style/Theme.Textr"
         android:usesCleartextTraffic="false"
         tools:targetApi="31">
+        <meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true" />
+        <!-- Only locally generated, intercepted content is ever displayed. -->
+        <meta-data android:name="android.webkit.WebView.EnableSafeBrowsing" android:value="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -35,14 +38,24 @@
                 <data android:mimeType="application/octet-stream" />
             </intent-filter>
             <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+            </intent-filter>
+            <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/*" />
                 <data android:mimeType="application/json" />
+                <data android:mimeType="application/ld+json" />
                 <data android:mimeType="application/xml" />
                 <data android:mimeType="application/yaml" />
                 <data android:mimeType="application/x-yaml" />
                 <data android:mimeType="application/toml" />
+                <data android:mimeType="application/x-toml" />
+                <data android:mimeType="application/ini" />
+                <data android:mimeType="application/x-ini" />
                 <data android:mimeType="application/octet-stream" />
             </intent-filter>
         </activity>
