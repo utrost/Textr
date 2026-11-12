@@ -70,6 +70,21 @@ The fixture generator and test provider include exact-limit and oversized files,
 
 Hostile Markdown checks cover scripts, embedded HTML, frames, remote images, unsafe links, and automatic navigation. External links open only after an actual tap. JavaScript, resource loading, network permission, and broad storage permission are absent/disabled as appropriate. The test provider rejects writes; source bytes remain unchanged. A unique shared-text marker is absent from private files, caches, and preferences after use. Android/WebView crash diagnostics remain subject to platform settings as described in the README.
 
+## Rendering measurements
+
+One full Android 10 suite run produced these measurements with the software-rendered emulator above. Opening ends at the WebView visual-state callback, not merely at completion of file I/O. Search must find the final marker, proving that source was not truncated.
+
+| Fixture | Opening (ms) | End-marker search (ms) | Peak app PSS (KiB) |
+| --- | ---: | ---: | ---: |
+| 5 MiB unbroken text | 16,335 | 742 | 133,446 |
+| 5 MiB Markdown, source fallback | 17,952 | 794 | 148,709 |
+| JSON nested 200 levels, source fallback | 914 | 22 | 114,524 |
+| Approximately 5 MiB dense JSON tokens | 19,312 | 859 | 122,038 |
+| Markdown with 12,000 table rows | 1,652 | 64 | 124,396 |
+| 5 MiB repeated ampersands | 64,639 | 757 | 141,755 |
+
+PSS is sampled every 200 ms in the application process; it excludes the separate WebView renderer and is not a heap-allocation total. Timings are single-run observations affected by emulator and host load. Large uninterrupted punctuation runs are deliberately pathological and can take over a minute on the old WebView. The toolbar remains available while the renderer works. Source streaming avoids allocating the whole escaped HTML expansion; safe soft breaks bound punctuation layout work. A regression verifies cross-boundary search and exact full-document copying.
+
 ## Signing rehearsal
 
 Release builds fail clearly without `TEXTR_SIGNING_PROPERTIES`. A disposable, short-lived test keystore outside the repository produced version code 1 and version code 2 APKs. Android build tools verified both signatures and the same certificate. A clean Android 16 installation followed by `adb install -r` retained the selected dark theme and recent history. Package identity, minimum/target SDK, non-debuggable release flags, and packaged notices were inspected.
