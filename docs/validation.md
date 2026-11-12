@@ -10,7 +10,15 @@ This record describes development-build validation on 2026-11-12. Public release
 | 15 | 35 | Google Play x86_64 | 124.0.6367.219 |
 | 16 | 36 | Google APIs x86_64 | 133.0.6943.137 |
 
-Local emulators used a Pixel 2 profile, 1080 × 1920 display, density 420, 2 GiB RAM, two virtual cores, and software graphics. These are compatibility checks, not predictions of performance on physical phones. CI independently runs API 29 and 36. Build requirements and reproducible commands are in [development](development.md).
+Local emulators used a Pixel 2 profile, 1080 × 1920 display, density 420, 2 GiB RAM, two virtual cores, and software graphics. The final Android 15 suite additionally used 720 × 1280 at density 320 (360 dp portrait width), including 200% font size and landscape. These are compatibility checks, not predictions of performance on physical phones. CI independently runs API 29 and 36. Build requirements and reproducible commands are in [development](development.md).
+
+## Automated results
+
+The suite contains 17 JVM tests and 33 instrumentation tests. Local validation passed all cases on API 29, 35, and 36, combining full-suite runs with focused reruns after correcting test-harness synchronization with accessibility activation, floating selection menus, and the system picker's remembered folder. The application code remained unchanged during those harness corrections.
+
+The [implementation PR checks](https://github.com/utrost/Textr/pull/23/checks) run the complete API 29/36 suites independently, plus build, JVM tests, and lint. Lint reports zero errors; its 15 advisory warnings concern newer dependency versions and optional Kotlin extension syntax. No warnings were suppressed to obtain a passing result.
+
+An additional Android 15 check opened and searched the complete 5 MiB source with wrapping disabled (12,026 ms opening, 664 ms end-marker search). The TalkBack acceptance run at 360 dp and 200% fonts verified a running touch-exploration service rather than merely a saved enabled-service setting.
 
 ## File opening and defaults
 
@@ -50,7 +58,7 @@ History tests exercise the 30-entry limit, deduplication, eviction, individual r
 
 ## Accessibility
 
-TalkBack 15.0.0.639625893 ran on the Android 15 emulator. The accessibility test connects with `FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES`, preserving the running service, and checks focus/activation for mode selection, search, next/previous matches, settings, history, the picker, and unavailable-file recovery. Document text and the **Match 1 of 1** announcement label are exposed in the accessibility tree. Keyboard focus traversal and recovery-button focus were also inspected with TalkBack enabled.
+TalkBack 15.0.0.639625893 ran on the Android 15 emulator, including a successful acceptance run at 360 dp portrait width and 200% font size. The accessibility test connects with `FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES`, preserving the running service, and checks focus/activation for mode selection, search, next/previous matches, settings, history, the picker, and unavailable-file recovery. Document text and the **Match 1 of 1** announcement label are exposed in the accessibility tree. Keyboard focus traversal and recovery-button focus were also inspected with TalkBack enabled.
 
 Automated layout checks use 200% system font size in portrait and landscape, check visible controls for clipping, enforce 48 dp button targets, and verify that the reader and settings confirmation remain reachable. Search uses a polite live region. Emulator checks inspect focus and accessibility labels; they do not substitute for a human evaluation of synthesized speech or physical touch ergonomics.
 
@@ -83,10 +91,23 @@ One full Android 10 suite run produced these measurements with the software-rend
 | Markdown with 12,000 table rows | 1,652 | 64 | 124,396 |
 | 5 MiB repeated ampersands | 64,639 | 757 | 141,755 |
 
+For comparison, the Android 15 / WebView 124 run at 360 dp portrait width measured:
+
+| Fixture | Opening (ms) | End-marker search (ms) | Peak app PSS (KiB) |
+| --- | ---: | ---: | ---: |
+| 5 MiB unbroken text | 5,441 | 630 | 159,816 |
+| 5 MiB Markdown, source fallback | 7,216 | 627 | 160,502 |
+| JSON nested 200 levels, source fallback | 1,350 | 46 | 119,322 |
+| Approximately 5 MiB dense JSON tokens | 8,684 | 682 | 151,097 |
+| Markdown with 12,000 table rows | 2,171 | 53 | 117,436 |
+| 5 MiB repeated ampersands | 10,704 | 635 | 145,531 |
+
 PSS is sampled every 200 ms in the application process; it excludes the separate WebView renderer and is not a heap-allocation total. Timings are single-run observations affected by emulator and host load. Large uninterrupted punctuation runs are deliberately pathological and can take over a minute on the old WebView. The toolbar remains available while the renderer works. Source streaming avoids allocating the whole escaped HTML expansion; safe soft breaks bound punctuation layout work. A regression verifies cross-boundary search and exact full-document copying.
 
 ## Signing rehearsal
 
 Release builds fail clearly without `TEXTR_SIGNING_PROPERTIES`. A disposable, short-lived test keystore outside the repository produced version code 1 and version code 2 APKs. Android build tools verified both signatures and the same certificate. A clean Android 16 installation followed by `adb install -r` retained the selected dark theme and recent history. Package identity, minimum/target SDK, non-debuggable release flags, and packaged notices were inspected.
+
+A clean source archive of commit `9d33ce9`, with no local SDK properties or build outputs, also produced a verified signed APK using the documented external credentials and SDK environment.
 
 The disposable certificate SHA-256 was `8947ee21cba7a639d42527d0b7299707835b5c77cbcc0c031a009a01844fa257`. This is test evidence, **not the production signing identity**. Test APKs are not public release artifacts. Production key custody, final release signing, source/archive/checksum publication, and downloaded-artifact verification belong to deferred [issue #13](https://github.com/utrost/Textr/issues/13).

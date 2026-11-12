@@ -23,6 +23,10 @@ If Textr is absent, open Textr directly and use **Open file**, or try the sender
 
 ## Read and revisit
 
+| Home in the light theme | Markdown in the dark theme |
+| --- | --- |
+| ![Textr home with a recent file](images/home-light.png) | ![Markdown preview with a table and omitted-image marker](images/markdown-dark.png) |
+
 - Tap the current display-mode button to switch between plain text, highlighted source, and available preview modes. CSV and unrecognized configurations stay plain text.
 - **Find** searches the displayed view. Use the arrows to move through matches and **×** to close search. Source and preview searches may differ.
 - Long-press text to select it, then choose Android's **Copy** action.

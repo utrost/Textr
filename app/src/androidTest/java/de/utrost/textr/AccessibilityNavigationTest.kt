@@ -25,6 +25,10 @@ class AccessibilityNavigationTest {
         android.util.Log.i("TextrAccessibility", "Enabled services: $services")
         if (InstrumentationRegistry.getArguments().getString("talkback") == "true") {
             assertTrue("TalkBack enabled for this acceptance run", services.orEmpty().contains("TalkBackService"))
+            val manager = context.getSystemService(android.content.Context.ACCESSIBILITY_SERVICE) as android.view.accessibility.AccessibilityManager
+            val deadline = System.nanoTime() + 10_000_000_000L
+            while (!manager.isTouchExplorationEnabled && System.nanoTime() < deadline) Thread.sleep(100)
+            assertTrue("TalkBack touch exploration is running", manager.isTouchExplorationEnabled)
         }
         DocumentRepository(context).clear()
         context.getSharedPreferences("reading", 0).edit().clear().commit()
@@ -57,18 +61,34 @@ class AccessibilityNavigationTest {
             node { it.viewIdResourceName == "android:id/button1" }.performAction(AccessibilityNodeInfo.ACTION_CLICK)
             activate("Open file")
             node { it.packageName?.toString()?.contains("documentsui") == true }
-            assertTrue(automation.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_BACK))
+            dismissPicker()
+            node { it.packageName == context.packageName && it.isVisibleToUser && it.contentDescription == "Open file" }
         }
         ActivityScenario.launch<MainActivity>(intent("missing.txt")).use {
             activate("Open file again")
             node { it.packageName?.toString()?.contains("documentsui") == true }
-            assertTrue(automation.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_BACK))
+            dismissPicker()
+            node { it.packageName == context.packageName && it.isVisibleToUser && it.contentDescription == "Open file again" }
         }
     }
 
     private fun intent(name: String) = Intent(Intent.ACTION_VIEW,
         Uri.parse("content://de.utrost.textr.test.documents/$name"), context, MainActivity::class.java)
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+    private fun dismissPicker() {
+        // DocumentsUI may remember a nested folder; Back first traverses parents.
+        repeat(12) {
+            if (automation.rootInActiveWindow?.packageName?.toString() == context.packageName) return
+            assertTrue(automation.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_BACK))
+            val deadline = System.nanoTime() + 2_000_000_000L
+            while (System.nanoTime() < deadline) {
+                if (automation.rootInActiveWindow?.packageName?.toString() == context.packageName) return
+                Thread.sleep(100)
+            }
+        }
+        fail("Picker did not return to Textr")
+    }
 
     private fun activate(label: String) {
         val target = node { it.isVisibleToUser && it.isClickable && (it.contentDescription?.toString() == label || it.text?.toString().equals(label, true)) }

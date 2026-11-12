@@ -119,7 +119,13 @@ class ReaderControlsTest {
             click("Open file")
             assertTrue(device.wait(Until.hasObject(By.pkg("com.google.android.documentsui")), 5000) ||
                 device.wait(Until.hasObject(By.pkg("com.android.documentsui")), 5000))
-            device.pressBack()
+            var returned = false
+            for (attempt in 0 until 12) {
+                if (device.currentPackageName == context.packageName) { returned = true; break }
+                device.pressBack()
+                if (device.wait(Until.hasObject(By.pkg(context.packageName)), 2000)) { returned = true; break }
+            }
+            assertTrue("Picker cancellation returns to the reader", returned)
             ready(scenario)
             search(scenario, "Textr fixture", "1 / 1")
         }
@@ -160,6 +166,7 @@ class ReaderControlsTest {
                 it.findViewById<WebView>(R.id.reader).scrollTo(0, 0)
                 (it.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager).clearPrimaryClip()
             }
+            device.waitForIdle()
             var x = 0; var y = 0
             scenario.onActivity {
                 val reader = it.findViewById<WebView>(R.id.reader)
@@ -269,10 +276,28 @@ class ReaderControlsTest {
         }
     }
     private fun click(text: String) {
-        val item = device.wait(Until.findObject(By.text(java.util.regex.Pattern.compile(java.util.regex.Pattern.quote(text), java.util.regex.Pattern.CASE_INSENSITIVE))), 5000)
-        assertNotNull("Missing control: $text", item)
-        item!!.click()
-        device.waitForIdle()
+        val selector = By.text(java.util.regex.Pattern.compile(java.util.regex.Pattern.quote(text), java.util.regex.Pattern.CASE_INSENSITIVE))
+        repeat(3) { attempt ->
+            var item = device.wait(Until.findObject(selector), 5000)
+            if (item == null && text == "Select all") {
+                // Android's floating selection toolbar moves this action into overflow
+                // on narrow displays and some WebView/platform versions.
+                val overflow = device.findObject(By.res("android", "floating_toolbar_overflow_button"))
+                    ?: device.findObject(By.desc("More options"))
+                overflow?.click()
+                item = device.wait(Until.findObject(selector), 5000)
+            }
+            assertNotNull("Missing control: $text", item)
+            try {
+                item!!.click()
+                device.waitForIdle()
+                return
+            } catch (error: androidx.test.uiautomator.StaleObjectException) {
+                // Floating toolbars may replace their nodes during selection animation.
+                if (attempt == 2) throw error
+                device.waitForIdle()
+            }
+        }
     }
     private fun clickDescription(description: String) {
         val item = device.wait(Until.findObject(By.desc(description)), 5000)
