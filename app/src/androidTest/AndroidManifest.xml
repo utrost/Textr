@@ -1,0 +1,10 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- Installed only in the test APK; simulates a separate app's document provider. -->
+        <provider
+            android:name="de.utrost.textr.FixtureProvider"
+            android:authorities="de.utrost.textr.test.documents"
+            android:exported="true"
+            android:grantUriPermissions="true" />
+    </application>
+</manifest>
