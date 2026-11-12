@@ -35,7 +35,7 @@ jobs:
         run: ./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug --stacktrace
       - name: Retain test and lint reports
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: reports-${{ github.sha }}
           path: |
@@ -44,7 +44,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
       - name: Retain development APK
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: textr-debug-development-only-${{ github.sha }}
           path: app/build/outputs/apk/debug/app-debug.apk
@@ -88,7 +88,7 @@ jobs:
           script: ./gradlew :app:connectedDebugAndroidTest --stacktrace
       - name: Retain device reports
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: device-api-${{ matrix.api }}-${{ github.sha }}
           path: |
