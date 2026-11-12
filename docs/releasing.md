@@ -1,5 +1,7 @@
 # Release signing
 
+Public release and production-key selection are deferred at the owner's request. Signing support and same-key upgrades were validated with a disposable test identity; see [validation](validation.md). The procedure below is for a future authorized release.
+
 Release APKs use an owner-controlled signing key. The repository and pull-request CI never contain a key or password. Debug APKs use Android's separate development key and cannot replace a release installation (or vice versa) unless signed by the same identity; uninstalling removes private settings/history.
 
 ## Prepare the signing identity

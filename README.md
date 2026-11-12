@@ -2,7 +2,7 @@
 
 Textr is a minimal, read-only text viewer for Android. Open files from other apps or the system file picker, revisit recent files, and switch between plain text, syntax highlighting, and supported formatted previews.
 
-**Status: early development build (0.1.0).** The Android app is implemented and can be built locally. There is no published or release-signed APK yet.
+**Status: early development build (0.1.0).** The Android app is implemented and can be built locally. Public release and production signing are deferred; no public APK is available.
 
 ## Current features
 
@@ -54,9 +54,9 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ./gradlew :app:connectedDebugAndroidTest
 ```
 
-On Windows, use `gradlew.bat`. Debug APKs use a local development key; production release downloads remain pending; [release signing support](docs/releasing.md) is available. No signing keys are committed.
+On Windows, use `gradlew.bat`. Debug APKs use a local development key; public release is deferred; [release signing support](docs/releasing.md) is available. No signing keys are committed.
 
-The app uses Kotlin, AndroidX Activity, native Android controls, and an offline WebView. CommonMark handles Markdown and tables; Jackson Core formats JSON while preserving number spelling and duplicate keys. See [development and testing](docs/development.md) for architecture, checks, and manual test scenarios.
+The app uses Kotlin, AndroidX Activity, native Android controls, and an offline WebView. CommonMark handles Markdown and tables; Jackson Core formats JSON while preserving number spelling and duplicate keys. See [development and testing](docs/development.md) for architecture and checks, and the [validation record](docs/validation.md) for tested configurations and limitations.
 
 ## Current limits
 

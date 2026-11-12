@@ -130,12 +130,22 @@ object DocumentRenderer {
             .sanitizeUrls(true).build().render(node)
     }
 
-    fun html(document: PreparedDocument, mode: DisplayMode, dark: Boolean, wrap: Boolean): String {
-        val content = when (mode) {
-            DisplayMode.PREVIEW -> document.preview ?: "<pre>${SyntaxHighlighter.escape(document.source.text)}</pre>"
+    /** Each request gets a fresh stream; plain text is escaped in small chunks. */
+    fun page(document: PreparedDocument, mode: DisplayMode, dark: Boolean, wrap: Boolean): HtmlPage {
+        val plain = mode == DisplayMode.PLAIN || (mode == DisplayMode.PREVIEW && document.preview == null)
+        val content = if (plain) document.source.text else when (mode) {
+            DisplayMode.PREVIEW -> document.preview!!
             DisplayMode.HIGHLIGHTED -> "<pre>${SyntaxHighlighter.highlight(document.source.text, document.source.kind)}</pre>"
-            DisplayMode.PLAIN -> "<pre>${SyntaxHighlighter.escape(document.source.text)}</pre>"
+            else -> error("Plain text handled above")
         }
+        return HtmlPage(header(dark, wrap) + if (plain) "<pre>" else "", content,
+            (if (plain) "</pre>" else "") + "</body></html>", plain, plain && wrap)
+    }
+
+    fun html(document: PreparedDocument, mode: DisplayMode, dark: Boolean, wrap: Boolean): String =
+        page(document, mode, dark, wrap).openStream().bufferedReader(Charsets.UTF_8).use { it.readText() }
+
+    private fun header(dark: Boolean, wrap: Boolean): String {
         val background = if (dark) "#171c1a" else "#fafaf7"
         val foreground = if (dark) "#e3e9e5" else "#202923"
         return """<!doctype html><html><head><meta charset="utf-8">
@@ -155,6 +165,44 @@ object DocumentRenderer {
             .string { color: ${if (dark) "#e4bd89" else "#86541d"}; }
             .number, .literal { color: ${if (dark) "#c2b2f4" else "#69429b"}; }
             .comment { color: ${if (dark) "#a6b3ab" else "#63766a"}; font-style: italic; }
-            </style></head><body>$content</body></html>""".trimIndent()
+            </style></head><body>""".trimIndent()
     }
+}
+
+/** Keeps the 5 MiB source intact without allocating its potentially 30 MiB HTML expansion. */
+class HtmlPage(private val prefix: String, private val content: String, private val suffix: String, private val escape: Boolean, private val softBreaks: Boolean) {
+    fun openStream(): java.io.InputStream = java.io.SequenceInputStream(java.util.Collections.enumeration(listOf(
+        prefix.byteInputStream(Charsets.UTF_8), ChunkedTextStream(content, escape, softBreaks), suffix.byteInputStream(Charsets.UTF_8)
+    )))
+}
+
+private class ChunkedTextStream(private val text: String, private val escape: Boolean, private val softBreaks: Boolean) : java.io.InputStream() {
+    private var offset = 0
+    private var chunk = java.io.ByteArrayInputStream(ByteArray(0))
+    private var closed = false
+
+    private fun availableChunk(): Boolean {
+        if (closed) return false
+        if (chunk.available() > 0) return true
+        if (offset == text.length) return false
+        var end = minOf(offset + 1024, text.length)
+        if (end < text.length && Character.isHighSurrogate(text[end - 1])) end--
+        val part = text.substring(offset, end)
+        offset = end
+        // Old WebViews can spend minutes laying out uninterrupted punctuation runs.
+        // Soft breaks add no source characters and bound that work. Only insert at
+        // ASCII boundaries, never inside CRLF, surrogate pairs, or combining text.
+        val softBreak = softBreaks && end < text.length && text[end - 1] in ' '..'~' && text[end] in ' '..'~'
+        chunk = ((if (escape) SyntaxHighlighter.escape(part) else part) + if (softBreak) "<wbr>" else "").byteInputStream(Charsets.UTF_8)
+        return true
+    }
+
+    override fun read(): Int = if (availableChunk()) chunk.read() else -1
+    override fun available(): Int = if (availableChunk()) chunk.available() else 0
+    override fun read(buffer: ByteArray, off: Int, len: Int): Int {
+        if (off < 0 || len < 0 || off > buffer.size - len) throw IndexOutOfBoundsException()
+        if (len == 0) return 0
+        return if (availableChunk()) chunk.read(buffer, off, len) else -1
+    }
+    override fun close() { closed = true; chunk.close() }
 }

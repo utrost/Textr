@@ -1,8 +1,8 @@
 # Installing and opening files
 
-Textr supports Android 10 (API 29) and newer. Release APKs are distributed through this repository's [GitHub Releases](https://github.com/utrost/Textr/releases). If there is no published release, use the [development build instructions](development.md); CI debug artifacts are development builds, not signed public releases.
+Textr supports Android 10 (API 29) and newer. Public release is deferred; no public APK is currently available. Use the [development build instructions](development.md) to build and install the candidate. CI debug artifacts are development builds. Future authorized releases will appear under [GitHub Releases](https://github.com/utrost/Textr/releases).
 
-## Install a release APK
+## Install a future release APK
 
 1. Download the APK and checksum from the same release. Use the release's source tag and signing-certificate fingerprint to identify that version.
 2. On a computer, compare `sha256sum Textr-VERSION.apk` with the published checksum. On Windows, use `Get-FileHash Textr-VERSION.apk -Algorithm SHA256` in PowerShell.

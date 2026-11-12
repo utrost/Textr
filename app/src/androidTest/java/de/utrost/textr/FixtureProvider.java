@@ -69,10 +69,16 @@ public class FixtureProvider extends ContentProvider {
         String name = uri.getLastPathSegment();
         if ("missing.txt".equals(name)) throw new FileNotFoundException();
         final byte[] bytes;
-        if ("sample.json".equals(name) || "extensionless-json".equals(name) || "UPPER.JSON".equals(name)) {
+        if ("sample.json".equals(name) || "slow.json".equals(name) || "extensionless-json".equals(name) || "UPPER.JSON".equals(name)) {
             bytes = "{\"message\":\"Textr fixture\",\"value\":42}".getBytes(StandardCharsets.UTF_8);
         } else if ("copy.txt".equals(name)) {
             bytes = "Copyable Textr selection".getBytes(StandardCharsets.UTF_8);
+        } else if ("copy-long.txt".equals(name)) {
+            StringBuilder text = new StringBuilder("Copyable source ");
+            while (text.length() < 1018) text.append('&');
+            text.append("CrossBoundaryMarker <script>literal</script> ");
+            for (int i = 0; i < 400; i++) text.append("& ");
+            bytes = text.toString().getBytes(StandardCharsets.UTF_8);
         } else if ("long.ini".equals(name)) {
             StringBuilder text = new StringBuilder("[reader]\n");
             for (int i = 0; i < 300; i++) text.append("line").append(i).append(" = text\n");
@@ -90,9 +96,9 @@ public class FixtureProvider extends ContentProvider {
         } else if ("sample.md".equals(name)) {
             bytes = ("# Textr fixture\n\n| Name | Value |\n| --- | --- |\n| First | 42 |\n\n"
                 + "![remote](https://example.com/pixel)\n").getBytes(StandardCharsets.UTF_8);
-        } else if ("large-markdown.md".equals(name)) {
+        } else if ("large-markdown.md".equals(name) || "escaped.txt".equals(name)) {
             bytes = new byte[5 * 1024 * 1024];
-            Arrays.fill(bytes, (byte) 'a');
+            Arrays.fill(bytes, (byte) ("escaped.txt".equals(name) ? '&' : 'a'));
             byte[] tail = "\nFixture end marker".getBytes(StandardCharsets.UTF_8);
             System.arraycopy(tail, 0, bytes, bytes.length - tail.length, tail.length);
         } else if ("deep.json".equals(name)) {
@@ -125,7 +131,7 @@ public class FixtureProvider extends ContentProvider {
             ParcelFileDescriptor[] pipe = ParcelFileDescriptor.createPipe();
             new Thread(() -> {
                 try (OutputStream output = new ParcelFileDescriptor.AutoCloseOutputStream(pipe[1])) {
-                    if ("slow.txt".equals(name)) {
+                    if ("slow.txt".equals(name) || "slow.json".equals(name)) {
                         try { Thread.sleep(5000); } catch (InterruptedException ignored) { }
                     }
                     output.write(bytes);

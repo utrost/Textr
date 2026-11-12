@@ -4,6 +4,13 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class DocumentRendererTest {
+    @Test fun `streamed HTML preserves Unicode across chunk boundaries and escapes source`() {
+        val source = "a".repeat(8191) + "\uD83D\uDE80<&>\"'" + "&".repeat(20_000)
+        val page = DocumentRenderer.page(prepare(source, FileKind.TEXT), DisplayMode.PLAIN, false, true)
+        val first = page.openStream().bufferedReader(Charsets.UTF_8).use { it.readText() }
+        assertTrue(first.replace("<wbr>", "").contains("<pre>${SyntaxHighlighter.escape(source)}</pre>"))
+        assertEquals(first, page.openStream().bufferedReader(Charsets.UTF_8).use { it.readText() })
+    }
     @org.junit.Test fun largeJsonKeepsSourceWithoutExpandingItsPreview() {
         val text = "[" + "0,".repeat(600_000) + "1]"
         val source = TextDocument("large.json", text, FileKind.JSON, text.length)

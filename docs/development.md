@@ -18,7 +18,7 @@ Install `app/build/outputs/apk/debug/app-debug.apk` with `adb install -r`. This 
 - `DocumentRepository` reads Android content/file URIs using read-only descriptors and a cancellation signal. It records at most 30 recent URI/name/timestamp entries in private preferences, retaining read grants where offered and releasing them when entries are removed. It stores no document contents.
 - `TextDocuments` enforces the 5 MiB byte limit while streaming, validates UTF-8 or BOM-marked UTF-16, rejects binary control characters, and classifies supported syntax from filenames or MIME types.
 - `DocumentRenderer` and `SyntaxHighlighter` are plain Kotlin/JVM components. Previews never alter source. JSON formatting preserves duplicate keys and numeric spelling; malformed or overly nested JSON falls back to source. Highlighting accepts up to 512 Ki characters and stops adding spans after 10,000 tokens to bound the WebView node count.
-- The WebView receives generated HTML through an intercepted in-memory HTTPS response, avoiding oversized data URLs. Controls become available after a visual-state callback confirms layout, and renderer termination offers a plain-text retry. The WebView receives generated HTML only. JavaScript, network loading, images, file access, content access, and DOM storage are disabled. A restrictive content security policy and request interception provide additional isolation. External web/email links require a user tap.
+- The WebView receives generated HTML through an intercepted in-memory HTTPS response, avoiding oversized data URLs. Source is escaped as a stream to avoid allocating its full HTML expansion; soft-break elements at safe ASCII boundaries bound old WebView layout work without adding source characters. Cross-boundary search and full copying have regression coverage. Controls become available after a visual-state callback confirms layout, and renderer termination offers a plain-text retry. JavaScript, network loading, images, file access, content access, and DOM storage are disabled. A restrictive content security policy and request interception provide additional isolation. External web/email links require a user tap.
 
 Reading preferences and recent metadata stay on the device and are excluded from backup/transfer rules. Source text is not written to saved-instance bundles or preferences. URI-based documents can be reloaded after process recreation when access remains valid; unreferenced shared text is session-only.
 
@@ -37,6 +37,8 @@ Device tests use a separate test-only content provider. They cover external file
 Reports are generated under `app/build/reports/tests/`, `app/build/reports/androidTests/`, and `app/build/reports/lint-results-debug.html`.
 
 Validation uses clean Android 10, 15, and 16 emulators (API 29, 35, and 36). The owner explicitly selected emulator validation because no physical device is available. Physical-device coverage is follow-up work, not a release gate. CI runs build, unit tests, lint, and API 29/36 instrumentation for pull requests and the default branch.
+
+Completed configurations and evidence are recorded in [validation](validation.md).
 
 ## Manual acceptance checklist
 

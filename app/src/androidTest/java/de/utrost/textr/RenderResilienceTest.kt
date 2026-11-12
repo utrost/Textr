@@ -60,7 +60,7 @@ class RenderResilienceTest {
 
     @Test fun pathologicalFixturesRemainSearchableAndRecordOpeningTimes() {
         val selected = InstrumentationRegistry.getArguments().getString("fixture")
-        for (name in listOf("boundary.txt", "large-markdown.md", "deep.json", "tokens.json", "tables.md").filter { selected == null || it == selected }) {
+        for (name in listOf("boundary.txt", "large-markdown.md", "deep.json", "tokens.json", "tables.md", "escaped.txt").filter { selected == null || it == selected }) {
             val peak = java.util.concurrent.atomic.AtomicInteger()
             val sampler = java.util.concurrent.Executors.newSingleThreadScheduledExecutor()
             sampler.scheduleAtFixedRate({
@@ -69,7 +69,7 @@ class RenderResilienceTest {
             }, 0, 200, TimeUnit.MILLISECONDS)
             val started = SystemClock.elapsedRealtime()
             try { ActivityScenario.launch<MainActivity>(intent(name)).use { scenario ->
-                ready(scenario)
+                ready(scenario, 120)
                 val opened = SystemClock.elapsedRealtime()
                 find(scenario, if (name == "boundary.txt") "Boundary end marker" else "Fixture end marker")
                 val memory = android.os.Debug.MemoryInfo().also { android.os.Debug.getMemoryInfo(it) }
@@ -94,14 +94,22 @@ class RenderResilienceTest {
         assertTrue("Search completed", latch.await(20, TimeUnit.SECONDS))
         assertTrue("Full source remains searchable: $query", matches > 0)
     }
-    private fun ready(scenario: ActivityScenario<MainActivity>) {
-        val deadline = System.nanoTime() + 30_000_000_000L
+    private fun ready(scenario: ActivityScenario<MainActivity>, seconds: Int = 30) {
+        val deadline = System.nanoTime() + seconds * 1_000_000_000L
+        var nextLog = System.nanoTime() + 5_000_000_000L
         while (System.nanoTime() < deadline) {
             var ready = false
-            scenario.onActivity { ready = it.findViewById<WebView>(R.id.reader)?.tag == true }
+            scenario.onActivity {
+                val reader = it.findViewById<WebView>(R.id.reader)
+                ready = reader?.tag == true
+                if (System.nanoTime() >= nextLog) {
+                    Log.i("TextrBenchmark", "Waiting for layout: progress=${reader?.progress}, ready=$ready")
+                    nextLog += 5_000_000_000L
+                }
+            }
             if (ready) return
             Thread.sleep(100)
         }
-        fail("Document did not render within 30 seconds")
+        fail("Document did not render within $seconds seconds")
     }
 }

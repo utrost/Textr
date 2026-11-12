@@ -1,6 +1,6 @@
 # Textr 0.1.0
 
-First release candidate of a minimal, read-only Android text viewer. Public release remains gated on the [roadmap](roadmap.md) and an owner-controlled signing identity.
+First release candidate of a minimal, read-only Android text viewer. Public release is deferred at the owner's request. The [roadmap](roadmap.md) retains production signing and publication as follow-up work.
 
 - Android 10 and newer; UTF-8 and BOM-marked UTF-16 files up to 5 MiB.
 - Open files through the system picker, compatible Open with flows, or attachment sharing.

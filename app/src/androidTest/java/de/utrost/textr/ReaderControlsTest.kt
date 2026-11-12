@@ -56,6 +56,15 @@ class ReaderControlsTest {
         }
     }
 
+    @Test fun recreationDuringLoadingPreservesAutomaticModeSelection() {
+        ActivityScenario.launch<MainActivity>(intent("slow.json")).use { scenario ->
+            scenario.recreate()
+            ready(scenario)
+            assertMode(scenario, "Preview")
+            search(scenario, "Textr fixture", "1 / 1")
+        }
+    }
+
     @Test fun searchNavigationClosingAndRecreationPreserveState() {
         ActivityScenario.launch<MainActivity>(intent("repeated.txt")).use { scenario ->
             ready(scenario)
@@ -139,6 +148,37 @@ class ReaderControlsTest {
             assertTrue("Copied text comes from the original source", before.contains(copied))
         }
         assertEquals(before, repository.read(uri("copy.txt"), null, android.os.CancellationSignal()).text)
+    }
+
+    @Test fun wrappedChunksPreserveCrossBoundarySearchAndFullCopy() {
+        val source = DocumentRepository(context).read(uri("copy-long.txt"), null, android.os.CancellationSignal()).text
+        ActivityScenario.launch<MainActivity>(intent("copy-long.txt")).use { scenario ->
+            ready(scenario)
+            search(scenario, "CrossBoundaryMarker", "1 / 1")
+            clickDescription("Close search")
+            scenario.onActivity {
+                it.findViewById<WebView>(R.id.reader).scrollTo(0, 0)
+                (it.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager).clearPrimaryClip()
+            }
+            var x = 0; var y = 0
+            scenario.onActivity {
+                val reader = it.findViewById<WebView>(R.id.reader)
+                val location = IntArray(2).also(reader::getLocationOnScreen)
+                x = location[0] + (35 * it.resources.displayMetrics.density).toInt()
+                y = location[1] + (32 * it.resources.displayMetrics.density).toInt()
+            }
+            device.swipe(x, y, x, y, 100)
+            click("Select all")
+            click("Copy")
+            await {
+                var copied = ""
+                scenario.onActivity {
+                    copied = (it.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager)
+                        .primaryClip?.getItemAt(0)?.coerceToText(it)?.toString().orEmpty()
+                }
+                copied == source
+            }
+        }
     }
 
     @Test fun readingPositionAndModeSurviveRecreationAndUriReload() {

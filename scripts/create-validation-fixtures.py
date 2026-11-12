@@ -29,6 +29,7 @@ for name, content in files.items():
 limit = 5 * 1024 * 1024
 marker = b"\nBoundary end marker\n"
 (args.destination / "boundary.txt").write_bytes(b"a" * (limit - len(marker)) + marker)
+(args.destination / "escaped.txt").write_bytes(b"&" * (limit - len(marker)) + marker)
 (args.destination / "oversized.txt").write_bytes(b"a" * (limit + 1))
 (args.destination / "binary.txt").write_bytes(bytes(range(256)))
 (args.destination / "deep.json").write_text("[" * 200 + "0" + "]" * 200)

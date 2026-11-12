@@ -1,6 +1,6 @@
 # Roadmap to the first public Textr release
 
-The goal is a signed, downloadable 0.1.0 APK with matching source, preserving Textr's minimal, offline, read-only scope.
+The roadmap leads to a signed, downloadable 0.1.0 APK with matching source, preserving Textr's minimal, offline, read-only scope. On 2026-11-12 the owner requested completion of implementation and deferred public release. Issue #13 remains open; no production signing key is created as part of implementation.
 
 **Live tracker:** [Roadmap #14](https://github.com/utrost/Textr/issues/14). Individual GitHub issues are the source of truth for progress, acceptance criteria, and verification evidence.
 

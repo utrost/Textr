@@ -390,7 +390,7 @@ class MainActivity : ComponentActivity() {
         val selectedMode = mode
         work = worker.submit {
             val page = try {
-                DocumentRenderer.html(prepared, selectedMode, dark, wrap).toByteArray(Charsets.UTF_8)
+                DocumentRenderer.page(prepared, selectedMode, dark, wrap)
             } catch (_: java.util.concurrent.CancellationException) {
                 return@submit
             } catch (_: RuntimeException) {
@@ -410,7 +410,7 @@ class MainActivity : ComponentActivity() {
                 content.addView(view, FrameLayout.LayoutParams(-1, -1))
                 content.addView(ProgressBar(this).apply { id = R.id.reader_loading },
                     FrameLayout.LayoutParams(dp(48), dp(48), Gravity.CENTER))
-                // Serve bytes in memory rather than embedding multi-MiB text in a data URL.
+                // Stream in-memory content rather than embedding multi-MiB text in a data URL.
                 view.loadUrl(DOCUMENT_URL)
                 pendingScroll = 0
                 if (prepared.notice != PreviewNotice.NONE) {
@@ -444,7 +444,7 @@ class MainActivity : ComponentActivity() {
         content.addView(body, FrameLayout.LayoutParams(-1, -1))
     }
 
-    private fun createWebView(scroll: Int, page: ByteArray) = WebView(this).apply {
+    private fun createWebView(scroll: Int, page: HtmlPage) = WebView(this).apply {
         id = R.id.reader
         tag = false
         setBackgroundColor(background())
@@ -475,7 +475,7 @@ class MainActivity : ComponentActivity() {
         webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse =
                 if (request.isForMainFrame && request.url.toString().substringBefore('#') == DOCUMENT_URL) {
-                    WebResourceResponse("text/html", "UTF-8", ByteArrayInputStream(page))
+                    WebResourceResponse("text/html", "UTF-8", page.openStream())
                 } else WebResourceResponse("text/plain", "UTF-8", ByteArrayInputStream(ByteArray(0)))
 
             override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
@@ -594,7 +594,9 @@ class MainActivity : ComponentActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putString("uri", currentUri?.toString())
-        outState.putString("mode", mode.name)
+        // While loading, mode still belongs to the previous document (or the initial
+        // plain-text default). Let the new document choose its automatic mode.
+        if (document != null) outState.putString("mode", mode.name)
         outState.putInt("scroll", webView?.scrollY ?: pendingScroll)
         outState.putString("query", searchField.text.toString())
         outState.putBoolean("search", searchRow.visibility == View.VISIBLE)
