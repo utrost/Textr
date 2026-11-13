@@ -153,13 +153,46 @@ class EverydayReadingDeviceTest {
         }
     }
 
+    @Test fun sourceSearchRemainsReachableAtLargeFontsInLandscape() {
+        val oldFont = device.executeShellCommand("settings get system font_scale").trim()
+        try {
+            device.executeShellCommand("settings put system font_scale 2.0")
+            ActivityScenario.launch<MainActivity>(intent("repeated.txt")).use { scenario ->
+                scenario.onActivity { it.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }
+                await {
+                    var configured = false
+                    scenario.onActivity { configured = it.resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE && it.resources.configuration.fontScale >= 1.99f }
+                    configured
+                }
+                ready(scenario)
+                click(By.desc("Find"))
+                scenario.onActivity {
+                    val field = it.findViewById<android.widget.EditText>(R.id.search_query)
+                    field.setText("needle")
+                    (it.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager).hideSoftInputFromWindow(field.windowToken, 0)
+                }
+                click(By.desc("Search source…"))
+                assertTrue(device.wait(Until.hasObject(By.text("3 matches in source")), 10000))
+                click(By.res(context.packageName, "match_case"))
+                click(By.res(context.packageName, "whole_word"))
+                assertTrue(device.wait(Until.hasObject(By.text("3 matches in source")), 10000))
+                click(By.text("Line 3")); ready(scenario)
+                scenario.onActivity { assertTrue(it.findViewById<WebView>(R.id.reader).height > 0) }
+            }
+        } finally {
+            device.executeShellCommand("settings put system font_scale ${oldFont.takeUnless { it == "null" } ?: "1.0"}")
+            device.setOrientationNatural(); device.unfreezeRotation()
+        }
+    }
+
     private fun ready(scenario: ActivityScenario<MainActivity>) = await {
         var ready = false; scenario.onActivity { ready = it.findViewById<WebView>(R.id.reader)?.tag == true }; ready
     }
     private fun menu(label: String) { click(By.desc("More options")); click(label) }
     private fun click(text: String) = click(By.text(java.util.regex.Pattern.compile(java.util.regex.Pattern.quote(text), 2)))
     private fun click(selector: BySelector) {
-        val node = device.wait(Until.findObject(selector), 5000)
+        var node = device.wait(Until.findObject(selector), 3000)
+        if (node == null) node = device.findObject(By.scrollable(true))?.scrollUntil(Direction.DOWN, Until.findObject(selector))
         assertNotNull("Missing $selector", node); node!!.click(); device.waitForIdle()
     }
     private fun await(condition: () -> Boolean) {

@@ -39,17 +39,35 @@ class SourceSearchDialog(context: Context, source: String, initial: SourceSearch
             addView(matchCase, LinearLayout.LayoutParams(0, -2, 1f)); addView(wholeWord, LinearLayout.LayoutParams(0, -2, 1f))
         }
         val status = TextView(context).apply { id = R.id.source_result_count; accessibilityLiveRegion = android.view.View.ACCESSIBILITY_LIVE_REGION_POLITE }
-        val results = ListView(context).apply { id = R.id.source_results }
+        val results = ListView(context).apply { id = R.id.source_results; itemsCanFocus = true }
         body.addView(query); body.addView(options); body.addView(status)
-        body.addView(results, LinearLayout.LayoutParams(-1, dp((context.resources.configuration.screenHeightDp / 3).coerceIn(100, 280))))
-        dialog = AlertDialog.Builder(context).setTitle(R.string.search_source).setView(body).setNegativeButton(R.string.done, null).create()
+        // A single scrolling list keeps both controls and results reachable when the
+        // keyboard or large landscape fonts leave too little space for a fixed header.
+        results.addHeaderView(body, null, false)
+        val matches = mutableListOf<SourceMatch>()
+        val adapter = object : ArrayAdapter<SourceMatch>(context, android.R.layout.simple_list_item_2, android.R.id.text1, matches) {
+            override fun getView(position: Int, convertView: android.view.View?, parent: android.view.ViewGroup): android.view.View {
+                val view = super.getView(position, convertView, parent)
+                val match = getItem(position)!!
+                view.findViewById<TextView>(android.R.id.text1).text = context.getString(R.string.source_result_line, match.line)
+                view.findViewById<TextView>(android.R.id.text2).apply { text = match.snippet; maxLines = 3 }
+                view.minimumHeight = dp(64)
+                return view
+            }
+        }
+        results.adapter = adapter
+        dialog = AlertDialog.Builder(context).setTitle(R.string.search_source).setView(results).setNegativeButton(R.string.done, null).create()
+        results.setOnItemClickListener { _, _, position, _ ->
+            matches.getOrNull(position - results.headerViewsCount)?.let { match -> dialog.dismiss(); selected(match) }
+        }
         fun update() {
             val settings = SourceSearchOptions(query.text.toString(), matchCase.isChecked, wholeWord.isChecked)
             changed(settings)
             val request = ++generation
             handler.removeCallbacksAndMessages(null)
             work?.cancel(true)
-            results.adapter = null
+            matches.clear()
+            adapter.notifyDataSetChanged()
             status.setText(if (settings.query.isEmpty()) R.string.source_search_explanation else R.string.searching)
             if (settings.query.isEmpty()) return
             handler.postDelayed({
@@ -61,17 +79,8 @@ class SourceSearchDialog(context: Context, source: String, initial: SourceSearch
                         status.text = if (found.truncated) context.getString(R.string.source_results_limited, SourceSearch.MAX_RESULTS)
                             else if (found.matches.isEmpty()) context.getString(R.string.no_matches)
                             else context.getString(R.string.source_results_count, found.matches.size)
-                        results.adapter = object : ArrayAdapter<SourceMatch>(context, android.R.layout.simple_list_item_2, android.R.id.text1, found.matches) {
-                            override fun getView(position: Int, convertView: android.view.View?, parent: android.view.ViewGroup): android.view.View {
-                                val view = super.getView(position, convertView, parent)
-                                val match = getItem(position)!!
-                                view.findViewById<TextView>(android.R.id.text1).text = context.getString(R.string.source_result_line, match.line)
-                                view.findViewById<TextView>(android.R.id.text2).apply { text = match.snippet; maxLines = 3 }
-                                view.minimumHeight = dp(64)
-                                return view
-                            }
-                        }
-                        results.setOnItemClickListener { _, _, position, _ -> dialog.dismiss(); selected(found.matches[position]) }
+                        matches.addAll(found.matches)
+                        adapter.notifyDataSetChanged()
                     }
                 }
             }, 250)
@@ -83,7 +92,10 @@ class SourceSearchDialog(context: Context, source: String, initial: SourceSearch
         })
         matchCase.setOnCheckedChangeListener { _, _ -> update() }
         wholeWord.setOnCheckedChangeListener { _, _ -> update() }
-        dialog.setOnShowListener { update(); dialog.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN) }
+        dialog.setOnShowListener {
+            update()
+            dialog.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN or android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        }
     }
 
     fun close() { closed = true; generation++; handler.removeCallbacksAndMessages(null); work?.cancel(true); worker.shutdownNow() }

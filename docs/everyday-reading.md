@@ -4,7 +4,7 @@
 
 The magnifying glass opens **Find in this view**. It searches the text displayed by the WebView, with previous/next controls and a match count. Preview and source text can differ.
 
-The **⋯** control in that Find bar opens **Search source…**. This searches the complete decoded source, regardless of display mode, with optional **Match case** and **Whole word**. Results show source line numbers and short snippets. Selecting one switches to plain text, scrolls to the exact occurrence and highlights it. The decoration adds no characters to copied source. JavaScript remains disabled.
+The **⋯** control in that Find bar opens **Search source…**. This searches the complete decoded source, regardless of display mode, with optional **Match case** and **Whole word**. Results show source line numbers and short snippets. Controls and results scroll together to remain reachable in landscape and at large font sizes. Selecting one switches to plain text, scrolls to the exact occurrence and highlights it. The decoration adds no characters to copied source. JavaScript remains disabled.
 
 Source search is literal, not regular-expression search. Matches do not overlap. Case-insensitive matching uses Unicode simple case folding, without normalization or multi-character expansions (for example, `ß` does not match `ss`). Whole-word boundaries treat Unicode letters, digits, combining marks and underscore as word characters. Line numbers recognize LF, CRLF and standalone CR. A query is limited to 1,000 UTF-16 code units; results stop at 200 and explicitly report when more exist. Refine the query to narrow an overflowing result list. Matching runs off the UI thread and is canceled when the query changes or dialog closes.
 
