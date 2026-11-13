@@ -113,8 +113,8 @@
     <string-array name="csv_delimiters"><item>Comma (,)</item><item>Semicolon (;)</item><item>Tab</item><item>Pipe (|)</item></string-array>
     <string name="csv_header">Use first row as header</string>
     <string name="csv_unavailable">CSV table unavailable: malformed quoting or preview limits exceeded. The complete source is available. Check CSV table options for the delimiter.</string>
-    <string name="csv_progress">Table view · Reading progress and bookmarks are available in source</string>
-    <string name="reading_progress">Reading position: approximately %1$d%%</string>
+    <string name="csv_progress">Use source for progress and bookmarks</string>
+    <string name="reading_progress">About %1$d%% · Reading position</string>
     <string name="add_bookmark">Add bookmark…</string>
     <string name="bookmarks">Bookmarks</string>
     <string name="bookmark_name">Bookmark name</string>

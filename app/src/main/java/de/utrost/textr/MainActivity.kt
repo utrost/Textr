@@ -266,6 +266,8 @@ class MainActivity : ComponentActivity() {
         root.addView(readingArea, LinearLayout.LayoutParams(-1, 0, 1f))
         readingProgress = TextView(this).apply {
             id = R.id.reading_progress; textSize = 12f; setTextColor(foreground())
+            // Progress must not resize the viewport when its percentage changes.
+            maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END
             setPadding(dp(16), dp(2), dp(16), dp(2)); visibility = View.GONE
         }
         root.addView(readingProgress)
@@ -931,6 +933,11 @@ class MainActivity : ComponentActivity() {
                                 modeButton.isEnabled = (document?.modes?.size ?: 0) > 1
                                 findButton.isEnabled = true
                                 rememberReading()
+                                // Publish the completed page after removing the loading overlay.
+                                // Accessibility clients may otherwise retain the empty loading tree.
+                                view.postOnAnimation {
+                                    if (webView === view) view.sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED)
+                                }
                                 if (searchRow.visibility == View.VISIBLE) view.findAllAsync(searchField.text.toString())
                             }
                         }
@@ -1092,8 +1099,9 @@ class MainActivity : ComponentActivity() {
     @Suppress("DEPRECATION")
     private fun readingFraction(): Double {
         val view = webView ?: return 0.0
+        if (!view.canScrollVertically(1)) return 1.0
         val bottom = (view.contentHeight * view.scale).toInt() - view.height
-        return if (bottom <= dp(2)) 1.0 else (view.scrollY.toDouble() / bottom).coerceIn(0.0, 1.0)
+        return if (bottom <= 0) 1.0 else (view.scrollY.toDouble() / bottom).coerceIn(0.0, 1.0)
     }
 
     private fun updateProgress() {

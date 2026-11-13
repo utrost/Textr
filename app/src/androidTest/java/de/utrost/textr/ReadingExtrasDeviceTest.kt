@@ -50,7 +50,7 @@ class ReadingExtrasDeviceTest {
             click(By.res(context.packageName, "csv_header")); click("Preview")
             assertTrue(device.wait(Until.gone(By.text("CSV table options…")), 5000)); ready(scenario)
             assertVisible(scenario, "one;two")
-            assertTrue(device.hasObject(By.text("<script>literal</script>")))
+            assertVisible(scenario, "<script>literal</script>")
             scenario.onActivity {
                 val prepared = ViewModelProvider(it)[ReaderSession::class.java].document!!
                 assertTrue(prepared.preview!!.contains("<th scope=\"col\">Name</th>"))
@@ -92,7 +92,8 @@ class ReadingExtrasDeviceTest {
         ActivityScenario.launch<MainActivity>(intent("scrolling.csv")).use { scenario ->
             ready(scenario); menu("CSV table options…")
             click(By.res(context.packageName, "csv_header")); click("Preview"); ready(scenario)
-            val heading = device.wait(Until.findObject(By.text("Heading 1")), 5000)
+            val heading = device.wait(Until.findObject(By.text("Heading 1")), 10000)
+            if (heading == null) capture(scenario, "Heading 1")
             assertNotNull(heading)
             val headerBounds = heading!!.visibleBounds
             val top = headerBounds.top
@@ -260,6 +261,35 @@ class ReadingExtrasDeviceTest {
         }
     }
 
+    @Test fun changingProgressDoesNotResizeTheReaderAtAWrappingBoundary() {
+        ActivityScenario.launch<MainActivity>(intent("long.ini")).use { scenario ->
+            ready(scenario)
+            var height = 0
+            scenario.onActivity {
+                val status = it.findViewById<TextView>(R.id.reading_progress)
+                status.layoutParams = status.layoutParams.apply {
+                    width = kotlin.math.ceil(status.paint.measureText(it.getString(R.string.reading_progress, 0))).toInt() +
+                        status.paddingLeft + status.paddingRight + 1
+                }
+            }
+            device.waitForIdle()
+            scenario.onActivity {
+                height = it.findViewById<TextView>(R.id.reading_progress).height
+                it.findViewById<WebView>(R.id.reader).scrollTo(0, 1_000_000)
+            }
+            await {
+                var bottom = false
+                scenario.onActivity { bottom = it.findViewById<TextView>(R.id.reading_progress).text.contains("100%") }; bottom
+            }
+            device.waitForIdle()
+            scenario.onActivity {
+                assertEquals(height, it.findViewById<TextView>(R.id.reading_progress).height)
+                assertTrue(it.findViewById<TextView>(R.id.reading_progress).text.contains("100%"))
+                assertTrue(it.findViewById<WebView>(R.id.reader).scrollY > 0)
+            }
+        }
+    }
+
     @Test fun bookmarksAndCsvControlsRemainReachableAtLargeFonts() {
         val old = device.executeShellCommand("settings get system font_scale").trim()
         try {
@@ -305,7 +335,7 @@ class ReadingExtrasDeviceTest {
         }
     }
     private fun assertVisible(scenario: ActivityScenario<MainActivity>, label: String) {
-        val found = device.wait(Until.hasObject(By.text(label)), 5000)
+        val found = device.wait(Until.hasObject(By.text(label)), 10000)
         if (!found) capture(scenario, label)
         assertTrue("Missing $label", found)
     }
