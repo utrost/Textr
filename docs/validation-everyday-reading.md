@@ -19,6 +19,10 @@ The complete instrumentation suite contains 61 cases. PR CI runs all cases on An
 
 A local Android 16 combined run passed 25 feature, reader-control, session and large-font cases before the additional landscape regression was added. After the layout fix, all six feature cases passed together on Android 15 at 200% fonts and 360 dp width (99.955 seconds). The About help link remains accessible by scrolling, and the final source-search screen was visually inspected. The existing session test additionally checks that reusing the same shared-text document preserves source-query options, while a fresh incoming share resets them and no query is written to preferences.
 
+All six feature cases also pass together on Android 10 locally (83.696 seconds). The UI helper reacquires stale native accessibility nodes and waits for each nested help/About dialog to disappear before continuing; feature assertions remain unchanged. Search-result scrolling targets its own list explicitly. The accessibility navigation check uses the native forward-scroll action when Reading settings is below the visible menu area.
+
+The corrected six-feature sequence also passes on Android 16 (91.010 seconds). Android 10 large-font layout followed by accessibility-tree navigation/actions passes as a pair (28.001 seconds), including the scrollable reader menu.
+
 ## Limits
 
 This batch does not add regex/cross-file search, general charset guessing, editing or new permissions. Source search compares Unicode code points without normalization or multi-character case expansions. Result lists are capped and disclose truncation. New source queries/options are held in memory only. Tab strips give way to the compact switcher above 130% system font scale.

@@ -116,7 +116,11 @@ class EverydayReadingDeviceTest {
             scenario.onActivity { assertEquals(FileKind.JSON, ViewModelProvider(it)[ReaderSession::class.java].document!!.source.kind) }
             menu("About Textr"); click("Opening files and defaults")
             assertTrue(device.wait(Until.hasObject(By.textContains("reported file type (MIME type)")), 5000))
-            click("Done"); click("Done"); click(By.desc("Back to files"))
+            click("Done")
+            assertTrue(device.wait(Until.gone(By.textContains("reported file type (MIME type)")), 5000))
+            click("Done")
+            assertTrue(device.wait(Until.gone(By.text("About Textr")), 5000))
+            click(By.desc("Back to files"))
             menu("Opening files and defaults")
             assertTrue(device.hasObject(By.textContains("Clearing history does not delete your files")))
         }
@@ -191,9 +195,28 @@ class EverydayReadingDeviceTest {
     private fun menu(label: String) { click(By.desc("More options")); click(label) }
     private fun click(text: String) = click(By.text(java.util.regex.Pattern.compile(java.util.regex.Pattern.quote(text), 2)))
     private fun click(selector: BySelector) {
-        var node = device.wait(Until.findObject(selector), 3000)
-        if (node == null) node = device.findObject(By.scrollable(true))?.scrollUntil(Direction.DOWN, Until.findObject(selector))
-        assertNotNull("Missing $selector", node); node!!.click(); device.waitForIdle()
+        repeat(3) { attempt ->
+            try {
+                var node = device.wait(Until.findObject(selector), 3000)
+                if (node == null) {
+                    val list = device.findObject(By.res(context.packageName, "source_results"))
+                        ?: device.findObject(By.scrollable(true))
+                    node = list?.scrollUntil(Direction.DOWN, Until.findObject(selector))
+                }
+                if (node == null) {
+                    device.dumpWindowHierarchy(java.io.File(context.cacheDir, "reader-test-failure.xml"))
+                    device.takeScreenshot(java.io.File(context.cacheDir, "reader-test-failure.png"))
+                }
+                assertNotNull("Missing $selector", node)
+                node!!.click(); device.waitForIdle()
+                return
+            } catch (error: StaleObjectException) {
+                // Native menus/dialogs can replace their accessibility nodes during
+                // animation. Reacquire the same control; do not weaken assertions.
+                if (attempt == 2) throw error
+                device.waitForIdle()
+            }
+        }
     }
     private fun await(condition: () -> Boolean) {
         val until = System.nanoTime() + 30_000_000_000L
