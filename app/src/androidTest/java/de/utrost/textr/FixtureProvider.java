@@ -99,6 +99,10 @@ public class FixtureProvider extends ContentProvider {
             bytes = "{\"message\":\"Textr fixture\",\"value\":42}".getBytes(StandardCharsets.UTF_8);
         } else if ("override.conf".equals(name)) {
             bytes = "\uFEFF{\"message\":\"Textr override\",\"value\":42}\r\n".getBytes(StandardCharsets.UTF_8);
+        } else if ("legacy-1252.txt".equals(name)) {
+            bytes = "Café costs €5 — résumé\r\nSecond line".getBytes(java.nio.charset.Charset.forName("windows-1252"));
+        } else if ("bomless-utf16.txt".equals(name)) {
+            bytes = "Hello 🌍\r\nGrüße".getBytes(StandardCharsets.UTF_16LE);
         } else if ("copy.txt".equals(name)) {
             bytes = "Copyable Textr selection".getBytes(StandardCharsets.UTF_8);
         } else if ("copy-long.txt".equals(name)) {

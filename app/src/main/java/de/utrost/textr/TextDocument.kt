@@ -15,10 +15,33 @@ enum class DisplayMode { PLAIN, HIGHLIGHTED, PREVIEW }
 enum class ReadFailure { TOO_LARGE, BINARY, ENCODING, ACCESS, SOURCE }
 class DocumentException(val reason: ReadFailure) : Exception(reason.name)
 
-data class TextDocument(val name: String, val text: String, val kind: FileKind, val bytes: Int)
+enum class TextEncoding(val charsetName: String) {
+    UTF8("UTF-8"), WINDOWS1252("windows-1252"), LATIN1("ISO-8859-1"), UTF16LE("UTF-16LE"), UTF16BE("UTF-16BE")
+}
+
+data class TextInfo(val lines: Int, val endings: String) {
+    companion object {
+        fun inspect(text: String): TextInfo {
+            var lf = 0; var cr = 0; var crlf = 0
+            var index = 0
+            while (index < text.length) {
+                if (index % 1024 == 0) RenderPolicy.checkCancellation()
+                when (text[index++]) {
+                    '\r' -> if (text.getOrNull(index) == '\n') { crlf++; index++ } else cr++
+                    '\n' -> lf++
+                }
+            }
+            val kinds = listOfNotNull("LF".takeIf { lf > 0 }, "CRLF".takeIf { crlf > 0 }, "CR".takeIf { cr > 0 })
+            return TextInfo(1 + lf + cr + crlf, kinds.joinToString(" + "))
+        }
+    }
+}
+
+data class TextDocument(val name: String, val text: String, val kind: FileKind, val bytes: Int,
+    val encoding: String = "UTF-8", val info: TextInfo = TextInfo.inspect(text))
 
 object TextDocuments {
-    fun read(input: InputStream, name: String, mimeType: String? = null): TextDocument {
+    fun read(input: InputStream, name: String, mimeType: String? = null, encoding: TextEncoding? = null): TextDocument {
         val output = ByteArrayOutputStream()
         val buffer = ByteArray(8192)
         while (true) {
@@ -31,17 +54,20 @@ object TextDocuments {
             if (output.size() > MAX_FILE_BYTES) throw DocumentException(ReadFailure.TOO_LARGE)
         }
         val bytes = output.toByteArray()
-        val text = decode(bytes)
-        return TextDocument(name, text, kind(name, mimeType), bytes.size)
+        val (text, charset) = decode(bytes, encoding)
+        return TextDocument(name, text, kind(name, mimeType), bytes.size, charset)
     }
 
-    private fun decode(bytes: ByteArray): String {
-        val (charset, offset) = when {
+    private fun decode(bytes: ByteArray, encoding: TextEncoding?): Pair<String, String> {
+        val (detected, offset) = when {
             bytes.size >= 3 && bytes[0] == 0xEF.toByte() && bytes[1] == 0xBB.toByte() && bytes[2] == 0xBF.toByte() -> Charsets.UTF_8 to 3
             bytes.size >= 2 && bytes[0] == 0xFF.toByte() && bytes[1] == 0xFE.toByte() -> Charsets.UTF_16LE to 2
             bytes.size >= 2 && bytes[0] == 0xFE.toByte() && bytes[1] == 0xFF.toByte() -> Charsets.UTF_16BE to 2
             else -> Charsets.UTF_8 to 0
         }
+        val charset = encoding?.let { java.nio.charset.Charset.forName(it.charsetName) } ?: detected
+        // A conflicting BOM is evidence of a wrong choice, not document content.
+        if (offset > 0 && charset != detected) throw DocumentException(ReadFailure.ENCODING)
         if (charset == Charsets.UTF_8 && bytes.any { it == 0.toByte() }) {
             throw DocumentException(ReadFailure.BINARY)
         }
@@ -55,7 +81,7 @@ object TextDocuments {
         if (text.any { it.code in 0..8 || it.code in 14..31 || it.code == 127 }) {
             throw DocumentException(ReadFailure.BINARY)
         }
-        return text
+        return text to charset.name()
     }
 
     fun kind(name: String, mime: String?): FileKind {

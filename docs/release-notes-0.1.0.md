@@ -26,3 +26,13 @@ License: GPL-3.0-only. Dependency notices are bundled in the app and source.
 - Source highlighting for Java, JavaScript, CSS, HTML, Kotlin, Python, shell, SQL, diff/patch, and iCalendar.
 - Bounded iCalendar event summaries with explicit all-day, UTC, floating-time, and supplied time-zone labels; recurrence metadata is displayed without expansion.
 - New formats participate in Treat as, Android opening/sharing, and original-byte read-only handoff. See [behavior and limits](formats.md).
+
+## Everyday reading improvements
+
+- Source search with case/whole-word options, bounded snippet results and exact-match navigation to plain text.
+- Recover older encodings with remembered per-file decoding choices; original-byte sharing stays intact.
+- Active-document labels, a tab strip on wide screens, and direct access to Treat as.
+- Encoding, logical line count and line-ending information in Document info.
+- Offline help for opening files, defaults and temporary access.
+
+See [details and limits](everyday-reading.md). Public release remains deferred.

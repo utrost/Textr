@@ -26,7 +26,7 @@
     <string name="access_error">This file is unavailable or access has expired. Select it again using Open file.</string>
     <string name="too_large">This file is larger than 5 MiB. Textr supports files up to 5 MiB.</string>
     <string name="binary_file">This appears to be a binary file. Textr can only display text files.</string>
-    <string name="unsupported_encoding">This file is not valid UTF-8 or UTF-16 text. Convert it to UTF-8 and try again.</string>
+    <string name="unsupported_encoding">This file could not be decoded with the selected encoding. Try Reopen with encoding, or choose Automatic for UTF-8 and UTF-16 files with a byte-order mark.</string>
     <string name="unsupported_uri">This source cannot be opened. Select a file using the system picker.</string>
     <string name="shared_text_name">Shared text.txt</string>
     <string name="invalid_json">JSON preview unavailable. The source is still readable.</string>
@@ -57,7 +57,7 @@
     <string name="preparing_share">Preparing file to share…</string>
     <string name="share_error">Could not share this file. It may have moved or access may have expired.</string>
     <string name="document_info">Document info</string>
-    <string name="document_details">%1$s\n\nSize: %2$s\nDetected format: %3$s\nTreat as: %4$s</string>
+    <string name="document_details">%1$s\n\nSize: %2$s\nDetected format: %3$s\nTreat as: %4$s\nEncoding: %5$s\nLines: %6$d\nLine endings: %7$s</string>
     <string name="treat_as">Treat as…</string>
     <string name="automatic">Automatic</string>
     <string name="source_code">Source code</string>
@@ -89,4 +89,19 @@
     <string name="no_file_handler">No other app is available to open this file type.</string>
     <string name="calendar_limit">This calendar is too large to preview. The complete source is available.</string>
     <string name="calendar_unavailable">This calendar cannot be previewed: it may be invalid, contain no supported events, or exceed preview limits. The complete source is available.</string>
+    <string name="reopen_encoding">Reopen with encoding…</string>
+    <string name="no_line_endings">None</string>
+    <string name="current_document">Current document: %1$s</string>
+    <string name="switch_document">Switch to %1$s</string>
+    <string name="search_source">Search source…</string>
+    <string name="source_query_hint">Find in the complete source</string>
+    <string name="match_case">Match case</string>
+    <string name="whole_word">Whole word</string>
+    <string name="source_search_explanation">Results open in plain text. Preview text can differ from source.</string>
+    <string name="searching">Searching…</string>
+    <string name="source_results_limited">First %1$d matches shown. Refine your search for more specific results.</string>
+    <string name="source_results_count">%1$d matches in source</string>
+    <string name="source_result_line">Line %1$d</string>
+    <string name="opening_help">Opening files and defaults</string>
+    <string name="opening_help_text">Open file\nChoose a document through Android’s system picker. This is also the fallback when another app does not offer Textr.\n\nOpen with and Share\nIn a file manager or another app, select a file, choose Open with or Share, then choose Textr. Shared text can also be viewed. Textr’s own Share file and Open with actions send a read-only copy to another app.\n\nChoosing a default\nWhen Android offers Always, you can select Textr as the default. The available choices depend on the sending app and the reported file type (MIME type), not just the filename extension. Some apps always use their own viewer. Textr cannot force an association for every extension.\n\nUnavailable recent files\nRecent files and open documents store references, not contents. A moved or deleted file, or an expired temporary permission, may require you to select it again using Open file. Clearing history does not delete your files.\n\nOlder text files\nIf text cannot be decoded or looks wrong, try Reopen with encoding. Your choice only changes how Textr reads the bytes; it does not convert the file.\n\nOffline viewing\nTextr has no network permission. A document provider selected in the system picker may independently use the network to retrieve your file.</string>
 </resources>

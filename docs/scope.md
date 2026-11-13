@@ -85,3 +85,7 @@ Implementation acceptance covers opening via the picker and another app; applica
 ## Additional formats (approved 2026-11-13)
 
 Java, JavaScript, CSS, HTML, Kotlin, Python, shell, SQL, diff/patch, and iCalendar receive bounded source highlighting and manual format choices. Supported iCalendar events also receive a read-only summary preview. HTML remains source-only. Calendar import, alarms, recurrence expansion, and time-zone conversion are excluded. Existing size, privacy, source-integrity, and rendering guarantees apply. See [format details and exact preview limits](formats.md).
+
+## Everyday reading extension (approved 2026-11-13)
+
+Issues #41–#49 track approved follow-up work. The first implementation batch adds source search with case/whole-word options and bounded results, per-file encoding overrides and decoding recovery, wide-screen tabs and active-document labels, richer Document info, and offline opening/default-app help. See [behavior and limits](everyday-reading.md). Remaining follow-ups—CSV table preview, bookmarks/progress, keyboard shortcuts and loading feedback—are planned, not available. CSV remains text-only until its dedicated issue is implemented; this future preview extends the original exclusion above. Existing read-only, source-size and offline requirements remain fixed.

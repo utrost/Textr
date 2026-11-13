@@ -43,6 +43,22 @@ Implementation extends source highlighting and adds a bounded iCalendar event su
 | [#38](https://github.com/utrost/Textr/issues/38) | iCalendar recognition and source highlighting |
 | [#39](https://github.com/utrost/Textr/issues/39) | Bounded read-only iCalendar event previews |
 
+## Everyday reading (approved 2026-11-13)
+
+[Milestone 7](https://github.com/utrost/Textr/milestone/7) tracks the next improvements. The first implementation batch covers source search, encoding recovery, navigation, document metadata and offline help. CSV preview, bookmarks/progress, keyboard shortcuts and loading feedback remain open follow-ups. Public release is still deferred.
+
+| Issue | Work | Sequence |
+| --- | --- | --- |
+| [#41](https://github.com/utrost/Textr/issues/41) | Improve search with source results and matching options | First implementation batch |
+| [#42](https://github.com/utrost/Textr/issues/42) | Reopen documents with an explicit text encoding | First implementation batch |
+| [#43](https://github.com/utrost/Textr/issues/43) | Make document switching and format selection easier to discover | First implementation batch |
+| [#44](https://github.com/utrost/Textr/issues/44) | Add an optional bounded CSV table preview | Later iteration |
+| [#45](https://github.com/utrost/Textr/issues/45) | Add reading progress and named document bookmarks | Later iteration |
+| [#46](https://github.com/utrost/Textr/issues/46) | Support hardware keyboard reader shortcuts | Later iteration |
+| [#47](https://github.com/utrost/Textr/issues/47) | Show text encoding and line information in Document info | First implementation batch |
+| [#48](https://github.com/utrost/Textr/issues/48) | Add offline help for opening files and Android defaults | First implementation batch |
+| [#49](https://github.com/utrost/Textr/issues/49) | Explain slow loading and provide a clear cancel action | Later iteration |
+
 ## Original release roadmap
 
 The completed foundation and validation stages are retained below for traceability. GitHub issues are the source of truth for completion evidence. Original P0/P1 priorities describe release sequencing.
