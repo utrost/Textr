@@ -8,7 +8,7 @@ Debug APK and test APK builds, all **47 JVM tests**, and Android lint pass with 
 
 The eight new instrumented acceptance cases pass on **API 29 and API 36** emulators configured with `hw.keyboard=yes`:
 
-- CSV options and mode restoration after clearing the retained ViewModel, escaped cells, disabled JavaScript, and byte-for-byte sharing including BOM/CRLF.
+- CSV options and mode restoration after clearing the retained ViewModel, native rendered-text search for quoted/escaped cells, disabled JavaScript, and byte-for-byte sharing including BOM/CRLF.
 - Native long-press selection and clipboard copying from a CSV cell.
 - Real vertical/horizontal gestures, sticky header paint and changing rows/columns. The test compares foreground strokes with small rasterization tolerance because WebView accessibility can report the original, offscreen bounds of sticky headers. Cell accessibility and selection are checked separately.
 - Independent bookmark URI-grant ownership after clearing history and sessions, a 100-bookmark limit, metadata persistence, rename/removal and last-owner cleanup.
@@ -17,7 +17,9 @@ The eight new instrumented acceptance cases pass on **API 29 and API 36** emulat
 - CSV and bookmark controls, accessible names and rename input at 200% system text size in landscape.
 - Progress reaches 100% at the native scroll boundary and remains the same height when its text crosses a wrapping boundary.
 
-The reader exposes its virtual accessibility tree after the completed page draw, together with removal of the loading indicator. This prevents accessibility clients from inspecting partially constructed table rows. The CSV checks refresh virtual nodes while waiting for visible cells and retain real gesture, clipboard and painted-header assertions.
+The reader exposes its virtual accessibility tree after the completed page draw, together with removal of the loading indicator. The header check refreshes virtual nodes; copying uses a real touch gesture and clipboard assertion. Options/restoration checks use WebView's native text search, independently of accessibility-node exposure.
+
+WebView 133 on the API 36 emulator intermittently omits CSV cell descendants from Android's accessibility tree even when browser-level accessibility data and painted content are correct. This remains an explicit limitation in [#59](https://github.com/utrost/Textr/issues/59), with source view as the accessible baseline. Passing automated checks do **not** claim that CSV cell navigation with TalkBack is resolved.
 
 ## Full regression coverage
 

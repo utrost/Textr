@@ -49,8 +49,8 @@ class ReadingExtrasDeviceTest {
             click(By.res(context.packageName, "csv_delimiter")); click("Semicolon (;)")
             click(By.res(context.packageName, "csv_header")); click("Preview")
             assertTrue(device.wait(Until.gone(By.text("CSV table options…")), 5000)); ready(scenario)
-            assertVisible(scenario, "one;two")
-            assertVisible(scenario, "<script>literal</script>")
+            assertRenderedText(scenario, "one;two")
+            assertRenderedText(scenario, "<script>literal</script>")
             scenario.onActivity {
                 val prepared = ViewModelProvider(it)[ReaderSession::class.java].document!!
                 assertTrue(prepared.preview!!.contains("<th scope=\"col\">Name</th>"))
@@ -58,8 +58,10 @@ class ReadingExtrasDeviceTest {
             }
             val state = DocumentRepository(context).readingState(uri(name))
             assertEquals(CsvOptions(';', true), state.csv)
+            assertEquals(DisplayMode.PREVIEW, state.mode)
             scenario.onActivity { it.viewModelStore.clear() }; scenario.recreate(); ready(scenario)
-            assertVisible(scenario, "one;two")
+            scenario.onActivity { assertEquals("Preview", it.findViewById<TextView>(R.id.display_mode).text.toString()) }
+            assertRenderedText(scenario, "one;two")
             val repo = DocumentRepository(context)
             val original = repo.read(uri(name), null, CancellationSignal())
             val shared = ShareFiles(context).prepare(uri(name), original, CancellationSignal())
@@ -345,6 +347,18 @@ class ReadingExtrasDeviceTest {
             android.util.Log.e("TextrExtrasTest", "$label mode=${it.findViewById<TextView>(R.id.display_mode)?.text} document=${ViewModelProvider(it)[ReaderSession::class.java].document?.source?.name} height=${view?.height} content=${view?.contentHeight}")
         }
     }
+    private fun assertRenderedText(scenario: ActivityScenario<MainActivity>, text: String) {
+        val matches = java.util.concurrent.atomic.AtomicInteger(-1)
+        scenario.onActivity {
+            val view = it.findViewById<WebView>(R.id.reader)
+            view.setFindListener { _, count, done -> if (done) matches.set(count) }
+            view.findAllAsync(text)
+        }
+        await { matches.get() >= 0 }
+        assertEquals("Rendered matches for $text", 1, matches.get())
+        scenario.onActivity { it.findViewById<WebView>(R.id.reader).clearMatches() }
+    }
+
     private fun assertVisible(scenario: ActivityScenario<MainActivity>, label: String) {
         val found = visibleTextNode(label) != null
         if (!found) capture(scenario, label)

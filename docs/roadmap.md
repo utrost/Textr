@@ -127,5 +127,6 @@ Public release remains deferred. These issues capture the release-readiness revi
 - [#55](https://github.com/utrost/Textr/issues/55): contextual opening-help and sidebar discovery.
 - [#56](https://github.com/utrost/Textr/issues/56): real-device beta, providers, accessibility and Magic V6 checks.
 - [#57](https://github.com/utrost/Textr/issues/57): optional Play App Bundle and store-listing preparation; publication remains deferred.
+- [#59](https://github.com/utrost/Textr/issues/59): investigate intermittent CSV cell accessibility in WebView 133 and validate with TalkBack; source remains the accessible baseline.
 
 Validation for #44–#46 is recorded in [reading extras validation](validation-reading-extras.md) and [PR #58](https://github.com/utrost/Textr/pull/58).
