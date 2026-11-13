@@ -24,7 +24,7 @@ class RecentFilesTest {
     private fun granted(uri: Uri) = context.contentResolver.persistedUriPermissions.any { it.uri == uri && it.isReadPermission }
     private fun provider(method: String, uri: Uri) = context.contentResolver.call(uri, method, uri.toString(), null)
 
-    @Before @After fun clear() { repository.clear() }
+    @Before @After fun clear() { context.getSharedPreferences("open_documents", 0).edit().clear().commit(); repository.setSessionReferences(emptySet()); repository.clear() }
 
     @Test fun readingMetadataMigratesAndDisappearsWithHistoryWithoutResurrectingEntries() {
         val target = uri(300)

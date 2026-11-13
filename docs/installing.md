@@ -30,8 +30,12 @@ If Textr is absent, open Textr directly and use **Open file**, or try the sender
 - Tap the current display-mode button to switch between plain text, highlighted source, and available preview modes. The selector is hidden when only plain text applies. To interpret a generic configuration file, use **⋮ → Document info → Treat as…**; select **Automatic** to reset.
 - **Find** searches the displayed view. Use the arrows to move through matches and **×** to close search. Source and preview searches may differ.
 - Long-press text to select it, then choose Android's **Copy** or **Share** action (sometimes under the selection toolbar’s overflow).
-- Open **⋮ → Reading settings** for text size, line wrapping, and system/light/dark appearance.
-- The **Back to files** arrow returns to the last 30 successfully opened file references. Reopening restores the last position, display mode, and format override. **×** removes one entry; **⋮ → Clear history** removes all entries and their reading preferences. These actions never delete the files.
+- Open **⋮ → Reading settings** for text size, line wrapping, optional source line numbers, and system/light/dark appearance. **Go to line…** uses logical source lines even when wrapping. Numbering is bounded to 10,000 lines; jumps work throughout the supported source.
+- The **Back to files** arrow returns to the last 30 successfully opened file references. Reopening restores the last position, display mode, and format override. The star pins an entry (up to ten). **×** removes one entry with ten seconds of **Undo removal**; **⋮ → Clear history** removes all history entries and commits pending removal. These actions never delete files or close open documents.
+
+**Reload** rereads the current URI-backed file while retaining reading context. **Heading outline** jumps between headings in supported Markdown previews. The document-count button or **Open documents** menu switches between up to five documents; close an entry with its **×**. Inactive URI files reload on selection. Search queries remain in memory, and URI references/reading preferences survive restart separately from recent history. See [session behavior and limits](open-documents.md).
+
+**⋮ → Open with…** offers compatible apps other than Textr and hands off a read-only temporary copy. If none is available, the reader stays open with a message.
 
 **⋮ → Share file…** opens Android’s Sharesheet with the original file bytes, not a rendered preview. The receiving app gets temporary read access to a copy. Textr keeps at most 20 copies and removes copies older than 24 hours on the next start or share; recipients may keep their own copies. **About Textr** is available from the menu on both screens and shows the installed version, privacy information, source/issue links, and license notices.
 
@@ -42,6 +46,10 @@ Recent files reopen only while their providers still grant access. Picker-select
 | Reader menu | About Textr |
 | --- | --- |
 | ![Reader menu with sharing and document information](images/reader-menu.png) | ![About with installed version, privacy, source and licenses](images/about.png) |
+
+| Source line numbers | Open-document switcher |
+| --- | --- |
+| ![Highlighted configuration source with logical line numbers](images/source-lines.png) | ![Three open documents with individual close controls](images/open-documents.png) |
 
 ## Limits and troubleshooting
 

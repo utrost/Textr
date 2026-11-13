@@ -48,6 +48,8 @@ class AccessibilityNavigationTest {
             while (!manager.isTouchExplorationEnabled && System.nanoTime() < deadline) Thread.sleep(100)
             assertTrue("TalkBack touch exploration is running", manager.isTouchExplorationEnabled)
         }
+        context.getSharedPreferences("open_documents", 0).edit().clear().commit()
+        DocumentRepository(context).setSessionReferences(emptySet())
         DocumentRepository(context).clear()
         context.getSharedPreferences("reading", 0).edit().clear().commit()
         ActivityScenario.launch<MainActivity>(intent("sample.json")).use { scenario ->

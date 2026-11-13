@@ -58,3 +58,9 @@ Completed configurations and evidence are recorded in [baseline validation](vali
 Use the [documented signing inputs and upgrade procedure](releasing.md), complete the compatibility checklist, and publish the corresponding source alongside any distributed GPLv3 APK. Keep keystores and local SDK paths out of Git. Store publication remains outside v1 scope.
 
 The [release roadmap](roadmap.md) tracks this work through milestones and individual GitHub issues with acceptance criteria and dependencies.
+
+## Navigation and document sessions
+
+`OpenDocuments` persists at most five URI references independently of recent history, retaining only active URI content and one transient shared-text entry in memory. `DocumentRepository` owns pin/Undo limits and releases persisted grants only after all reference owners relinquish them. Source line anchors stream with the existing HTML pipeline; Markdown heading IDs come from the bounded CommonMark tree. See [behavior and limits](open-documents.md) and `BacklogTest` for integration coverage.
+
+[Backlog validation](validation-backlog.md) records the current 20 JVM / 52 instrumentation cases and platform evidence.
