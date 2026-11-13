@@ -29,7 +29,7 @@ class OpenDocuments(context: Context) {
                 if (entries.none { it.uri == uri }) entries.add(OpenDocument(uri, uri, entry.getString("name"), ReadingState(
                     DisplayMode.entries.find { it.name == entry.optString("mode") }, entry.optInt("scroll").coerceAtLeast(0),
                     FileKind.entries.find { it.name == entry.optString("format") },
-                    TextEncoding.entries.find { it.name == entry.optString("encoding") })))
+                    TextEncoding.entries.find { it.name == entry.optString("encoding") }, csvOptions(entry))))
             }
         } catch (_: org.json.JSONException) { entries.clear() }
         save()
@@ -51,7 +51,8 @@ class OpenDocuments(context: Context) {
         val array = JSONArray()
         entries.filter { it.uri != null }.forEach {
             array.put(JSONObject().put("uri", it.uri).put("name", it.name).put("mode", it.reading.mode?.name)
-                .put("scroll", it.reading.scroll).put("format", it.reading.format?.name).put("encoding", it.reading.encoding?.name))
+                .put("scroll", it.reading.scroll).put("format", it.reading.format?.name).put("encoding", it.reading.encoding?.name)
+                .put("delimiter", it.reading.csv.delimiter.toString()).put("csvHeader", it.reading.csv.firstRowHeader))
         }
         preferences.edit().putString("entries", array.toString()).apply()
         repository.setSessionReferences(entries.mapNotNull { it.uri }.toSet())

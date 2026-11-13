@@ -21,10 +21,11 @@ data class OutlineHeading(val id: String, val title: String, val level: Int)
 data class PreparedDocument(val source: TextDocument, val preview: String?, val notice: PreviewNotice = PreviewNotice.NONE, val headings: List<OutlineHeading> = emptyList()) {
     val modes: List<DisplayMode> get() = buildList {
         add(DisplayMode.PLAIN)
-        if (source.kind != FileKind.TEXT && source.text.length <= RenderPolicy.MAX_HIGHLIGHT_CHARS) add(DisplayMode.HIGHLIGHTED)
+        if (source.kind !in setOf(FileKind.TEXT, FileKind.CSV) && source.text.length <= RenderPolicy.MAX_HIGHLIGHT_CHARS) add(DisplayMode.HIGHLIGHTED)
         if (preview != null) add(DisplayMode.PREVIEW)
     }
-    val defaultMode: DisplayMode get() = modes.last()
+    val defaultMode: DisplayMode get() = if (source.kind == FileKind.CSV) DisplayMode.PLAIN else modes.last()
+    val fingerprint: String by lazy { java.security.MessageDigest.getInstance("SHA-256").digest(source.text.toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) } }
 }
 
 object DocumentRenderer {
@@ -33,7 +34,7 @@ object DocumentRenderer {
             .maxStringLength(MAX_FILE_BYTES).maxNumberLength(MAX_FILE_BYTES).build()
     ).build()
 
-    fun prepare(document: TextDocument): PreparedDocument {
+    fun prepare(document: TextDocument, csv: CsvOptions = CsvOptions()): PreparedDocument {
         RenderPolicy.checkCancellation()
         if (document.kind == FileKind.JSON && document.bytes > RenderPolicy.MAX_JSON_PREVIEW_BYTES) {
             return PreparedDocument(document, null, PreviewNotice.JSON_LIMIT)
@@ -50,6 +51,7 @@ object DocumentRenderer {
                 FileKind.JSON -> prettyJson(document.text)?.let { "<pre>${SyntaxHighlighter.escape(it)}</pre>" }
                 FileKind.MARKDOWN -> markdown(document.text, headings)
                 FileKind.ICALENDAR -> CalendarPreview.render(document.text)
+                FileKind.CSV -> CsvPreview.render(document.text, csv)
                 else -> null
             }
         } catch (_: StackOverflowError) {
@@ -60,7 +62,7 @@ object DocumentRenderer {
             null
         }
         RenderPolicy.checkCancellation()
-        val notice = if (preview == null && document.kind != FileKind.TEXT && document.text.length > RenderPolicy.MAX_HIGHLIGHT_CHARS) {
+        val notice = if (preview == null && document.kind == FileKind.CSV) PreviewNotice.CSV_UNAVAILABLE else if (preview == null && document.kind != FileKind.TEXT && document.text.length > RenderPolicy.MAX_HIGHLIGHT_CHARS) {
             PreviewNotice.HIGHLIGHT_LIMIT
         } else if (preview == null && document.kind in setOf(FileKind.MARKDOWN, FileKind.JSON, FileKind.ICALENDAR)) {
             PreviewNotice.UNAVAILABLE
@@ -200,6 +202,10 @@ object DocumentRenderer {
             blockquote { border-left: 3px solid #789486; padding-left: 16px; margin-left: 0; }
             table { border-collapse: collapse; display: block; overflow-x: auto; }
             th, td { border: 1px solid #789486; padding: 6px 12px; }
+            .csv-scroll { overflow: auto; max-height: calc(100vh - 40px); }
+            table.csv { display: table; overflow: visible; margin: 0; }
+            .csv th { position: sticky; top: 0; background: $background; z-index: 1; }
+            .csv th, .csv td { white-space: pre-wrap; min-width: 6em; max-width: 30em; overflow-wrap: anywhere; }
             a, .key { color: ${if (dark) "#9bcbb7" else "#245c50"}; }
             .string { color: ${if (dark) "#e4bd89" else "#86541d"}; }
             .number, .literal { color: ${if (dark) "#c2b2f4" else "#69429b"}; }

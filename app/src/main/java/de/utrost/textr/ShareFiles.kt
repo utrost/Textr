@@ -72,6 +72,7 @@ class ShareFiles(private val context: Context) {
                 FileKind.SQL -> "application/sql"
                 FileKind.DIFF -> "text/x-diff"
                 FileKind.ICALENDAR -> "text/calendar"
+                FileKind.CSV -> "text/csv"
                 else -> "text/plain"
             }
         }

@@ -11,6 +11,9 @@ import android.os.Bundle
 import android.os.CancellationSignal
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.KeyEvent
+import android.view.KeyboardShortcutGroup
+import android.view.KeyboardShortcutInfo
 import android.view.Gravity
 import android.view.View
 import android.view.WindowInsets
@@ -56,6 +59,11 @@ class MainActivity : ComponentActivity() {
     private lateinit var modeButton: Button
     private lateinit var documentsButton: Button
     private val openDocuments get() = session.openDocuments!!
+    private var csvOptions = CsvOptions()
+    private val bookmarks by lazy { Bookmarks(applicationContext) }
+    private var pendingBookmark: Bookmark? = null
+    private var pickerBookmark: Bookmark? = null
+    private lateinit var readingProgress: TextView
     private var lineNumbers = false
     private var targetLine = 0
     private var anchor: String? = null
@@ -99,9 +107,11 @@ class MainActivity : ComponentActivity() {
     private val picker = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) result.data?.let { data ->
             data.data?.let { uri ->
-                openDocument(uri, grantFlags = data.flags)
+                openDocument(uri, grantFlags = data.flags, bookmark = pickerBookmark)
+                pickerBookmark = null
             }
         }
+        pickerBookmark = null
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -119,6 +129,7 @@ class MainActivity : ComponentActivity() {
         wrap = preferences.getBoolean("wrap", true)
         lineNumbers = preferences.getBoolean("lineNumbers", false)
         repository = DocumentRepository(applicationContext)
+        repository.setBookmarkReferences(bookmarks.entries().map { it.uri }.toSet())
         if (session.openDocuments == null) session.openDocuments = OpenDocuments(applicationContext)
         repository.undoAvailable()
         ShareFiles(this).prune()
@@ -129,6 +140,9 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState != null) {
             formatOverride = FileKind.entries.find { it.name == savedInstanceState.getString("format") }
             encodingOverride = TextEncoding.entries.find { it.name == savedInstanceState.getString("encoding") }
+            csvOptions = CsvOptions(savedInstanceState.getString("csvDelimiter")?.firstOrNull()?.takeIf { it in CsvOptions.DELIMITERS } ?: ',', savedInstanceState.getBoolean("csvHeader"))
+            pendingBookmark = bookmarks.entries().find { it.id == savedInstanceState.getString("pendingBookmark") }
+            pickerBookmark = bookmarks.entries().find { it.id == savedInstanceState.getString("pickerBookmark") }
             pendingGrantFlags = savedInstanceState.getInt("grantFlags")
             pendingScroll = savedInstanceState.getInt("scroll")
             searchField.setText(savedInstanceState.getString("query", ""))
@@ -139,7 +153,7 @@ class MainActivity : ComponentActivity() {
                 currentUri = uri?.let(Uri::parse)
                 mode = savedMode?.takeIf { it in document!!.modes } ?: document!!.defaultMode
                 render()
-            } else if (uri != null) openDocument(Uri.parse(uri), restoredMode = savedMode, restoring = true)
+            } else if (uri != null) openDocument(Uri.parse(uri), restoredMode = savedMode, restoring = true, bookmark = pendingBookmark)
             else showHome()
         } else if (!handleIntent(intent)) showHome()
     }
@@ -250,6 +264,11 @@ class MainActivity : ComponentActivity() {
         readingArea.addView(fileSidebar, LinearLayout.LayoutParams(dp(220), -1))
         readingArea.addView(content, LinearLayout.LayoutParams(0, -1, 1f))
         root.addView(readingArea, LinearLayout.LayoutParams(-1, 0, 1f))
+        readingProgress = TextView(this).apply {
+            id = R.id.reading_progress; textSize = 12f; setTextColor(foreground())
+            setPadding(dp(16), dp(2), dp(16), dp(2)); visibility = View.GONE
+        }
+        root.addView(readingProgress)
         readingArea.addOnLayoutChangeListener { view, _, _, _, _, _, _, _, _ ->
             // Measure the actual inset-adjusted app window, including split-screen resizing.
             val density = resources.displayMetrics.density
@@ -296,6 +315,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun clearContent(stopLoading: Boolean = true) {
+        if (::readingProgress.isInitialized) readingProgress.visibility = View.GONE
         webView?.let { view ->
             content.removeView(view)
             if (stopLoading) view.stopLoading()
@@ -313,6 +333,8 @@ class MainActivity : ComponentActivity() {
         session.original = null
         formatOverride = null
         encodingOverride = null
+        csvOptions = CsvOptions()
+        pendingBookmark = null
         currentUri = null
         updateDocumentsButton()
         homeShown = true
@@ -390,6 +412,8 @@ class MainActivity : ComponentActivity() {
                 item(R.string.reload, ready && currentUri != null) { reloadDocument() }
                 item(R.string.treat_as, ready) { showFormats() }
                 item(R.string.document_info, ready) { showDocumentInfo() }
+                if (document?.source?.kind == FileKind.CSV) item(R.string.csv_options, ready) { showCsvOptions() }
+                item(R.string.add_bookmark, ready && currentUri != null && !(document?.source?.kind == FileKind.CSV && mode == DisplayMode.PREVIEW)) { addBookmark() }
                 if (mode != DisplayMode.PREVIEW) item(R.string.go_to_line, ready) { showGoToLine() }
                 if (mode == DisplayMode.PREVIEW && document?.headings?.isNotEmpty() == true) item(R.string.outline, ready) { showOutline() }
             } else if (repository.recentFiles().isNotEmpty()) {
@@ -401,6 +425,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
             if (openDocuments.entries.isNotEmpty()) item(R.string.open_documents) { showDocuments() }
+            item(R.string.bookmarks) { showBookmarks() }
             item(R.string.settings) { showSettings() }
             if (homeShown) item(R.string.opening_help) { showOpeningHelp() }
             item(R.string.about) { showAbout() }
@@ -422,6 +447,7 @@ class MainActivity : ComponentActivity() {
             addView(button(R.string.report_issue) { openExternal("https://github.com/utrost/Textr/issues") })
             addView(button(R.string.licenses) { showLicenses() })
             addView(button(R.string.opening_help) { showOpeningHelp() })
+            addView(button(R.string.keyboard_shortcuts) { showShortcutHelp() })
         }
         AlertDialog.Builder(this).setTitle(R.string.about).setView(ScrollView(this).apply { addView(body) })
             .setPositiveButton(R.string.done, null).create().present()
@@ -565,7 +591,8 @@ class MainActivity : ComponentActivity() {
         catch (_: SecurityException) { Toast.makeText(this, R.string.share_error, Toast.LENGTH_LONG).show() }
     }
 
-    private fun openPicker() {
+    private fun openPicker(bookmark: Bookmark? = null) {
+        pickerBookmark = bookmark
         try {
             picker.launch(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
@@ -615,6 +642,8 @@ class MainActivity : ComponentActivity() {
                 pendingScroll = 0
                 formatOverride = null
                 encodingOverride = null
+                csvOptions = CsvOptions()
+                pendingBookmark = null
                 // Shared text has no reopenable URI and is deliberately excluded from history.
                 load(null) {
                     TextDocuments.read(sharedText.byteInputStream(), getString(R.string.shared_text_name), "text/plain")
@@ -624,16 +653,18 @@ class MainActivity : ComponentActivity() {
         return true
     }
 
-    private fun openDocument(uri: Uri, mime: String? = null, restoredMode: DisplayMode? = null, grantFlags: Int = 0, restoring: Boolean = false) {
+    private fun openDocument(uri: Uri, mime: String? = null, restoredMode: DisplayMode? = null, grantFlags: Int = 0, restoring: Boolean = false, bookmark: Bookmark? = null) {
         rememberReading()
+        pendingBookmark = bookmark
         val existing = openDocuments.entries.find { it.uri == uri.toString() }
-        val state = existing?.reading ?: repository.readingState(uri)
+        val state = bookmark?.reading ?: existing?.reading ?: repository.readingState(uri)
         if (!restoring) {
             closeSearch()
-            searchField.setText(existing?.query.orEmpty())
-            searchRow.visibility = if (existing?.searching == true) View.VISIBLE else View.GONE
+            searchField.setText(if (bookmark == null) existing?.query.orEmpty() else "")
+            searchRow.visibility = if (bookmark == null && existing?.searching == true) View.VISIBLE else View.GONE
             formatOverride = state.format
             encodingOverride = state.encoding
+            csvOptions = state.csv
             pendingScroll = state.scroll
         }
         val encoding = encodingOverride
@@ -651,11 +682,12 @@ class MainActivity : ComponentActivity() {
         val signal = CancellationSignal().also { cancellation = it }
         val request = generation
         val selectedFormat = formatOverride
+        val selectedCsv = csvOptions
         showProgress(R.string.loading)
         work = worker.submit {
             try {
                 val original = reader(signal)
-                val prepared = DocumentRenderer.prepare(original.copy(kind = selectedFormat ?: original.kind))
+                val prepared = DocumentRenderer.prepare(original.copy(kind = selectedFormat ?: original.kind), selectedCsv).also { it.fingerprint }
                 runOnUiThread {
                     if (request != generation || isDestroyed) return@runOnUiThread
                     session.original = original
@@ -671,6 +703,9 @@ class MainActivity : ComponentActivity() {
                     if (uri != null) {
                         repository.retainReadAccess(uri, grantFlags)
                         repository.remember(uri, prepared.source.name)
+                        pendingBookmark?.let {
+                            if (it.uri != uri.toString()) bookmarks.reconnect(it.id, uri.toString(), prepared.source.name)
+                        }
                     }
                     render()
                 }
@@ -696,6 +731,7 @@ class MainActivity : ComponentActivity() {
         toolbar.visibility = View.GONE
         modeButton.isEnabled = false
         findButton.isEnabled = false
+        readingProgress.visibility = View.GONE
         titleView.text = getString(message)
         updateDocumentsButton()
         content.addView(ProgressBar(this), FrameLayout.LayoutParams(dp(48), dp(48), Gravity.CENTER))
@@ -709,13 +745,15 @@ class MainActivity : ComponentActivity() {
         findButton.visibility = View.GONE
         clearContent()
         toolbar.visibility = View.GONE
+        readingProgress.visibility = View.GONE
         closeSearch()
         titleView.text = getString(R.string.cannot_open)
         val body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER; setPadding(dp(24), dp(24), dp(24), dp(24)) }
         body.addView(TextView(this).apply { text = getString(message); textSize = 18f; setTextColor(foreground()) })
         if (currentUri != null && message in setOf(R.string.unsupported_encoding, R.string.binary_file))
             body.addView(button(R.string.reopen_encoding) { showEncodings() })
-        body.addView(button(R.string.open_again) { openPicker() })
+        if (pendingBookmark != null) body.addView(TextView(this).apply { text = getString(R.string.bookmark_unavailable); setTextColor(foreground()) })
+        body.addView(button(R.string.open_again) { openPicker(pendingBookmark) })
         content.addView(body, FrameLayout.LayoutParams(-1, -1))
     }
 
@@ -764,6 +802,7 @@ class MainActivity : ComponentActivity() {
                         else if (prepared.notice == PreviewNotice.JSON_LIMIT) R.string.json_limit
                         else if (prepared.notice == PreviewNotice.HIGHLIGHT_LIMIT) R.string.highlight_limit
                         else if (prepared.notice == PreviewNotice.CALENDAR_LIMIT) R.string.calendar_limit
+                        else if (prepared.notice == PreviewNotice.CSV_UNAVAILABLE) R.string.csv_unavailable
                         else if (prepared.source.kind == FileKind.ICALENDAR) R.string.calendar_unavailable
                         else if (prepared.source.kind == FileKind.JSON) R.string.invalid_json else R.string.preview_unavailable, Toast.LENGTH_LONG).show()
                 }
@@ -795,9 +834,11 @@ class MainActivity : ComponentActivity() {
 
     private class ReaderWebView(context: android.content.Context) : WebView(context) {
         var afterNextDraw: (() -> Unit)? = null
+        var onViewportDraw: (() -> Unit)? = null
 
         override fun onDraw(canvas: android.graphics.Canvas) {
             super.onDraw(canvas)
+            onViewportDraw?.let { post(it) }
             afterNextDraw?.let { action ->
                 afterNextDraw = null
                 post { action() }
@@ -808,6 +849,7 @@ class MainActivity : ComponentActivity() {
     private fun createWebView(scroll: Int, page: HtmlPage, initialAnchor: String? = null) = ReaderWebView(this).apply {
         id = R.id.reader
         tag = false
+        onViewportDraw = { if (webView === this) updateProgress() }
         setBackgroundColor(background())
         settings.apply {
             javaScriptEnabled = false
@@ -827,6 +869,8 @@ class MainActivity : ComponentActivity() {
             displayZoomControls = false
         }
         importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
+        setOnScrollChangeListener { _, _, _, _, _ -> updateProgress() }
+        addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> updateProgress() }
         setFindListener { active, total, done ->
             if (done) {
                 searchCount.text = if (searchField.text.isEmpty()) "" else if (total == 0) getString(R.string.no_matches) else getString(R.string.matches, active + 1, total)
@@ -874,9 +918,15 @@ class MainActivity : ComponentActivity() {
                                 if (initialAnchor != null) view.loadUrl("$DOCUMENT_URL#$initialAnchor") else {
                                     @Suppress("DEPRECATION")
                                     val bottom = (view.contentHeight * view.scale).toInt() - view.height
-                                    view.scrollTo(0, scroll.coerceIn(0, bottom.coerceAtLeast(0)))
+                                    val saved = pendingBookmark
+                                    val position = saved?.let { (bottom.coerceAtLeast(0) * it.fraction).toInt() } ?: scroll
+                                    view.scrollTo(0, position.coerceIn(0, bottom.coerceAtLeast(0)))
+                                    if (saved != null && saved.fingerprint != document?.fingerprint)
+                                        Toast.makeText(this@MainActivity, R.string.bookmark_changed, Toast.LENGTH_LONG).show()
+                                    pendingBookmark = null
                                 }
                                 view.tag = true
+                                updateProgress()
                                 content.findViewById<View>(R.id.reader_loading)?.let(content::removeView)
                                 modeButton.isEnabled = (document?.modes?.size ?: 0) > 1
                                 findButton.isEnabled = true
@@ -976,6 +1026,7 @@ class MainActivity : ComponentActivity() {
         else entry.shared?.let { shared ->
             rememberReading(); closeSearch()
             pendingScroll = entry.reading.scroll; formatOverride = entry.reading.format; encodingOverride = null
+            csvOptions = entry.reading.csv; pendingBookmark = null
             searchField.setText(entry.query); searchRow.visibility = if (entry.searching) View.VISIBLE else View.GONE
             load(null, entry.reading.mode) { shared }
         }
@@ -1011,6 +1062,158 @@ class MainActivity : ComponentActivity() {
         pendingScroll = webView?.scrollY ?: pendingScroll
         val encoding = encodingOverride
         load(uri, mode, pendingGrantFlags) { signal -> repository.read(uri, null, signal, encoding) }
+    }
+
+    private fun showCsvOptions() {
+        val body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(20), 0, dp(20), 0) }
+        body.addView(TextView(this).apply { text = getString(R.string.csv_explanation) })
+        val delimiter = Spinner(this).apply {
+            id = R.id.csv_delimiter; contentDescription = getString(R.string.csv_delimiter)
+            adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
+                resources.getStringArray(R.array.csv_delimiters))
+            setSelection(CsvOptions.DELIMITERS.indexOf(csvOptions.delimiter))
+        }
+        body.addView(delimiter)
+        val header = CheckBox(this).apply {
+            id = R.id.csv_header; text = getString(R.string.csv_header); isChecked = csvOptions.firstRowHeader
+        }
+        body.addView(header)
+        AlertDialog.Builder(this).setTitle(R.string.csv_options).setView(ScrollView(this).apply { addView(body) })
+            .setNegativeButton(R.string.cancel, null).setPositiveButton(R.string.preview) { _, _ ->
+                if (!canInteract()) return@setPositiveButton
+                val original = session.original ?: return@setPositiveButton
+                rememberReading(); closeSearch()
+                csvOptions = CsvOptions(CsvOptions.DELIMITERS[delimiter.selectedItemPosition], header.isChecked)
+                pendingScroll = 0
+                load(currentUri, DisplayMode.PREVIEW) { original }
+            }.create().present()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun readingFraction(): Double {
+        val view = webView ?: return 0.0
+        val bottom = (view.contentHeight * view.scale).toInt() - view.height
+        return if (bottom <= dp(2)) 1.0 else (view.scrollY.toDouble() / bottom).coerceIn(0.0, 1.0)
+    }
+
+    private fun updateProgress() {
+        if (!::readingProgress.isInitialized) return
+        val visible = document != null && webView?.tag == true && !homeShown
+        readingProgress.visibility = if (visible) View.VISIBLE else View.GONE
+        if (!visible) return
+        val csvTable = document?.source?.kind == FileKind.CSV && mode == DisplayMode.PREVIEW
+        val label = if (csvTable) getString(R.string.csv_progress) else
+            getString(R.string.reading_progress, (readingFraction() * 100).toInt())
+        // Avoid live-region announcements on every scroll. TalkBack can focus the status.
+        if (readingProgress.text.toString() != label) readingProgress.text = label
+    }
+
+    private fun bookmarkName(initial: String, save: (String) -> Unit) {
+        val field = EditText(this).apply {
+            id = R.id.bookmark_name; setText(initial); selectAll(); isSingleLine = true
+            hint = getString(R.string.bookmark_name); contentDescription = getString(R.string.bookmark_name)
+            filters = arrayOf(android.text.InputFilter.LengthFilter(Bookmarks.LABEL_LIMIT))
+        }
+        val dialog = AlertDialog.Builder(this).setTitle(R.string.bookmark_name).setView(field)
+            .setNegativeButton(R.string.cancel, null).setPositiveButton(R.string.save, null).create().present()
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            if (field.text.isNullOrBlank()) field.error = getString(R.string.bookmark_name_required)
+            else { save(field.text.toString()); dialog.dismiss() }
+        }
+    }
+
+    private fun addBookmark() {
+        val uri = currentUri ?: return
+        val prepared = document ?: return
+        if (webView?.tag != true) return
+        if (bookmarks.entries().size >= Bookmarks.LIMIT) {
+            Toast.makeText(this, R.string.bookmark_limit, Toast.LENGTH_LONG).show(); return
+        }
+        val fraction = readingFraction()
+        val state = ReadingState(mode, 0, formatOverride, encodingOverride, csvOptions)
+        bookmarkName(getString(R.string.bookmark_default, (fraction * 100).toInt())) { label ->
+            if (bookmarks.add(uri.toString(), prepared.source.name, label, fraction, prepared.fingerprint, state))
+                Toast.makeText(this, R.string.bookmark_saved, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun showBookmarks() {
+        val entries = bookmarks.entries()
+        val body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), 0, dp(16), 0) }
+        body.addView(TextView(this).apply { text = getString(if (entries.isEmpty()) R.string.bookmarks_empty else R.string.bookmarks_explanation) })
+        val dialog = AlertDialog.Builder(this).setTitle(R.string.bookmarks).setView(ScrollView(this).apply { addView(body) })
+            .setPositiveButton(R.string.done, null).create()
+        entries.forEach { bookmark ->
+            body.addView(button(R.string.bookmarks, "${bookmark.label}\n${bookmark.fileName}") {
+                dialog.dismiss(); showBookmarkActions(bookmark)
+            }.apply { contentDescription = getString(R.string.bookmark_named, bookmark.label, bookmark.fileName) }, LinearLayout.LayoutParams(-1, -2))
+        }
+        if (entries.isNotEmpty()) dialog.setButton(AlertDialog.BUTTON_NEUTRAL, getString(R.string.clear_bookmarks)) { _, _ ->
+            AlertDialog.Builder(this).setTitle(R.string.clear_bookmarks).setMessage(R.string.clear_bookmarks_message)
+                .setNegativeButton(R.string.cancel, null).setPositiveButton(R.string.clear_bookmarks) { _, _ -> bookmarks.clear() }.create().present()
+        }
+        dialog.present()
+    }
+
+    private fun showBookmarkActions(bookmark: Bookmark) {
+        AlertDialog.Builder(this).setTitle(bookmark.label).setItems(arrayOf(getString(R.string.open_file),
+            getString(R.string.rename_bookmark), getString(R.string.reconnect_bookmark), getString(R.string.delete_bookmark))) { _, index ->
+            if (!canInteract()) return@setItems
+            when (index) {
+                0 -> openDocument(Uri.parse(bookmark.uri), bookmark = bookmark)
+                1 -> bookmarkName(bookmark.label) { bookmarks.rename(bookmark.id, it) }
+                2 -> openPicker(bookmark)
+                3 -> bookmarks.remove(bookmark.id)
+            }
+        }.create().present()
+    }
+
+    private fun showShortcutHelp() {
+        AlertDialog.Builder(this).setTitle(R.string.keyboard_shortcuts).setMessage(R.string.keyboard_shortcuts_text)
+            .setPositiveButton(R.string.done, null).create().present()
+    }
+
+    override fun onProvideKeyboardShortcuts(data: MutableList<KeyboardShortcutGroup>, menu: android.view.Menu?, deviceId: Int) {
+        super.onProvideKeyboardShortcuts(data, menu, deviceId)
+        data.add(KeyboardShortcutGroup(getString(R.string.app_name), listOf(
+            KeyboardShortcutInfo(getString(R.string.open_file), KeyEvent.KEYCODE_O, KeyEvent.META_CTRL_ON),
+            KeyboardShortcutInfo(getString(R.string.find), KeyEvent.KEYCODE_F, KeyEvent.META_CTRL_ON),
+            KeyboardShortcutInfo(getString(R.string.go_to_line), KeyEvent.KEYCODE_G, KeyEvent.META_CTRL_ON),
+            KeyboardShortcutInfo(getString(R.string.next_document), KeyEvent.KEYCODE_TAB, KeyEvent.META_CTRL_ON),
+            KeyboardShortcutInfo(getString(R.string.previous_document), KeyEvent.KEYCODE_TAB, KeyEvent.META_CTRL_ON or KeyEvent.META_SHIFT_ON)
+        )))
+    }
+
+    // Activity's public event contracts must run before WebView consumes browser
+    // shortcuts (including Ctrl+G). AndroidX marks its forwarding bridges restricted.
+    @android.annotation.SuppressLint("RestrictedApi")
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean =
+        handleReaderShortcut(event) || super.dispatchKeyEvent(event)
+
+    @android.annotation.SuppressLint("RestrictedApi")
+    override fun dispatchKeyShortcutEvent(event: KeyEvent): Boolean =
+        handleReaderShortcut(event) || super.dispatchKeyShortcutEvent(event)
+
+    private fun handleReaderShortcut(event: KeyEvent): Boolean {
+        if (!canInteract() || dialogs.any { it.isShowing } || activeMenu != null || currentFocus is EditText ||
+            !event.isCtrlPressed || event.isAltPressed || event.isMetaPressed || event.action != KeyEvent.ACTION_DOWN ||
+            (event.isShiftPressed && event.keyCode != KeyEvent.KEYCODE_TAB)) return false
+        val ready = document != null && webView?.tag == true
+        val action: (() -> Unit)? = when (event.keyCode) {
+            KeyEvent.KEYCODE_O -> ({ openPicker() })
+            KeyEvent.KEYCODE_F -> if (ready) ({ if (searchRow.visibility != View.VISIBLE) toggleSearch() else searchField.requestFocus() }) else null
+            KeyEvent.KEYCODE_G -> if (ready && mode != DisplayMode.PREVIEW) ({ showGoToLine() }) else null
+            KeyEvent.KEYCODE_TAB -> if (ready && openDocuments.entries.size > 1) ({
+                val entries = openDocuments.entries.sortedWith(compareBy({ it.name.lowercase(java.util.Locale.ROOT) }, { it.key }))
+                val index = entries.indexOfFirst { it.key == (currentUri?.toString() ?: "shared-text") }
+                val next = Math.floorMod(index + if (event.isShiftPressed) -1 else 1, entries.size)
+                switchDocument(entries[next])
+            }) else null
+            else -> null
+        }
+        if (action == null) return false
+        if (event.repeatCount == 0) action()
+        return true
     }
 
     private fun showGoToLine() {
@@ -1173,13 +1376,17 @@ class MainActivity : ComponentActivity() {
         outState.putString("format", formatOverride?.name)
         outState.putString("encoding", encodingOverride?.name)
         outState.putInt("grantFlags", pendingGrantFlags)
+        outState.putString("csvDelimiter", csvOptions.delimiter.toString())
+        outState.putBoolean("csvHeader", csvOptions.firstRowHeader)
+        outState.putString("pendingBookmark", pendingBookmark?.id)
+        outState.putString("pickerBookmark", pickerBookmark?.id)
         outState.putBoolean("search", searchRow.visibility == View.VISIBLE)
     }
 
     private fun rememberReading() {
         val view = webView ?: return
         if (document != null && view.tag == true) {
-            val reading = ReadingState(mode, view.scrollY.coerceAtLeast(0), formatOverride, encodingOverride)
+            val reading = ReadingState(mode, view.scrollY.coerceAtLeast(0), formatOverride, encodingOverride, csvOptions)
             currentUri?.let { repository.saveReadingState(it, reading) }
             openDocuments.entries.find { it.key == (currentUri?.toString() ?: "shared-text") }?.let {
                 it.reading = reading

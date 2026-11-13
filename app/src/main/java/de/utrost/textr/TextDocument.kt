@@ -10,7 +10,7 @@ import java.util.concurrent.CancellationException
 
 const val MAX_FILE_BYTES = 5 * 1024 * 1024
 
-enum class FileKind { TEXT, MARKDOWN, JSON, INI, YAML, TOML, XML, JAVA, JAVASCRIPT, CSS, HTML, KOTLIN, PYTHON, SHELL, SQL, DIFF, ICALENDAR }
+enum class FileKind { TEXT, MARKDOWN, JSON, INI, YAML, TOML, XML, JAVA, JAVASCRIPT, CSS, HTML, KOTLIN, PYTHON, SHELL, SQL, DIFF, ICALENDAR, CSV }
 enum class DisplayMode { PLAIN, HIGHLIGHTED, PREVIEW }
 enum class ReadFailure { TOO_LARGE, BINARY, ENCODING, ACCESS, SOURCE }
 class DocumentException(val reason: ReadFailure) : Exception(reason.name)
@@ -103,7 +103,8 @@ object TextDocuments {
             "sql" -> FileKind.SQL
             "diff", "patch" -> FileKind.DIFF
             "ics", "ical" -> FileKind.ICALENDAR
-            "txt", "log", "csv" -> FileKind.TEXT
+            "csv" -> FileKind.CSV
+            "txt", "log" -> FileKind.TEXT
             else -> when (mime?.substringBefore(';')?.trim()?.lowercase(Locale.ROOT)) {
                 "text/markdown", "text/x-markdown" -> FileKind.MARKDOWN
                 "application/json", "application/ld+json" -> FileKind.JSON
@@ -121,6 +122,7 @@ object TextDocuments {
                 "application/sql", "text/x-sql" -> FileKind.SQL
                 "text/x-diff", "text/x-patch" -> FileKind.DIFF
                 "text/calendar" -> FileKind.ICALENDAR
+                "text/csv", "application/csv" -> FileKind.CSV
                 else -> FileKind.TEXT
             }
         }

@@ -47,7 +47,7 @@
     <string name="theme_dark">Dark</string>
     <string name="done">Done</string>
     <string name="cancel">Cancel</string>
-    <string name="clear_history_message">Remove all recent entries? Open documents stay available, and the files themselves stay where they are.</string>
+    <string name="clear_history_message">Remove all recent entries? Open documents and bookmarks stay available, and the files themselves stay where they are.</string>
     <string name="about">About Textr</string>
     <string name="licenses">Open-source licenses</string>
     <string name="more_options">More options</string>
@@ -62,7 +62,7 @@
     <string name="automatic">Automatic</string>
     <string name="source_code">Source code</string>
     <string name="report_issue">Report an issue</string>
-    <string name="about_privacy">A read-only text viewer. No accounts, ads, analytics, or network permission.\n\nHistory and open documents store references and reading preferences, not document contents. Sharing or opening a file with another app creates a temporary copy. Old copies are cleaned on the next app start or share after 24 hours; only the latest 20 are kept.\n\nLicensed under GPL-3.0-only.</string>
+    <string name="about_privacy">A read-only text viewer. No accounts, ads, analytics, or network permission.\n\nHistory, open documents and bookmarks store references and reading metadata, not document contents. Bookmarks also keep names you enter and a source fingerprint to detect changes. Clear bookmarks separately from history. Sharing or opening a file with another app creates a temporary copy. Old copies are cleaned on the next app start or share after 24 hours; only the latest 20 are kept.\n\nLicensed under GPL-3.0-only.</string>
     <string name="about_details">Textr %1$s\n\n%2$s</string>
     <string name="reload">Reload</string>
     <string name="open_documents">Open documents</string>
@@ -107,4 +107,40 @@
     <string name="sidebar_setting">File sidebar on wide screens</string>
     <string name="sidebar_help">Keep open and recent files beside the reader on an unfolded phone or tablet. The sidebar hides when space is limited or system text is enlarged.</string>
     <string name="open_recent">Open recent file: %1$s</string>
+    <string name="csv_options">CSV table options…</string>
+    <string name="csv_explanation">Choose a delimiter explicitly. The first row stays data unless you choose to use it as the header. Source text and shared bytes are unchanged.</string>
+    <string name="csv_delimiter">CSV delimiter</string>
+    <string-array name="csv_delimiters"><item>Comma (,)</item><item>Semicolon (;)</item><item>Tab</item><item>Pipe (|)</item></string-array>
+    <string name="csv_header">Use first row as header</string>
+    <string name="csv_unavailable">CSV table unavailable: malformed quoting or preview limits exceeded. The complete source is available. Check CSV table options for the delimiter.</string>
+    <string name="csv_progress">Table view · Reading progress and bookmarks are available in source</string>
+    <string name="reading_progress">Reading position: approximately %1$d%%</string>
+    <string name="add_bookmark">Add bookmark…</string>
+    <string name="bookmarks">Bookmarks</string>
+    <string name="bookmark_name">Bookmark name</string>
+    <string name="bookmark_name_required">Enter a name</string>
+    <string name="bookmark_default">At %1$d%%</string>
+    <string name="bookmark_saved">Bookmark saved</string>
+    <string name="bookmark_limit">You can keep up to 100 bookmarks. Remove one to add another.</string>
+    <string name="bookmarks_empty">No bookmarks yet. Open a file and choose Add bookmark. Shared text must first be saved as a file outside Textr.</string>
+    <string name="bookmarks_explanation">Bookmarks keep approximate positions and file references independently of history and open documents. Changed files and layouts may move the position. Choose a bookmark to open, rename, reconnect or delete it.</string>
+    <string name="bookmark_named">Bookmark: %1$s, in %2$s</string>
+    <string name="rename_bookmark">Rename bookmark</string>
+    <string name="reconnect_bookmark">Choose file for bookmark…</string>
+    <string name="delete_bookmark">Delete bookmark</string>
+    <string name="clear_bookmarks">Clear bookmarks</string>
+    <string name="clear_bookmarks_message">Remove all bookmark names, positions and references? Your files and recent history are kept.</string>
+    <string name="bookmark_unavailable">Your bookmark is kept. Choose the file again to reconnect this bookmark, or manage it from Bookmarks.</string>
+    <string name="bookmark_changed">This file has changed since the bookmark was saved. Its reading position is approximate.</string>
+    <string name="save">Save</string>
+    <string name="keyboard_shortcuts">Keyboard shortcuts</string>
+    <string name="keyboard_shortcuts_text">Ctrl+O — Open file
+Ctrl+F — Find in the current view
+Ctrl+G — Go to line in source view
+Ctrl+Tab — Next open document
+Ctrl+Shift+Tab — Previous open document
+
+Document switching follows alphabetical filename order. Shortcuts leave text fields, dialogs and menus in control. Reader actions are available after loading; Go to line requires a source view. Standard copy, selection and system shortcuts are unchanged.</string>
+    <string name="next_document">Next open document</string>
+    <string name="previous_document">Previous open document</string>
 </resources>
