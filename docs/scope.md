@@ -89,3 +89,7 @@ Java, JavaScript, CSS, HTML, Kotlin, Python, shell, SQL, diff/patch, and iCalend
 ## Everyday reading extension (approved 2026-11-13)
 
 Issues #41–#49 track approved follow-up work. The first implementation batch adds source search with case/whole-word options and bounded results, per-file encoding overrides and decoding recovery, wide-screen tabs and active-document labels, richer Document info, and offline opening/default-app help. See [behavior and limits](everyday-reading.md). Remaining follow-ups—CSV table preview, bookmarks/progress, keyboard shortcuts and loading feedback—are planned, not available. CSV remains text-only until its dedicated issue is implemented; this future preview extends the original exclusion above. Existing read-only, source-size and offline requirements remain fixed.
+
+## Optional foldable layout (requested 2026-11-13)
+
+Issue #51 adds a locally saved, opt-in sidebar for open and recent files beside the current reader on sufficiently large windows. Compact windows and enlarged system text retain existing navigation. See [layout thresholds and limits](foldable-layout.md). This does not add simultaneous document comparison, hinge-angle/tabletop layouts, or new permissions.

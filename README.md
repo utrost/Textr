@@ -17,6 +17,7 @@ Textr is a minimal, read-only text viewer for Android. Open files from other app
 - Document information and a remembered **Treat as…** format override for misidentified or generic files.
 - Manual reload, source line numbers and Go to line, and a Markdown heading outline.
 - A five-document switcher with active-document labels and a tab strip on wide screens, pinned recents with Undo, and read-only **Open with…** handoff.
+- An optional [file sidebar for foldable and tablet screens](docs/foldable-layout.md), with automatic compact-window fallback.
 - Per-file encoding overrides, encoding/line information, and offline help for opening files and Android defaults.
 - A minimal home screen with an **Open file** action and recent files. Remove individual entries or clear the history.
 
