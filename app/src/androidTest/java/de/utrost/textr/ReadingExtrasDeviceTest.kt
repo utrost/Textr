@@ -74,12 +74,18 @@ class ReadingExtrasDeviceTest {
         ActivityScenario.launch<MainActivity>(intent("selection.csv")).use { scenario ->
             ready(scenario); menu("CSV table options…"); click("Preview"); ready(scenario)
             scenario.onActivity { (it.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager).clearPrimaryClip() }
-            val cell = visibleTextNode("Copyable")
-            if (cell == null) capture(scenario, "Copyable")
-            assertNotNull(cell)
-            val bounds = android.graphics.Rect()
-            cell!!.getBoundsInScreen(bounds)
-            device.swipe(bounds.centerX(), bounds.centerY(), bounds.centerX(), bounds.centerY(), 150)
+            // Exercise touch selection independently of the separate accessibility
+            // assertions. In this fixed 16px fixture the first data word is at
+            // CSS (70, 78), beneath the generated header and 20px page padding.
+            val point = android.graphics.Point()
+            scenario.onActivity {
+                val view = it.findViewById<WebView>(R.id.reader)
+                val bounds = android.graphics.Rect()
+                assertTrue(view.getGlobalVisibleRect(bounds))
+                @Suppress("DEPRECATION") val scale = view.scale
+                point.set(bounds.left + (70 * scale).toInt(), bounds.top + (78 * scale).toInt())
+            }
+            device.swipe(point.x, point.y, point.x, point.y, 150)
             click("Copy")
             await {
                 var copied = false
