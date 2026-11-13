@@ -62,7 +62,7 @@ The app uses Kotlin, AndroidX Activity, native Android controls, and an offline 
 
 ## Current limits
 
-Files near the size limit, especially long unbroken lines, can render slowly on older WebViews. **Home** and **Open file** remain available during loading. See the [measured emulator results](docs/validation.md).
+Files near the size limit, especially long unbroken lines, can render slowly on older WebViews. **Back to files** and **Open file** remain available during loading. See the [measured emulator results](docs/validation.md).
 
 - Text decoding supports UTF-8, UTF-8 with a BOM, and UTF-16 LE/BE with a BOM. Other encodings produce an explanatory message.
 - Highlighting is lightweight rather than a complete language parser. It is available for sources up to 512 Ki characters and decorates up to 10,000 tokens; remaining source stays readable without colors.

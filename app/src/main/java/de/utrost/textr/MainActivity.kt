@@ -71,6 +71,17 @@ class MainActivity : ComponentActivity() {
     private var requestedMode: DisplayMode? = null
     private var homeShown = false
     private var sharing = false
+    private val dialogs = mutableSetOf<AlertDialog>()
+    private var activeMenu: PopupMenu? = null
+    private fun canInteract() = !isDestroyed && !isFinishing && !worker.isShutdown
+
+    private fun AlertDialog.present(): AlertDialog {
+        if (!canInteract()) return this
+        dialogs.add(this)
+        setOnDismissListener { dialogs.remove(this) }
+        show()
+        return this
+    }
     private val picker = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) result.data?.let { data ->
             data.data?.let { uri ->
@@ -244,6 +255,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun showHome() {
+        if (!canInteract()) return
         rememberReading()
         cancelWork()
         document = null
@@ -290,9 +302,12 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun showMenu() {
+        if (!canInteract()) return
         PopupMenu(this, menuButton).apply {
+            activeMenu = this
+            setOnDismissListener { if (activeMenu === this) activeMenu = null }
             fun item(label: Int, enabled: Boolean = true, action: () -> Unit) {
-                menu.add(label).apply { isEnabled = enabled; setOnMenuItemClickListener { action(); true } }
+                menu.add(label).apply { isEnabled = enabled; setOnMenuItemClickListener { if (canInteract()) action(); true } }
             }
             if (!homeShown) {
                 item(R.string.open_file) { openPicker() }
@@ -303,7 +318,9 @@ class MainActivity : ComponentActivity() {
             } else if (repository.recentFiles().isNotEmpty()) {
                 item(R.string.clear_history) {
                     AlertDialog.Builder(this@MainActivity).setTitle(R.string.clear_history).setMessage(R.string.clear_history_message)
-                        .setNegativeButton(R.string.cancel, null).setPositiveButton(R.string.done) { _, _ -> repository.clear(); showHome() }.show()
+                        .setNegativeButton(R.string.cancel, null).setPositiveButton(R.string.done) { _, _ ->
+                            if (canInteract()) { repository.clear(); showHome() }
+                        }.create().present()
                 }
             }
             item(R.string.settings) { showSettings() }
@@ -327,10 +344,11 @@ class MainActivity : ComponentActivity() {
             addView(button(R.string.licenses) { showLicenses() })
         }
         AlertDialog.Builder(this).setTitle(R.string.about).setView(ScrollView(this).apply { addView(body) })
-            .setPositiveButton(R.string.done, null).show()
+            .setPositiveButton(R.string.done, null).create().present()
     }
 
     private fun openExternal(url: String) {
+        if (!canInteract()) return
         try { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addCategory(Intent.CATEGORY_BROWSABLE)) }
         catch (_: ActivityNotFoundException) { Toast.makeText(this, R.string.no_link_handler, Toast.LENGTH_SHORT).show() }
         catch (_: SecurityException) { Toast.makeText(this, R.string.no_link_handler, Toast.LENGTH_SHORT).show() }
@@ -350,13 +368,15 @@ class MainActivity : ComponentActivity() {
                 android.text.format.Formatter.formatShortFileSize(this, source.bytes.toLong()),
                 formatName(source.kind), formatName(formatOverride)))
             .setNeutralButton(R.string.treat_as) { _, _ -> showFormats() }
-            .setPositiveButton(R.string.done, null).show()
+            .setPositiveButton(R.string.done, null).create().present()
     }
 
     private fun showFormats() {
+        if (!canInteract()) return
         val formats = listOf(null) + FileKind.entries
         AlertDialog.Builder(this).setTitle(R.string.treat_as)
             .setSingleChoiceItems(formats.map(::formatName).toTypedArray(), formats.indexOf(formatOverride)) { dialog, index ->
+                if (!canInteract()) return@setSingleChoiceItems
                 dialog.dismiss()
                 val original = session.original ?: return@setSingleChoiceItems
                 rememberReading()
@@ -364,10 +384,11 @@ class MainActivity : ComponentActivity() {
                 pendingScroll = 0
                 closeSearch()
                 load(currentUri) { original }
-            }.show()
+            }.create().present()
     }
 
     private fun shareDocument() {
+        if (!canInteract()) return
         val source = session.original ?: return
         if (currentUri == null && source.bytes < 100_000) {
             launchShare(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, source.text))
@@ -415,6 +436,7 @@ class MainActivity : ComponentActivity() {
     private fun showLicenses() {
         val files = assets.list("licenses").orEmpty().sorted()
         AlertDialog.Builder(this).setTitle(R.string.licenses).setItems(files.toTypedArray()) { _, index ->
+            if (!canInteract()) return@setItems
             val text = assets.open("licenses/${files[index]}").bufferedReader().use { it.readText() }
             val body = TextView(this).apply {
                 this.text = text
@@ -423,8 +445,8 @@ class MainActivity : ComponentActivity() {
                 setPadding(dp(20), dp(16), dp(20), dp(16))
             }
             AlertDialog.Builder(this).setTitle(files[index])
-                .setView(ScrollView(this).apply { addView(body) }).setPositiveButton(R.string.done, null).show()
-        }.show()
+                .setView(ScrollView(this).apply { addView(body) }).setPositiveButton(R.string.done, null).create().present()
+        }.create().present()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -470,6 +492,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun load(uri: Uri?, restoredMode: DisplayMode? = null, grantFlags: Int = 0, reader: (CancellationSignal) -> TextDocument) {
+        if (!canInteract()) return
         cancelWork()
         requestedMode = restoredMode
         document = null
@@ -535,6 +558,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun render() {
+        if (!canInteract()) return
         val prepared = document ?: return
         val scroll = webView?.scrollY ?: pendingScroll
         cancelWork()
@@ -678,10 +702,12 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun showModes() {
+        if (!canInteract()) return
         val modes = document?.modes ?: return
         AlertDialog.Builder(this).setSingleChoiceItems(modes.map { getString(modeLabel(it)) }.toTypedArray(), modes.indexOf(mode)) { dialog, index ->
+            if (!canInteract()) return@setSingleChoiceItems
             mode = modes[index]; pendingScroll = 0; webView?.scrollTo(0, 0); dialog.dismiss(); render()
-        }.show()
+        }.create().present()
     }
 
     private fun toggleSearch() {
@@ -739,12 +765,13 @@ class MainActivity : ComponentActivity() {
         body.addView(themes)
         AlertDialog.Builder(this).setTitle(R.string.settings).setView(ScrollView(this).apply { addView(body) }).setNegativeButton(R.string.cancel, null)
             .setPositiveButton(R.string.done) { _, _ ->
+                if (!canInteract()) return@setPositiveButton
                 val theme = themeValues[themes.selectedItemPosition]
                 val themeChanged = theme != preferences.getString("theme", "system")
                 fontSize = selectedSize; wrap = wrapping.isChecked
                 preferences.edit().putInt("fontSize", fontSize).putBoolean("wrap", wrap).putString("theme", theme).apply()
                 if (themeChanged) recreate() else if (document != null) render()
-            }.show()
+            }.create().present()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -782,6 +809,8 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         cancelWork()
         worker.shutdownNow()
+        activeMenu?.dismiss()
+        dialogs.toList().forEach { it.dismiss() }
         clearContent()
         super.onDestroy()
     }

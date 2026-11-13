@@ -10,7 +10,7 @@ The initial implementation and validation issues #1–#12 are complete, merged t
 
 ## Reader UX iteration (approved 2026-11-13)
 
-The next iteration improves navigation, sharing, reading continuity, and format interpretation. These changes preserve read-only operation, Android 10+, the 5 MiB limit, and no network permission. See the [iteration milestone](https://github.com/utrost/Textr/milestone/4).
+Implemented in [PR #34](https://github.com/utrost/Textr/pull/34): navigation, sharing, reading continuity, and format interpretation. These changes preserve read-only operation, Android 10+, the 5 MiB limit, and no network permission. See the [iteration milestone](https://github.com/utrost/Textr/milestone/4).
 
 | Issue | Work |
 | --- | --- |

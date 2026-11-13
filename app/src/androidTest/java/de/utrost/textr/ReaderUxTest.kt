@@ -5,7 +5,12 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.CancellationSignal
+import android.view.View
+import android.view.ViewGroup
+import android.view.inspector.WindowInspector
 import android.webkit.WebView
+import android.widget.AdapterView
+import android.widget.ListView
 import android.widget.TextView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -84,6 +89,37 @@ class ReaderUxTest {
             ready(scenario)
             assertPosition(scenario, 0)
             scenario.onActivity { assertEquals("Highlighted", it.findViewById<TextView>(R.id.display_mode).text.toString()) }
+        }
+    }
+
+    @Test fun queuedModeSelectionFromDestroyedActivityIsIgnored() {
+        ActivityScenario.launch<MainActivity>(intent("long.ini")).use { scenario ->
+            ready(scenario)
+            lateinit var oldActivity: MainActivity
+            lateinit var oldList: ListView
+            lateinit var queuedClick: AdapterView.OnItemClickListener
+            fun findList(view: View): ListView? {
+                if (view is ListView) return view
+                if (view is ViewGroup) for (index in 0 until view.childCount) {
+                    findList(view.getChildAt(index))?.let { return it }
+                }
+                return null
+            }
+            scenario.onActivity {
+                oldActivity = it
+                it.findViewById<View>(R.id.display_mode).performClick()
+                oldList = WindowInspector.getGlobalWindowViews().firstNotNullOf(::findList)
+                queuedClick = oldList.onItemClickListener!!
+            }
+            scenario.recreate()
+            ready(scenario)
+            scenario.onActivity {
+                assertTrue(oldActivity.isDestroyed)
+                // Android can deliver an already queued list click after activity teardown.
+                queuedClick.onItemClick(oldList, View(it), 0, oldList.adapter.getItemId(0))
+                assertEquals("Highlighted", it.findViewById<TextView>(R.id.display_mode).text.toString())
+                assertEquals(true, it.findViewById<WebView>(R.id.reader).tag)
+            }
         }
     }
 

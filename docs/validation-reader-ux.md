@@ -4,8 +4,9 @@ This iteration implements roadmap issues #24–#27. The earlier [baseline valida
 
 ## Coverage
 
-The suite now contains 17 JVM tests and 42 instrumentation cases. The original decoding, rendering, file routing, privacy, cancellation, grant cleanup, and renderer-recovery checks remain. New coverage exercises:
+The suite now contains 17 JVM tests and 43 instrumentation cases. The original decoding, rendering, file routing, privacy, cancellation, grant cleanup, and renderer-recovery checks remain. New coverage exercises:
 
+- A queued mode-selection callback delivered after its activity is destroyed is ignored; open dialogs and popup menus are dismissed during teardown.
 - Home and reader menus, installed version and About/license access, and hidden mode selection for plain-only files.
 - Reopening through Home and a new activity with the last position and display mode; removing history resets that state.
 - Migration from old URI/name/timestamp-only entries, preservation on deduplication, eviction, clearing, and preventing removed entries from being resurrected by a late state save.
