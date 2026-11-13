@@ -55,8 +55,19 @@ class FoldableLayoutTest {
                 assertFalse(reader.settings.javaScriptEnabled)
             }
             click(By.desc("Close copy.txt"))
-            assertFalse(OpenDocuments(context).entries.any { it.name == "copy.txt" })
-            assertTrue(device.wait(Until.hasObject(By.desc("Open recent file: copy.txt")), 5000))
+            // Input injection can return before the Android 10 click handler finishes.
+            // Wait for completion before inspecting state; constructing OpenDocuments
+            // here would itself save a potentially stale snapshot back to preferences.
+            val closed = device.wait(Until.hasObject(By.desc("Open recent file: copy.txt")), 10000)
+            if (!closed) {
+                device.dumpWindowHierarchy(java.io.File(context.cacheDir, "foldable-close.xml"))
+                device.takeScreenshot(java.io.File(context.cacheDir, "foldable-close.png"))
+            }
+            assertTrue("Closed document should return to sidebar recents", closed)
+            scenario.onActivity {
+                assertFalse(ViewModelProvider(it)[ReaderSession::class.java].openDocuments!!.entries.any { entry -> entry.name == "copy.txt" })
+            }
+            assertFalse(context.getSharedPreferences("open_documents", 0).getString("entries", "")!!.contains("copy.txt"))
             scenario.recreate(); ready(scenario); sidebar(scenario, true)
             // Switching the option off restores tabs without closing documents.
             click(By.desc("Open recent file: copy.txt")); ready(scenario)
@@ -64,7 +75,7 @@ class FoldableLayoutTest {
             click(By.res(context.packageName, "sidebar_setting")); click(By.res("android", "button1"))
             ready(scenario); sidebar(scenario, false)
             scenario.onActivity { assertEquals(View.VISIBLE, it.findViewById<View>(R.id.document_strip).visibility) }
-            assertEquals(2, OpenDocuments(context).entries.size)
+            scenario.onActivity { assertEquals(2, ViewModelProvider(it)[ReaderSession::class.java].openDocuments!!.entries.size) }
             assertFalse(context.getSharedPreferences("reading", 0).getBoolean("fileSidebar", true))
         }
     }
@@ -103,7 +114,12 @@ class FoldableLayoutTest {
             click(By.desc("Close fold.json"))
             assertTrue(device.wait(Until.hasObject(By.text("Recent files")), 5000))
             sidebar(scenario, false)
-            assertTrue(OpenDocuments(context).entries.isEmpty())
+            await {
+                var empty = false
+                scenario.onActivity { empty = ViewModelProvider(it)[ReaderSession::class.java].openDocuments!!.entries.isEmpty() }
+                empty
+            }
+            assertEquals("[]", context.getSharedPreferences("open_documents", 0).getString("entries", ""))
         }
     }
 
