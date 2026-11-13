@@ -684,7 +684,19 @@ class MainActivity : ComponentActivity() {
         content.addView(body, FrameLayout.LayoutParams(-1, -1))
     }
 
-    private fun createWebView(scroll: Int, page: HtmlPage, initialAnchor: String? = null) = WebView(this).apply {
+    private class ReaderWebView(context: android.content.Context) : WebView(context) {
+        var afterNextDraw: (() -> Unit)? = null
+
+        override fun onDraw(canvas: android.graphics.Canvas) {
+            super.onDraw(canvas)
+            afterNextDraw?.let { action ->
+                afterNextDraw = null
+                post { action() }
+            }
+        }
+    }
+
+    private fun createWebView(scroll: Int, page: HtmlPage, initialAnchor: String? = null) = ReaderWebView(this).apply {
         id = R.id.reader
         tag = false
         setBackgroundColor(background())
@@ -740,24 +752,30 @@ class MainActivity : ComponentActivity() {
             }
 
             override fun onPageFinished(view: WebView, url: String) {
-                if (laidOut) return
+                if (laidOut || url.substringBefore('#') != DOCUMENT_URL) return
                 laidOut = true
-                // progress == 100 can precede layout on older WebViews. Wait for
-                // the displayed document before enabling search or restoring scroll.
+                // The visual callback promises the DOM on the next draw, not the
+                // current native contentHeight. Clamp only after that draw so an
+                // initial zero height cannot erase a saved reading position.
                 view.postVisualStateCallback(0, object : WebView.VisualStateCallback() {
                     override fun onComplete(requestId: Long) {
                         if (webView !== view) return
-                        view.tag = true
-                        content.findViewById<View>(R.id.reader_loading)?.let(content::removeView)
-                        modeButton.isEnabled = (document?.modes?.size ?: 0) > 1
-                        findButton.isEnabled = true
-                        if (initialAnchor != null) view.loadUrl("$DOCUMENT_URL#$initialAnchor") else {
-                            @Suppress("DEPRECATION")
-                            val bottom = (view.contentHeight * view.scale).toInt() - view.height
-                            view.scrollTo(0, scroll.coerceIn(0, bottom.coerceAtLeast(0)))
+                        (view as ReaderWebView).afterNextDraw = {
+                            if (webView === view) {
+                                if (initialAnchor != null) view.loadUrl("$DOCUMENT_URL#$initialAnchor") else {
+                                    @Suppress("DEPRECATION")
+                                    val bottom = (view.contentHeight * view.scale).toInt() - view.height
+                                    view.scrollTo(0, scroll.coerceIn(0, bottom.coerceAtLeast(0)))
+                                }
+                                view.tag = true
+                                content.findViewById<View>(R.id.reader_loading)?.let(content::removeView)
+                                modeButton.isEnabled = (document?.modes?.size ?: 0) > 1
+                                findButton.isEnabled = true
+                                rememberReading()
+                                if (searchRow.visibility == View.VISIBLE) view.findAllAsync(searchField.text.toString())
+                            }
                         }
-                        rememberReading()
-                        if (searchRow.visibility == View.VISIBLE) view.findAllAsync(searchField.text.toString())
+                        view.invalidate()
                     }
                 })
             }
