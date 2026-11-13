@@ -41,11 +41,15 @@ object DocumentRenderer {
         if (document.kind == FileKind.MARKDOWN && document.text.length > RenderPolicy.MAX_MARKDOWN_CHARS) {
             return PreparedDocument(document, null, PreviewNotice.MARKDOWN_LIMIT)
         }
+        if (document.kind == FileKind.ICALENDAR && document.text.length > CalendarPreview.MAX_CHARS) {
+            return PreparedDocument(document, null, PreviewNotice.CALENDAR_LIMIT)
+        }
         val headings = mutableListOf<OutlineHeading>()
         val preview = try {
             when (document.kind) {
                 FileKind.JSON -> prettyJson(document.text)?.let { "<pre>${SyntaxHighlighter.escape(it)}</pre>" }
                 FileKind.MARKDOWN -> markdown(document.text, headings)
+                FileKind.ICALENDAR -> CalendarPreview.render(document.text)
                 else -> null
             }
         } catch (_: StackOverflowError) {
@@ -58,7 +62,7 @@ object DocumentRenderer {
         RenderPolicy.checkCancellation()
         val notice = if (preview == null && document.kind != FileKind.TEXT && document.text.length > RenderPolicy.MAX_HIGHLIGHT_CHARS) {
             PreviewNotice.HIGHLIGHT_LIMIT
-        } else if (preview == null && document.kind in setOf(FileKind.MARKDOWN, FileKind.JSON)) {
+        } else if (preview == null && document.kind in setOf(FileKind.MARKDOWN, FileKind.JSON, FileKind.ICALENDAR)) {
             PreviewNotice.UNAVAILABLE
         } else PreviewNotice.NONE
         return PreparedDocument(document, preview, notice, if (preview != null) headings else emptyList())
@@ -200,6 +204,9 @@ object DocumentRenderer {
             .string { color: ${if (dark) "#e4bd89" else "#86541d"}; }
             .number, .literal { color: ${if (dark) "#c2b2f4" else "#69429b"}; }
             .comment { color: ${if (dark) "#a6b3ab" else "#63766a"}; font-style: italic; }
+            .addition { color: ${if (dark) "#9bcbb7" else "#245c50"}; }
+            .deletion { color: ${if (dark) "#ffb4ab" else "#9a2925"}; }
+            .calendar-value { white-space: pre-wrap; }
             </style></head><body>""".trimIndent()
     }
 }

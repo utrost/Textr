@@ -14,7 +14,7 @@ Provide a minimal, read-only Android app for opening and reading everyday text f
 
 - Support Android 10 and newer.
 - Support text files up to 5 MiB (5,242,880 bytes).
-- Cover TXT, LOG, CONF/CFG, INI, JSON, Markdown, YAML, TOML, XML, and CSV. Allow other text files to be selected through the system picker.
+- Cover TXT, LOG, CONF/CFG, INI, JSON, Markdown, YAML, TOML, XML, CSV, and the [approved additional formats](formats.md). Allow other text files to be selected through the system picker.
 - Treat plain-text access as the baseline. Opening a file does not imply a dedicated parser, syntax highlighting, or a formatted preview.
 - Show understandable messages for oversized, unreadable, and unsupported binary files.
 
@@ -28,6 +28,8 @@ Choose the initial display automatically and allow manual switching between appl
 | Valid JSON | Indented JSON preview | Highlighted source and plain text |
 | Invalid JSON | Source, highlighted where possible | Plain text |
 | Recognized INI, YAML, TOML, XML | Highlighted source | Plain text |
+| Java, JavaScript, CSS, HTML, Kotlin, Python, shell, SQL, diff | Highlighted source | Plain text |
+| Supported iCalendar events | Event summary preview | Highlighted source and plain text |
 | Other supported text | Plain text | No dedicated preview required |
 
 - Initial syntax highlighting covers JSON, Markdown source, INI, YAML, TOML, and XML. Generic configuration files use plain text unless their syntax is recognized.
@@ -36,7 +38,7 @@ Choose the initial display automatically and allow manual switching between appl
 - Preview budgets bound expensive rendering: JSON accepts up to 1 MiB of input and 5 Mi characters of formatted output; Markdown accepts up to 512 Ki characters, 20,000 nodes, and depth 64. Exceeding a preview budget leaves the complete source readable and explains the fallback. The source limit remains 5 MiB.
 - CSV stays a text view, with no spreadsheet interface.
 - Provide search, text selection and copying, adjustable font size, line wrapping, and light/dark themes.
-- Let users inspect document information and choose Automatic, plain text, JSON, Markdown, INI, YAML, TOML, or XML interpretation without changing file bytes. Remember the choice for recent files.
+- Let users inspect document information and choose Automatic, plain text, or any supported syntax interpretation without changing file bytes. Remember the choice for recent files.
 - Keep the reader focused on the document with a small toolbar. Viewing and switching modes must never modify the source file.
 
 ## Opening files and recent history
@@ -79,3 +81,7 @@ The initial documentation milestone established:
 - Documentation and licensing before application implementation.
 
 Implementation acceptance covers opening via the picker and another app; applicable display modes and invalid-JSON fallback; reading controls; recent-file reopening and history removal; unavailable-file handling; the 5 MiB boundary; and clear errors for unreadable and unsupported binary files. Confirm that viewing never modifies files and that Textr requests no network permission. Track verification and remaining device coverage in [development notes](development.md).
+
+## Additional formats (approved 2026-11-13)
+
+Java, JavaScript, CSS, HTML, Kotlin, Python, shell, SQL, diff/patch, and iCalendar receive bounded source highlighting and manual format choices. Supported iCalendar events also receive a read-only summary preview. HTML remains source-only. Calendar import, alarms, recurrence expansion, and time-zone conversion are excluded. Existing size, privacy, source-integrity, and rendering guarantees apply. See [format details and exact preview limits](formats.md).

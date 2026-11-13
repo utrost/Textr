@@ -23,6 +23,7 @@ object SyntaxHighlighter {
     fun highlight(text: String, kind: FileKind): String {
         if (text.length > RenderPolicy.MAX_HIGHLIGHT_CHARS) return escape(text)
         if (kind == FileKind.TEXT) return escape(text)
+        if (kind in SourceHighlighter.kinds) return SourceHighlighter.highlight(text, kind)
         return buildString(text.length) {
             var index = 0
             var tokens = 0
@@ -39,11 +40,11 @@ object SyntaxHighlighter {
                 val c = text[index]
                 var style: String? = null
                 when {
-                    kind == FileKind.XML && text.startsWith("<!--", index) -> {
+                    (kind == FileKind.XML || kind == FileKind.HTML) && text.startsWith("<!--", index) -> {
                         index = text.indexOf("-->", index + 4).let { if (it < 0) text.length else it + 3 }
                         style = "comment"
                     }
-                    kind == FileKind.XML && c == '<' -> {
+                    (kind == FileKind.XML || kind == FileKind.HTML) && c == '<' -> {
                         var quote: Char? = null
                         index++
                         while (index < text.length) {

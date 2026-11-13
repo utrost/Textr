@@ -64,3 +64,6 @@ The [release roadmap](roadmap.md) tracks this work through milestones and indivi
 `OpenDocuments` persists at most five URI references independently of recent history, retaining only active URI content and one transient shared-text entry in memory. `DocumentRepository` owns pin/Undo limits and releases persisted grants only after all reference owners relinquish them. Source line anchors stream with the existing HTML pipeline; Markdown heading IDs come from the bounded CommonMark tree. See [behavior and limits](open-documents.md) and `BacklogTest` for integration coverage.
 
 [Backlog validation](validation-backlog.md) records the current 20 JVM / 52 instrumentation cases and platform evidence.
+## Additional source formats
+
+`SourceHighlighter` decorates code, CSS, diff, and iCalendar source under the existing highlighting budgets. HTML uses escaped markup decoration. `CalendarPreview` summarizes bounded VEVENT data without executing code, expanding recurrence, resolving time zones, or loading resources. See [format behavior](formats.md) and [validation](validation-formats.md).

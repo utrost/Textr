@@ -32,6 +32,17 @@ Implementation: [PR #35](https://github.com/utrost/Textr/pull/35), with [validat
 | [#32](https://github.com/utrost/Textr/issues/32) | Add a bounded open-document switcher |
 | [#33](https://github.com/utrost/Textr/issues/33) | Hand off a document using Open with another app |
 
+## Additional text formats (approved 2026-11-13)
+
+Implementation extends source highlighting and adds a bounded iCalendar event summary. Public release remains deferred. See [format behavior and limits](formats.md) and [milestone 6](https://github.com/utrost/Textr/milestone/6).
+
+| Issue | Work |
+| --- | --- |
+| [#36](https://github.com/utrost/Textr/issues/36) | Java, JavaScript, CSS, and HTML source highlighting |
+| [#37](https://github.com/utrost/Textr/issues/37) | Kotlin, Python, shell, SQL, and diff highlighting |
+| [#38](https://github.com/utrost/Textr/issues/38) | iCalendar recognition and source highlighting |
+| [#39](https://github.com/utrost/Textr/issues/39) | Bounded read-only iCalendar event previews |
+
 ## Original release roadmap
 
 The completed foundation and validation stages are retained below for traceability. GitHub issues are the source of truth for completion evidence. Original P0/P1 priorities describe release sequencing.

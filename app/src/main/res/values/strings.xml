@@ -87,4 +87,6 @@
     <string name="open_with">Open with…</string>
     <string name="open_copy_title">Open a read-only copy with…</string>
     <string name="no_file_handler">No other app is available to open this file type.</string>
+    <string name="calendar_limit">This calendar is too large to preview. The complete source is available.</string>
+    <string name="calendar_unavailable">This calendar cannot be previewed: it may be invalid, contain no supported events, or exceed preview limits. The complete source is available.</string>
 </resources>

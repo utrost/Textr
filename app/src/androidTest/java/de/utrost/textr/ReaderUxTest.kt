@@ -246,7 +246,14 @@ class ReaderUxTest {
     }
 
     private fun raw(name: String) = context.contentResolver.openInputStream(uri(name))!!.use { it.readBytes() }
-    private fun override(format: String) { menu("Document info"); click("Treat as…"); click(format) }
+    private fun override(format: String) {
+        menu("Document info"); click("Treat as…")
+        // The native list opens around the selected format; Automatic may be above
+        // the viewport now that the supported formats require scrolling.
+        androidx.test.uiautomator.UiScrollable(androidx.test.uiautomator.UiSelector().className("android.widget.ListView"))
+            .scrollIntoView(androidx.test.uiautomator.UiSelector().text(format))
+        click(format)
+    }
     private fun menu(label: String) { click(By.desc("More options")); click(label) }
     private fun click(label: String) = click(By.text(java.util.regex.Pattern.compile(java.util.regex.Pattern.quote(label), 2)))
     private fun click(selector: BySelector) {

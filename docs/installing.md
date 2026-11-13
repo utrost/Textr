@@ -51,6 +51,16 @@ Recent files reopen only while their providers still grant access. Picker-select
 | --- | --- |
 | ![Highlighted configuration source with logical line numbers](images/source-lines.png) | ![Three open documents with individual close controls](images/open-documents.png) |
 
+## Source code and calendar files
+
+Java, JavaScript, CSS, HTML, Kotlin, Python, shell, SQL, and diff files open with source highlighting within the existing size budgets. HTML is displayed as source. **Treat as…** includes every new format; scroll the list for later entries.
+
+iCalendar files offer a supported event summary, highlighted source, and plain text. The summary labels UTC, supplied time zones, floating times, all-day dates, and exclusive end dates. Recurrence metadata is shown without expansion. Viewing a calendar does not import events or schedule reminders. See [format details and limits](formats.md).
+
+| JavaScript source | iCalendar event summary |
+| --- | --- |
+| ![JavaScript with highlighted comments, keywords, strings, and numbers](images/javascript-source.png) | ![Calendar event with supplied time zone, exclusive end, location, and description](images/calendar-preview.png) |
+
 ## Limits and troubleshooting
 
 The source limit is 5 MiB. UTF-8 and BOM-marked UTF-16 are supported. Oversized, binary, unsupported-encoding, and unavailable files show explanations and an action to choose another file. Complex or invalid previews fall back to readable source. If Android terminates a WebView renderer, Textr offers **Retry as plain text** and **Open file**.
