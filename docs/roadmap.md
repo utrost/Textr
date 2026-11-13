@@ -21,7 +21,7 @@ Implemented in [PR #34](https://github.com/utrost/Textr/pull/34): navigation, sh
 
 The owner authorized the following backlog on 2026-11-13. Implementation includes a five-document switcher and bounded source navigation; [design and limits](open-documents.md) define session persistence, memory, grant lifetime, Back behavior, pins, and Undo.
 
-See the [implementation milestone](https://github.com/utrost/Textr/milestone/5).
+Implementation: [PR #35](https://github.com/utrost/Textr/pull/35), with [validation evidence](validation-backlog.md). See the [implementation milestone](https://github.com/utrost/Textr/milestone/5).
 
 | Issue | Approved backlog implementation |
 | --- | --- |

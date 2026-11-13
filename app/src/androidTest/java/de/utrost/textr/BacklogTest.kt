@@ -50,12 +50,13 @@ class BacklogTest {
             click("Highlighted"); click("Plain text")
             await { mode(scenario) == "Plain text" }; ready(scenario)
             scenario.onActivity { it.findViewById<WebView>(R.id.reader).scrollTo(0, 1200) }
+            awaitScroll(scenario, 1200)
             val position = scroll(scenario)
             replace("mutable.ini", "[section]\n" + "long = modified\n".repeat(300))
             menu("Reload")
             await { source(scenario)?.contains("modified") == true }; ready(scenario)
             assertEquals("Plain text", mode(scenario))
-            assertTrue(kotlin.math.abs(position - scroll(scenario)) <= 2)
+            awaitScroll(scenario, position)
             replace("mutable.ini", "short = changed")
             menu("Reload")
             await { source(scenario) == "short = changed" }; ready(scenario)
@@ -144,10 +145,11 @@ class BacklogTest {
             }
             click(By.desc("Close search"))
             scenario.onActivity { it.findViewById<WebView>(R.id.reader).scrollTo(0, 1700) }
+            awaitScroll(scenario, 1700)
             val position = scroll(scenario)
             menu("Open documents"); click("repeated.txt"); ready(scenario)
             menu("Open documents"); click("long.ini"); ready(scenario)
-            assertTrue(kotlin.math.abs(position - scroll(scenario)) <= 2)
+            awaitScroll(scenario, position)
             scenario.recreate(); ready(scenario)
             assertEquals("Plain text", mode(scenario))
             menu("Open documents"); click(By.desc("Close long.ini")); click("Done")
@@ -258,6 +260,18 @@ class BacklogTest {
     private fun mode(scenario: ActivityScenario<MainActivity>): String { var value = ""; scenario.onActivity { value = it.findViewById<TextView>(R.id.display_mode).text.toString() }; return value }
     private fun source(scenario: ActivityScenario<MainActivity>): String? { var value: String? = null; scenario.onActivity { value = ViewModelProvider(it)[ReaderSession::class.java].original?.text }; return value }
     private fun scroll(scenario: ActivityScenario<MainActivity>): Int { var value = 0; scenario.onActivity { value = it.findViewById<WebView>(R.id.reader)?.scrollY ?: 0 }; return value }
+    private fun awaitScroll(scenario: ActivityScenario<MainActivity>, expected: Int) {
+        val deadline = System.nanoTime() + 30_000_000_000L
+        while (System.nanoTime() < deadline) {
+            if (kotlin.math.abs(expected - scroll(scenario)) <= 2) return
+            Thread.sleep(100)
+        }
+        var state = "No reader"
+        scenario.onActivity { it.findViewById<WebView>(R.id.reader)?.let { view ->
+            state = "scroll=${view.scrollY}, contentHeight=${view.contentHeight}, height=${view.height}, ready=${view.tag}"
+        } }
+        fail("Expected scroll $expected: $state")
+    }
     private fun ready(scenario: ActivityScenario<MainActivity>) = await { var value = false; scenario.onActivity { value = it.findViewById<WebView>(R.id.reader)?.tag == true }; value }
     private fun menu(label: String) { click(By.desc("More options")); click(label) }
     private fun click(label: String) = click(By.text(java.util.regex.Pattern.compile(java.util.regex.Pattern.quote(label), 2)))
