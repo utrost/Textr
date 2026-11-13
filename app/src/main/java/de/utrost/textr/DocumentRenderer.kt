@@ -9,11 +9,16 @@ import org.commonmark.node.HtmlInline
 import org.commonmark.node.Image
 import org.commonmark.node.Text
 import org.commonmark.node.Node
+import org.commonmark.node.Heading
+import org.commonmark.node.Code
+import org.commonmark.renderer.html.AttributeProvider
 import org.commonmark.parser.Parser
 import org.commonmark.renderer.html.HtmlRenderer
 import java.io.StringWriter
 
-data class PreparedDocument(val source: TextDocument, val preview: String?, val notice: PreviewNotice = PreviewNotice.NONE) {
+data class OutlineHeading(val id: String, val title: String, val level: Int)
+
+data class PreparedDocument(val source: TextDocument, val preview: String?, val notice: PreviewNotice = PreviewNotice.NONE, val headings: List<OutlineHeading> = emptyList()) {
     val modes: List<DisplayMode> get() = buildList {
         add(DisplayMode.PLAIN)
         if (source.kind != FileKind.TEXT && source.text.length <= RenderPolicy.MAX_HIGHLIGHT_CHARS) add(DisplayMode.HIGHLIGHTED)
@@ -36,10 +41,11 @@ object DocumentRenderer {
         if (document.kind == FileKind.MARKDOWN && document.text.length > RenderPolicy.MAX_MARKDOWN_CHARS) {
             return PreparedDocument(document, null, PreviewNotice.MARKDOWN_LIMIT)
         }
+        val headings = mutableListOf<OutlineHeading>()
         val preview = try {
             when (document.kind) {
                 FileKind.JSON -> prettyJson(document.text)?.let { "<pre>${SyntaxHighlighter.escape(it)}</pre>" }
-                FileKind.MARKDOWN -> markdown(document.text)
+                FileKind.MARKDOWN -> markdown(document.text, headings)
                 else -> null
             }
         } catch (_: StackOverflowError) {
@@ -55,7 +61,7 @@ object DocumentRenderer {
         } else if (preview == null && document.kind in setOf(FileKind.MARKDOWN, FileKind.JSON)) {
             PreviewNotice.UNAVAILABLE
         } else PreviewNotice.NONE
-        return PreparedDocument(document, preview, notice)
+        return PreparedDocument(document, preview, notice, if (preview != null) headings else emptyList())
     }
 
     fun prettyJson(text: String): String? = try {
@@ -101,7 +107,7 @@ object DocumentRenderer {
     } catch (_: java.io.IOException) { null }
       catch (_: IllegalArgumentException) { null }
 
-    fun markdown(source: String): String {
+    fun markdown(source: String, headings: MutableList<OutlineHeading> = mutableListOf()): String {
         require(source.length <= RenderPolicy.MAX_MARKDOWN_CHARS)
         RenderPolicy.checkCancellation()
         val extensions = listOf(TablesExtension.create())
@@ -109,11 +115,30 @@ object DocumentRenderer {
         // Visit iteratively so adversarial nesting cannot exhaust our own stack.
         val pending = ArrayDeque<Pair<Node, Int>>()
         pending.add(node to 0)
+        val headingIds = java.util.IdentityHashMap<Node, String>()
         var count = 0
         while (pending.isNotEmpty()) {
             RenderPolicy.checkCancellation()
             val (current, depth) = pending.removeLast()
             require(++count <= RenderPolicy.MAX_MARKDOWN_NODES && depth <= RenderPolicy.MAX_MARKDOWN_DEPTH)
+            if (current is Heading) {
+                val label = StringBuilder()
+                val children = ArrayDeque<Node>()
+                current.firstChild?.let(children::add)
+                while (children.isNotEmpty() && label.length < 160) {
+                    val child = children.removeLast()
+                    when (child) {
+                        is Text -> label.append(child.literal)
+                        is Code -> label.append(child.literal)
+                        is org.commonmark.node.SoftLineBreak, is org.commonmark.node.HardLineBreak -> label.append(' ')
+                    }
+                    child.next?.let(children::add)
+                    child.firstChild?.let(children::add)
+                }
+                val id = "heading-${headings.size + 1}"
+                headingIds[current] = id
+                headings.add(OutlineHeading(id, label.toString().take(160).ifBlank { "Untitled heading" }, current.level))
+            }
             when (current) {
                 is Image -> { current.insertBefore(Text("[image omitted]")); current.unlink() }
                 is HtmlBlock, is HtmlInline -> current.unlink()
@@ -127,23 +152,30 @@ object DocumentRenderer {
             }
         }
         return HtmlRenderer.builder().extensions(extensions).escapeHtml(true)
-            .sanitizeUrls(true).build().render(node)
+            .sanitizeUrls(true).attributeProviderFactory {
+                AttributeProvider { current, _, attributes -> headingIds[current]?.let { attributes["id"] = it } }
+            }.build().render(node)
     }
 
     /** Each request gets a fresh stream; plain text is escaped in small chunks. */
-    fun page(document: PreparedDocument, mode: DisplayMode, dark: Boolean, wrap: Boolean): HtmlPage {
+    fun page(document: PreparedDocument, mode: DisplayMode, dark: Boolean, wrap: Boolean, lineNumbers: Boolean = false, targetLine: Int = 0): HtmlPage {
         val plain = mode == DisplayMode.PLAIN || (mode == DisplayMode.PREVIEW && document.preview == null)
         val content = if (plain) document.source.text else when (mode) {
             DisplayMode.PREVIEW -> document.preview!!
-            DisplayMode.HIGHLIGHTED -> "<pre>${SyntaxHighlighter.highlight(document.source.text, document.source.kind)}</pre>"
+            DisplayMode.HIGHLIGHTED -> SyntaxHighlighter.highlight(document.source.text, document.source.kind)
             else -> error("Plain text handled above")
         }
-        return HtmlPage(header(dark, wrap) + if (plain) "<pre>" else "", content,
-            (if (plain) "</pre>" else "") + "</body></html>", plain, plain && wrap)
+        val source = mode != DisplayMode.PREVIEW || plain
+        val numbered = source && lineNumbers && logicalLines(document.source.text) <= MAX_NUMBERED_LINES
+        return HtmlPage(header(dark, wrap) + if (source) (if (numbered) "<pre class=\"numbered\">" else "<pre>") else "", content,
+            (if (source) "</pre>" else "") + "</body></html>", plain, plain && wrap, numbered, if (source) targetLine else 0)
     }
 
     fun html(document: PreparedDocument, mode: DisplayMode, dark: Boolean, wrap: Boolean): String =
         page(document, mode, dark, wrap).openStream().bufferedReader(Charsets.UTF_8).use { it.readText() }
+
+    const val MAX_NUMBERED_LINES = 10_000
+    fun logicalLines(text: String): Int = 1 + text.indices.count { text[it] == '\n' || (text[it] == '\r' && text.getOrNull(it + 1) != '\n') }
 
     private fun header(dark: Boolean, wrap: Boolean): String {
         val background = if (dark) "#171c1a" else "#fafaf7"
@@ -156,6 +188,9 @@ object DocumentRenderer {
             body { margin: 0; padding: 20px; background: $background; color: $foreground; font-family: sans-serif; line-height: 1.6; overflow-wrap: break-word; overflow-wrap: anywhere; }
             pre, code { font-family: monospace; }
             pre { margin: 0; white-space: ${if (wrap) "pre-wrap" else "pre"}; word-break: ${if (wrap) "break-all" else "normal"}; overflow-wrap: ${if (wrap) "anywhere" else "normal"}; tab-size: 4; line-height: 1.6; }
+            pre.numbered { padding-left: 4.5em; }
+            .line-marker { position: relative; }
+            .line-marker::before { content: attr(data-line); position: absolute; right: 1em; width: 3.5em; text-align: right; color: ${if (dark) "#a6b3ab" else "#63766a"}; user-select: none; -webkit-user-select: none; }
             p, ul, ol, blockquote, table { margin: 0 0 1em; }
             h1, h2, h3 { line-height: 1.25; }
             blockquote { border-left: 3px solid #789486; padding-left: 16px; margin-left: 0; }
@@ -170,13 +205,14 @@ object DocumentRenderer {
 }
 
 /** Keeps the 5 MiB source intact without allocating its potentially 30 MiB HTML expansion. */
-class HtmlPage(private val prefix: String, private val content: String, private val suffix: String, private val escape: Boolean, private val softBreaks: Boolean) {
+class HtmlPage(private val prefix: String, private val content: String, private val suffix: String, private val escape: Boolean, private val softBreaks: Boolean, private val numbered: Boolean = false, private val targetLine: Int = 0) {
     fun openStream(): java.io.InputStream = java.io.SequenceInputStream(java.util.Collections.enumeration(listOf(
-        prefix.byteInputStream(Charsets.UTF_8), ChunkedTextStream(content, escape, softBreaks), suffix.byteInputStream(Charsets.UTF_8)
+        prefix.byteInputStream(Charsets.UTF_8), ChunkedTextStream(content, escape, softBreaks, numbered, targetLine), suffix.byteInputStream(Charsets.UTF_8)
     )))
 }
 
-private class ChunkedTextStream(private val text: String, private val escape: Boolean, private val softBreaks: Boolean) : java.io.InputStream() {
+private class ChunkedTextStream(private val text: String, private val escape: Boolean, private val softBreaks: Boolean, private val numbered: Boolean, private val targetLine: Int) : java.io.InputStream() {
+    private var line = 1
     private var offset = 0
     private var chunk = java.io.ByteArrayInputStream(ByteArray(0))
     private var closed = false
@@ -187,13 +223,36 @@ private class ChunkedTextStream(private val text: String, private val escape: Bo
         if (offset == text.length) return false
         var end = minOf(offset + 1024, text.length)
         if (end < text.length && Character.isHighSurrogate(text[end - 1])) end--
-        val part = text.substring(offset, end)
+        val start = offset
+        val part = text.substring(start, end)
         offset = end
         // Old WebViews can spend minutes laying out uninterrupted punctuation runs.
         // Soft breaks add no source characters and bound that work. Only insert at
         // ASCII boundaries, never inside CRLF, surrogate pairs, or combining text.
         val softBreak = softBreaks && end < text.length && text[end - 1] in ' '..'~' && text[end] in ' '..'~'
-        chunk = ((if (escape) SyntaxHighlighter.escape(part) else part) + if (softBreak) "<wbr>" else "").byteInputStream(Charsets.UTF_8)
+        val decorated = if (!numbered && targetLine == 0) {
+            if (escape) SyntaxHighlighter.escape(part) else part
+        } else buildString {
+            fun marker() {
+                if (numbered || line == targetLine) append("<span aria-hidden=\"true\" id=\"line-$line\"" +
+                    (if (numbered) " class=\"line-marker\" data-line=\"$line\"" else "") + "></span>")
+            }
+            if (start == 0) marker()
+            var segment = 0
+            for (index in part.indices) {
+                val absolute = start + index
+                if (part[index] == '\n' || (part[index] == '\r' && text.getOrNull(absolute + 1) != '\n')) {
+                    val value = part.substring(segment, index + 1)
+                    append(if (escape) SyntaxHighlighter.escape(value) else value)
+                    line++
+                    marker()
+                    segment = index + 1
+                }
+            }
+            val value = part.substring(segment)
+            append(if (escape) SyntaxHighlighter.escape(value) else value)
+        }
+        chunk = (decorated + if (softBreak) "<wbr>" else "").byteInputStream(Charsets.UTF_8)
         return true
     }
 

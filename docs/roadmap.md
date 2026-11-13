@@ -19,9 +19,11 @@ Implemented in [PR #34](https://github.com/utrost/Textr/pull/34): navigation, sh
 | [#26](https://github.com/utrost/Textr/issues/26) | Remember reading position and display mode for recent files |
 | [#27](https://github.com/utrost/Textr/issues/27) | Add document information and a remembered Treat as format override |
 
-The following ideas are recorded for later prioritization, not scheduled for this iteration. Tabs/open-document sessions are a possible future scope extension, not part of v1.
+The owner authorized the following backlog on 2026-11-13. Implementation includes a five-document switcher and bounded source navigation; [design and limits](open-documents.md) define session persistence, memory, grant lifetime, Back behavior, pins, and Undo.
 
-| Issue | Backlog |
+Implementation: [PR #35](https://github.com/utrost/Textr/pull/35), with [validation evidence](validation-backlog.md). See the [implementation milestone](https://github.com/utrost/Textr/milestone/5).
+
+| Issue | Approved backlog implementation |
 | --- | --- |
 | [#28](https://github.com/utrost/Textr/issues/28) | Reload an externally changed document while preserving reading context |
 | [#29](https://github.com/utrost/Textr/issues/29) | Add optional source line numbers and Go to line |
@@ -80,6 +82,6 @@ The release must come from the tested source commit, pass signature/checksum ver
 
 The owner confirmed emulator-only validation on 2026-11-12 because no physical device is available. API 29, 35, and 36 emulator evidence satisfies the compatibility release gate; physical-device checks remain follow-up coverage.
 
-Android 10+, text files up to 5 MiB, read-only behavior, and no app network permission remain fixed. Editing, tabs, file management, huge-log support, direct cloud integrations, Markdown images/embedded HTML, and store publication remain outside v1. New features require a separate scope decision.
+Android 10+, text files up to 5 MiB, read-only behavior, and no app network permission remain fixed. Editing, unbounded tab sessions, file management, huge-log support, direct cloud integrations, Markdown images/embedded HTML, and store publication remain outside v1. New features require a separate scope decision.
 
 Close work issues with acceptance evidence and update the [tracker checklist](https://github.com/utrost/Textr/issues/14). Update this document when scope or dependencies change; use GitHub for live completion status. See the [product scope](scope.md) and [development notes](development.md) for implementation context.

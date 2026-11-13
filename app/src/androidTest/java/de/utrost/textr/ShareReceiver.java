@@ -14,6 +14,7 @@ public class ShareReceiver extends Activity {
         String result;
         try {
             Uri uri = getIntent().getParcelableExtra(Intent.EXTRA_STREAM);
+            if (uri == null) uri = getIntent().getData();
             if (uri == null) {
                 result = "text:" + getIntent().getStringExtra(Intent.EXTRA_TEXT);
             } else {

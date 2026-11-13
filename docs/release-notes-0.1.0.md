@@ -10,9 +10,12 @@ First release candidate of a minimal, read-only Android text viewer. Public rele
 - Local recent references with remembered reading position/mode, individual removal, and history clearing.
 - Document information and per-file format overrides, with an Automatic reset.
 - Original-file and selected-text sharing through Android; temporary file copies have read-only grants and bounded retention.
+- Manual Reload, bounded source line numbers, Go to line, and a Markdown heading outline.
+- Five-document switcher with separate persisted URI references; pinned recents and ten-second removal Undo.
+- Open with another compatible app using a read-only copy, excluding Textr to avoid routing loops.
 - No editing, accounts, ads, analytics, network permission, or broad storage permission.
 
-Default associations depend on the sending app and MIME type. Markdown preview has a 512 Ki-character input limit, 20,000-node limit, and nesting limit of 64. JSON preview accepts files up to 1 MiB and has a nesting limit of 128 and formatted-output limit of 5 Mi characters. Source remains readable when previews are unavailable; highlighting accepts up to 512 Ki characters and decorates up to 10,000 tokens. Images, embedded HTML, relative file links, huge logs, tabs, and file management are outside this version.
+Default associations depend on the sending app and MIME type. Markdown preview has a 512 Ki-character input limit, 20,000-node limit, and nesting limit of 64. JSON preview accepts files up to 1 MiB and has a nesting limit of 128 and formatted-output limit of 5 Mi characters. Source remains readable when previews are unavailable; highlighting accepts up to 512 Ki characters and decorates up to 10,000 tokens. Images, embedded HTML, relative file links, huge logs, unbounded tab sessions, and file management are outside this version.
 
 Validation uses clean API 29, 35, and 36 emulators as requested by the owner. Physical-device coverage is a follow-up. See [installation and defaults](installing.md), [development](development.md), and [release signing](releasing.md).
 

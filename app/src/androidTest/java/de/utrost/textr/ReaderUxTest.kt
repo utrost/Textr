@@ -37,6 +37,8 @@ class ReaderUxTest {
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
     @Before fun reset() {
+        context.getSharedPreferences("open_documents", 0).edit().clear().commit()
+        DocumentRepository(context).setSessionReferences(emptySet())
         repository.clear()
         context.getSharedPreferences("reading", 0).edit().clear().commit()
     }
@@ -89,6 +91,7 @@ class ReaderUxTest {
             assertPosition(scenario, position)
             scenario.onActivity { assertEquals("Plain text", it.findViewById<TextView>(R.id.display_mode).text.toString()) }
         }
+        OpenDocuments(context).close(uri("long.ini").toString())
         repository.remove(uri("long.ini").toString())
         assertEquals(ReadingState(), repository.readingState(uri("long.ini")))
         ActivityScenario.launch<MainActivity>(intent("long.ini")).use { scenario ->

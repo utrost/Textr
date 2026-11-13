@@ -90,7 +90,12 @@ class AccessibilityLayoutTest {
     private fun click(selector: BySelector) {
         repeat(3) { attempt ->
             device.waitForIdle()
-            val target = device.wait(Until.findObject(selector), 5000)
+            var target = device.wait(Until.findObject(selector), 1000)
+            // Android's native overflow list scrolls at 200% fonts in landscape.
+            if (target == null) {
+                val list = device.findObject(By.scrollable(true))
+                if (list != null) target = list.scrollUntil(androidx.test.uiautomator.Direction.DOWN, Until.findObject(selector))
+            }
             assertNotNull("Visible accessibility control: $selector", target)
             try {
                 target!!.click()

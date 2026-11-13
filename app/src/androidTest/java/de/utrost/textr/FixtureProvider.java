@@ -18,9 +18,23 @@ import java.util.Arrays;
 /** Runs in the separate test APK process, without the target APK's Kotlin runtime. */
 public class FixtureProvider extends ContentProvider {
     private final java.util.Set<String> revoked = java.util.Collections.synchronizedSet(new java.util.HashSet<>());
+    private final java.util.Set<String> missing = java.util.Collections.synchronizedSet(new java.util.HashSet<>());
+    private final java.util.Map<String, String> replacements = new java.util.concurrent.ConcurrentHashMap<>();
     @Override public boolean onCreate() { return true; }
 
     @Override public Bundle call(String method, String arg, Bundle extras) {
+        if ("receiver-enabled".equals(method)) {
+            long identity = android.os.Binder.clearCallingIdentity();
+            try {
+                android.content.ComponentName receiver = new android.content.ComponentName(getContext(), ShareReceiver.class);
+                int state = Boolean.parseBoolean(arg) ? android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                    : android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
+                getContext().getPackageManager().setComponentEnabledSetting(receiver, state, android.content.pm.PackageManager.DONT_KILL_APP);
+                Bundle result = new Bundle();
+                result.putInt("state", getContext().getPackageManager().getComponentEnabledSetting(receiver));
+                return result;
+            } finally { android.os.Binder.restoreCallingIdentity(identity); }
+        }
         if ("shared-result".equals(method)) {
             Bundle result = new Bundle();
             result.putString("result", getContext().getSharedPreferences("receiver", 0).getString("result", ""));
@@ -30,6 +44,8 @@ public class FixtureProvider extends ContentProvider {
             getContext().getSharedPreferences("receiver", 0).edit().clear().commit();
             return Bundle.EMPTY;
         }
+        if ("replace".equals(method)) { replacements.put(arg, extras.getString("text")); revoked.remove(arg); missing.remove(arg); return Bundle.EMPTY; }
+        if ("missing".equals(method)) { missing.add(arg); return Bundle.EMPTY; }
         Uri target = Uri.parse(arg);
         int read = Intent.FLAG_GRANT_READ_URI_PERMISSION;
         if ("grant".equals(method)) {
@@ -76,9 +92,10 @@ public class FixtureProvider extends ContentProvider {
         if (!"r".equals(mode)) throw new AssertionError("Textr must never request writes");
         if (revoked.contains(uri.toString())) throw new SecurityException("Fixture grant revoked");
         String name = uri.getLastPathSegment();
-        if ("missing.txt".equals(name)) throw new FileNotFoundException();
+        if ("missing.txt".equals(name) || missing.contains(uri.toString())) throw new FileNotFoundException();
         final byte[] bytes;
-        if ("sample.json".equals(name) || "slow.json".equals(name) || "extensionless-json".equals(name) || "UPPER.JSON".equals(name)) {
+        if (replacements.containsKey(uri.toString())) { bytes = replacements.get(uri.toString()).getBytes(StandardCharsets.UTF_8);
+        } else if ("sample.json".equals(name) || "slow.json".equals(name) || "extensionless-json".equals(name) || "UPPER.JSON".equals(name)) {
             bytes = "{\"message\":\"Textr fixture\",\"value\":42}".getBytes(StandardCharsets.UTF_8);
         } else if ("override.conf".equals(name)) {
             bytes = "\uFEFF{\"message\":\"Textr override\",\"value\":42}\r\n".getBytes(StandardCharsets.UTF_8);

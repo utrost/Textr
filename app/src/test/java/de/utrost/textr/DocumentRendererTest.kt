@@ -20,6 +20,37 @@ class DocumentRendererTest {
         org.junit.Assert.assertEquals(text, prepared.source.text)
         org.junit.Assert.assertTrue(DisplayMode.PLAIN in prepared.modes)
     }
+
+    @Test fun `heading outline has unique safe anchors and readable labels`() {
+        val result = prepare("# Same\n\n## Same\n\n### \n\n# A `code` **label**", FileKind.MARKDOWN)
+        assertEquals(listOf("Same", "Same", "Untitled heading", "A code label"), result.headings.map { it.title })
+        assertEquals(listOf(1, 2, 3, 1), result.headings.map { it.level })
+        assertEquals(4, result.headings.map { it.id }.distinct().size)
+        result.headings.forEach { assertTrue(result.preview!!.contains("id=\"${it.id}\"")) }
+    }
+
+    @Test fun `source anchors preserve line endings unicode and highlighted multiline tokens`() {
+        val text = "<!-- first\r\nsecond\rthird -->\n" + "x".repeat(1020) + "🚀\nlast"
+        for (mode in listOf(DisplayMode.PLAIN, DisplayMode.HIGHLIGHTED)) {
+            val html = DocumentRenderer.page(prepare(text, FileKind.XML), mode, false, true, true, 4)
+                .openStream().bufferedReader().use { it.readText() }
+            assertEquals(5, DocumentRenderer.logicalLines(text))
+            assertEquals(5, Regex("id=\"line-").findAll(html).count())
+            val source = html.substringAfter("<pre class=\"numbered\">").substringBefore("</pre>")
+                .replace(Regex("</?span[^>]*>"), "").replace("<wbr>", "")
+            assertEquals(SyntaxHighlighter.escape(text), source)
+        }
+    }
+
+    @Test fun `large source uses one jump anchor and bounded line decorations`() {
+        val text = "line\n".repeat(100_000)
+        val html = DocumentRenderer.page(prepare(text, FileKind.TEXT), DisplayMode.PLAIN, false, true, true, 90_000)
+            .openStream().bufferedReader().use { it.readText() }
+        assertFalse(html.contains("<pre class=\"numbered\">"))
+        assertEquals(1, Regex("id=\"line-").findAll(html).count())
+        assertTrue(html.contains("id=\"line-90000\""))
+    }
+
     private fun prepare(text: String, kind: FileKind) = DocumentRenderer.prepare(TextDocument("file", text, kind, text.toByteArray().size))
 
     @Test fun `automatic modes and manual alternatives depend on the document`() {
@@ -103,7 +134,7 @@ class DocumentRendererTest {
             <img src="file:///private/data">
         """.trimIndent()
         val result = DocumentRenderer.markdown(markdown)
-        for (tag in listOf("<h1>", "<blockquote>", "<ul>", "<table>", "<pre>")) assertTrue(tag, result.contains(tag))
+        for (tag in listOf("<h1 id=\"heading-1\">", "<blockquote>", "<ul>", "<table>", "<pre>")) assertTrue(tag, result.contains(tag))
         assertTrue(result.contains("href=\"https://example.com\""))
         assertFalse(result.contains("<img"))
         assertFalse(result.contains("<script"))

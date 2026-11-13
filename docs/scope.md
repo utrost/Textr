@@ -4,7 +4,7 @@
 
 ## Approved reader UX extension (2026-11-13)
 
-The next iteration adds contextual menus and About access, outgoing file/selected-text sharing, remembered reading position and display mode, and per-file format overrides. The original source and rendering limits remain in force. Tabs, reload, line navigation, pinning, and other backlog ideas are not part of this iteration.
+The first UX iteration added contextual menus and About, outgoing sharing, remembered reading state, and format overrides. The owner subsequently authorized #28–#33: manual reload, source line navigation, pinned recents with Undo, a Markdown outline, a five-document switcher, and Open with. See [behavior and limits](open-documents.md). The original source and rendering limits remain in force.
 
 ## Purpose
 
@@ -54,7 +54,7 @@ Textr has no editing, accounts, ads, analytics, or network permission. Document 
 
 The following are outside v1:
 
-- File management and tabs.
+- File management and unbounded tab sessions. A bounded document switcher is included in the approved extension.
 - Huge-log support or files larger than 5 MiB.
 - Direct cloud integrations.
 - Markdown images and embedded HTML, and spreadsheet-style CSV previews.

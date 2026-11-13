@@ -30,6 +30,8 @@ class ReaderControlsTest {
 
     @Before fun resetPreferences() {
         context.getSharedPreferences("reading", Context.MODE_PRIVATE).edit().clear().commit()
+        context.getSharedPreferences("open_documents", 0).edit().clear().commit()
+        DocumentRepository(context).setSessionReferences(emptySet())
         DocumentRepository(context).clear()
     }
 
