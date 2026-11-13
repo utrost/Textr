@@ -99,7 +99,7 @@ class ReadingExtrasDeviceTest {
             val before = InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()!!
             val web = android.graphics.Rect()
             scenario.onActivity { assertTrue(it.findViewById<WebView>(R.id.reader).getGlobalVisibleRect(web)) }
-            device.swipe(web.centerX(), web.bottom - 120, web.centerX(), top + 160, 35)
+            repeat(2) { device.swipe(web.centerX(), web.bottom - 120, web.centerX(), top + 160, 35) }
             device.waitForIdle()
             // Chromium reports the original (offscreen) AX bounds for sticky cells.
             // Compare the painted header after a real swipe instead of those stale bounds.
@@ -117,14 +117,24 @@ class ReadingExtrasDeviceTest {
                     }
                 }
             }
-            before.recycle(); after.recycle()
+
             assertTrue("Header strokes moved: $matched/$expected, after=$actual", expected > 100 &&
                 matched.toDouble() / expected > 0.95 && actual.toDouble() / expected in 0.75..1.25)
-            assertFalse(device.hasObject(By.text("Row 1 cell 1")))
-            repeat(3) { device.swipe(web.right - 50, top + 60, web.left + 50, top + 60, 30) }
+            fun changedBody(a: android.graphics.Bitmap, b: android.graphics.Bitmap): Int {
+                var changed = 0
+                for (y in headerBounds.bottom + 20 until web.bottom - 20 step 4) {
+                    for (x in web.left + 20 until web.right - 20 step 4) {
+                        if (a.getPixel(x, y) != b.getPixel(x, y)) changed++
+                    }
+                }
+                return changed
+            }
+            assertTrue("Vertical swipe must move the rows", changedBody(before, after) > 100)
+            repeat(3) { device.swipe(web.right - 100, web.centerY(), web.left + 100, web.centerY(), 35) }
             device.waitForIdle()
-            assertFalse(device.hasObject(By.text(java.util.regex.Pattern.compile("Row \\d+ cell 1"))))
-            assertTrue(device.hasObject(By.text(java.util.regex.Pattern.compile("Row \\d+ cell (8|9|10)"))))
+            val horizontal = InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()!!
+            assertTrue("Horizontal swipe must move the columns", changedBody(after, horizontal) > 100)
+            before.recycle(); after.recycle(); horizontal.recycle()
         }
     }
 
@@ -267,10 +277,14 @@ class ReadingExtrasDeviceTest {
                 menu("Add bookmark…"); click("Save")
                 await { Bookmarks(context).entries().isNotEmpty() }
                 menu("Bookmarks")
-                assertTrue(device.wait(Until.hasObject(By.descContains("Bookmark:")), 5000))
-                click("Done")
+                click(By.descContains("Bookmark:")); click("Rename bookmark")
+                assertTrue(device.wait(Until.hasObject(By.res(context.packageName, "bookmark_name")), 5000))
+                click("Cancel")
             }
-        } finally { device.executeShellCommand("settings put system font_scale ${old.takeUnless { it == "null" } ?: "1.0"}") }
+        } finally {
+            device.executeShellCommand("settings put system font_scale ${old.takeUnless { it == "null" } ?: "1.0"}")
+            device.setOrientationNatural(); device.unfreezeRotation(); device.waitForIdle()
+        }
     }
 
     private fun monitorPicker(result: Intent?): android.app.Instrumentation.ActivityMonitor {

@@ -52,9 +52,9 @@ Implementation extends source highlighting and adds a bounded iCalendar event su
 | [#41](https://github.com/utrost/Textr/issues/41) | Improve search with source results and matching options | First implementation batch |
 | [#42](https://github.com/utrost/Textr/issues/42) | Reopen documents with an explicit text encoding | First implementation batch |
 | [#43](https://github.com/utrost/Textr/issues/43) | Make document switching and format selection easier to discover | First implementation batch |
-| [#44](https://github.com/utrost/Textr/issues/44) | Add an optional bounded CSV table preview | Implemented; validation in progress |
-| [#45](https://github.com/utrost/Textr/issues/45) | Add reading progress and named document bookmarks | Implemented; validation in progress |
-| [#46](https://github.com/utrost/Textr/issues/46) | Support hardware keyboard reader shortcuts | Implemented; validation in progress |
+| [#44](https://github.com/utrost/Textr/issues/44) | Add an optional bounded CSV table preview | Implemented |
+| [#45](https://github.com/utrost/Textr/issues/45) | Add reading progress and named document bookmarks | Implemented |
+| [#46](https://github.com/utrost/Textr/issues/46) | Support hardware keyboard reader shortcuts | Implemented |
 | [#47](https://github.com/utrost/Textr/issues/47) | Show text encoding and line information in Document info | First implementation batch |
 | [#48](https://github.com/utrost/Textr/issues/48) | Add offline help for opening files and Android defaults | First implementation batch |
 | [#49](https://github.com/utrost/Textr/issues/49) | Explain slow loading and provide a clear cancel action | Later iteration |
@@ -127,3 +127,5 @@ Public release remains deferred. These issues capture the release-readiness revi
 - [#55](https://github.com/utrost/Textr/issues/55): contextual opening-help and sidebar discovery.
 - [#56](https://github.com/utrost/Textr/issues/56): real-device beta, providers, accessibility and Magic V6 checks.
 - [#57](https://github.com/utrost/Textr/issues/57): optional Play App Bundle and store-listing preparation; publication remains deferred.
+
+Validation for #44–#46 is recorded in [reading extras validation](validation-reading-extras.md) and [PR #58](https://github.com/utrost/Textr/pull/58).

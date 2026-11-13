@@ -1140,14 +1140,14 @@ class MainActivity : ComponentActivity() {
     private fun showBookmarks() {
         val entries = bookmarks.entries()
         val body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), 0, dp(16), 0) }
-        body.addView(TextView(this).apply { text = getString(if (entries.isEmpty()) R.string.bookmarks_empty else R.string.bookmarks_explanation) })
         val dialog = AlertDialog.Builder(this).setTitle(R.string.bookmarks).setView(ScrollView(this).apply { addView(body) })
             .setPositiveButton(R.string.done, null).create()
         entries.forEach { bookmark ->
             body.addView(button(R.string.bookmarks, "${bookmark.label}\n${bookmark.fileName}") {
                 dialog.dismiss(); showBookmarkActions(bookmark)
-            }.apply { contentDescription = getString(R.string.bookmark_named, bookmark.label, bookmark.fileName) }, LinearLayout.LayoutParams(-1, -2))
+            }.apply { contentDescription = getString(R.string.bookmark_named, bookmark.label, bookmark.fileName); maxLines = 3; ellipsize = android.text.TextUtils.TruncateAt.END }, LinearLayout.LayoutParams(-1, -2))
         }
+        body.addView(TextView(this).apply { text = getString(if (entries.isEmpty()) R.string.bookmarks_empty else R.string.bookmarks_explanation) })
         if (entries.isNotEmpty()) dialog.setButton(AlertDialog.BUTTON_NEUTRAL, getString(R.string.clear_bookmarks)) { _, _ ->
             AlertDialog.Builder(this).setTitle(R.string.clear_bookmarks).setMessage(R.string.clear_bookmarks_message)
                 .setNegativeButton(R.string.cancel, null).setPositiveButton(R.string.clear_bookmarks) { _, _ -> bookmarks.clear() }.create().present()
