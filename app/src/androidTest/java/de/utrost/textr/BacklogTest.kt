@@ -214,11 +214,11 @@ class BacklogTest {
         repository.remember(uri("copy.txt"), "copy.txt")
         ActivityScenario.launch(MainActivity::class.java).use {
             click(By.desc("Pin copy.txt"))
-            assertTrue(repository.recentFiles().single().pinned)
+            await { repository.recentFiles().singleOrNull()?.pinned == true }
             click(By.desc("Remove copy.txt from recent files"))
-            assertTrue(repository.recentFiles().isEmpty())
+            await { repository.recentFiles().isEmpty() }
             click("Undo removal")
-            assertTrue(repository.recentFiles().single().pinned)
+            await { repository.recentFiles().singleOrNull()?.pinned == true }
             assertEquals("Copyable Textr selection", repository.read(uri("copy.txt"), null, android.os.CancellationSignal()).text)
         }
     }
