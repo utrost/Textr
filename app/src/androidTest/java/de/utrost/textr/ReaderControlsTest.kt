@@ -196,6 +196,7 @@ class ReaderControlsTest {
             ready(scenario)
             click("Highlighted")
             click("Plain text")
+            assertMode(scenario, "Plain text")
             ready(scenario)
             scenario.onActivity { it.findViewById<WebView>(R.id.reader).scrollTo(0, 1200) }
             var originalScroll = 0

@@ -67,7 +67,13 @@ class ReaderUxTest {
         var position = 0
         ActivityScenario.launch<MainActivity>(intent("long.ini")).use { scenario ->
             ready(scenario)
-            click("Highlighted"); click("Plain text"); ready(scenario)
+            click("Highlighted"); click("Plain text")
+            await {
+                var selected = false
+                scenario.onActivity { selected = it.findViewById<TextView>(R.id.display_mode).text == "Plain text" }
+                selected
+            }
+            ready(scenario)
             scenario.onActivity {
                 it.findViewById<WebView>(R.id.reader).scrollTo(0, 1200)
                 position = it.findViewById<WebView>(R.id.reader).scrollY
