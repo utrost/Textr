@@ -247,7 +247,10 @@ class ReaderUxTest {
 
     private fun raw(name: String) = context.contentResolver.openInputStream(uri(name))!!.use { it.readBytes() }
     private fun override(format: String) {
-        menu("Document info"); click("Treat as…")
+        menu("Document info")
+        // The closing reader menu now also has a Treat as row. Address the
+        // dialog's neutral button rather than a transient duplicate text node.
+        click(By.res("android", "button3"))
         // The native list opens around the selected format; Automatic may be above
         // the viewport now that the supported formats require scrolling.
         androidx.test.uiautomator.UiScrollable(androidx.test.uiautomator.UiSelector().className("android.widget.ListView"))
@@ -257,9 +260,17 @@ class ReaderUxTest {
     private fun menu(label: String) { click(By.desc("More options")); click(label) }
     private fun click(label: String) = click(By.text(java.util.regex.Pattern.compile(java.util.regex.Pattern.quote(label), 2)))
     private fun click(selector: BySelector) {
-        val target = device.wait(Until.findObject(selector), 5000)
-        assertNotNull("Missing $selector", target)
-        target!!.click(); device.waitForIdle()
+        repeat(3) { attempt ->
+            try {
+                val target = device.wait(Until.findObject(selector), 5000)
+                assertNotNull("Missing $selector", target)
+                target!!.click(); device.waitForIdle()
+                return
+            } catch (error: androidx.test.uiautomator.StaleObjectException) {
+                if (attempt == 2) throw error
+                device.waitForIdle()
+            }
+        }
     }
     private fun ready(scenario: ActivityScenario<MainActivity>) = await {
         var ready = false

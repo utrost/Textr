@@ -23,6 +23,8 @@ All six feature cases also pass together on Android 10 locally (83.696 seconds).
 
 The corrected six-feature sequence also passes on Android 16 (91.010 seconds). Android 10 large-font layout followed by accessibility-tree navigation/actions passes as a pair (28.001 seconds), including the scrollable reader menu.
 
+The older format-override tests select Document info’s neutral button by ID, avoiding the identically named row in the dismissing reader menu. The invalid-JSON, Automatic-restoration and iCalendar override cases pass together on Android 10 (41.453 seconds). Native control reacquisition remains bounded to three attempts.
+
 ## Limits
 
 This batch does not add regex/cross-file search, general charset guessing, editing or new permissions. Source search compares Unicode code points without normalization or multi-character case expansions. Result lists are capped and disclose truncation. New source queries/options are held in memory only. Tab strips give way to the compact switcher above 130% system font scale.
