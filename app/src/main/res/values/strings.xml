@@ -6,7 +6,6 @@
     <string name="remove_recent">Remove %1$s from recent files</string>
     <string name="empty_history">Open a text file to get started. Your recent files will appear here.</string>
     <string name="home_description">Read notes, configs, and text documents up to 5 MiB.</string>
-    <string name="home">Home</string>
     <string name="settings">Reading settings</string>
     <string name="find">Find</string>
     <string name="find_hint">Find in this view</string>
@@ -51,5 +50,18 @@
     <string name="clear_history_message">Remove all recent entries? The files themselves will stay where they are.</string>
     <string name="about">About Textr</string>
     <string name="licenses">Open-source licenses</string>
-    <string name="about_message">Textr 0.1.0\nA read-only text viewer.\n\nNo network or broad storage permission. Recent history contains references, not file contents.\n\nLicensed under GPL-3.0-only.\nCommonMark: BSD 2-Clause\nJackson Core: Apache 2.0\nKotlin: Apache 2.0\n\nLong-press document text to select and copy.</string>
+    <string name="more_options">More options</string>
+    <string name="back_to_files">Back to files</string>
+    <string name="share_file">Share file…</string>
+    <string name="share_text">Share text…</string>
+    <string name="preparing_share">Preparing file to share…</string>
+    <string name="share_error">Could not share this file. It may have moved or access may have expired.</string>
+    <string name="document_info">Document info</string>
+    <string name="document_details">%1$s\n\nSize: %2$s\nDetected format: %3$s\nTreat as: %4$s</string>
+    <string name="treat_as">Treat as…</string>
+    <string name="automatic">Automatic</string>
+    <string name="source_code">Source code</string>
+    <string name="report_issue">Report an issue</string>
+    <string name="about_privacy">A read-only text viewer. No accounts, ads, analytics, or network permission.\n\nHistory stores references and reading preferences, not document contents. Sharing a file creates a temporary copy. Old copies are cleaned on the next app start or share after 24 hours; only the latest 20 are kept.\n\nLicensed under GPL-3.0-only.</string>
+    <string name="about_details">Textr %1$s\n\n%2$s</string>
 </resources>

@@ -27,15 +27,21 @@ If Textr is absent, open Textr directly and use **Open file**, or try the sender
 | --- | --- |
 | ![Textr home with a recent file](images/home-light.png) | ![Markdown preview with a table and omitted-image marker](images/markdown-dark.png) |
 
-- Tap the current display-mode button to switch between plain text, highlighted source, and available preview modes. CSV and unrecognized configurations stay plain text.
+- Tap the current display-mode button to switch between plain text, highlighted source, and available preview modes. The selector is hidden when only plain text applies. To interpret a generic configuration file, use **⋮ → Document info → Treat as…**; select **Automatic** to reset.
 - **Find** searches the displayed view. Use the arrows to move through matches and **×** to close search. Source and preview searches may differ.
-- Long-press text to select it, then choose Android's **Copy** action.
-- Open **⋮ Reading settings** for text size, line wrapping, and system/light/dark appearance.
-- **Home** shows the last 30 successfully opened file references. **×** removes one entry; **Clear history** removes all entries. These actions never delete the files.
+- Long-press text to select it, then choose Android's **Copy** or **Share** action (sometimes under the selection toolbar’s overflow).
+- Open **⋮ → Reading settings** for text size, line wrapping, and system/light/dark appearance.
+- The **Back to files** arrow returns to the last 30 successfully opened file references. Reopening restores the last position, display mode, and format override. **×** removes one entry; **⋮ → Clear history** removes all entries and their reading preferences. These actions never delete the files.
+
+**⋮ → Share file…** opens Android’s Sharesheet with the original file bytes, not a rendered preview. The receiving app gets temporary read access to a copy. Textr keeps at most 20 copies and removes copies older than 24 hours on the next start or share; recipients may keep their own copies. **About Textr** is available from the menu on both screens and shows the installed version, privacy information, source/issue links, and license notices.
 
 ![Formatted JSON in Textr](images/json-preview.png)
 
 Recent files reopen only while their providers still grant access. Picker-selected files usually offer persistent read access; shared attachments may offer temporary access only. If a document moved, was deleted, or lost access, use **Open file again** to select it or a replacement. Shared text without a file URI is available for that session and rotation, but cannot be reopened after process termination.
+
+| Reader menu | About Textr |
+| --- | --- |
+| ![Reader menu with sharing and document information](images/reader-menu.png) | ![About with installed version, privacy, source and licenses](images/about.png) |
 
 ## Limits and troubleshooting
 

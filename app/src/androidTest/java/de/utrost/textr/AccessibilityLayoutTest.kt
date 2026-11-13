@@ -58,7 +58,8 @@ class AccessibilityLayoutTest {
                     }
                     click(By.desc("Close search"))
                 }
-                click(By.desc("Reading settings"))
+                click(By.desc("More options"))
+                click(By.text("Reading settings"))
                 assertNotNull("Scrollable settings retain their confirmation action", device.wait(Until.findObject(By.res("android", "button1")), 5000))
                 click(By.res("android", "button1"))
             }

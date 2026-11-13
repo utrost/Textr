@@ -2,6 +2,8 @@
 
 This record describes development-build validation on 2026-11-12. Public release and selection of a production signing identity are deferred at the owner's request. No physical device was available; the owner selected emulator validation.
 
+The subsequent [reader UX validation](validation-reader-ux.md) covers menus, sharing, remembered reading state, and format overrides. Test counts below describe the original baseline.
+
 ## Environments
 
 | Android | API | System image | WebView |

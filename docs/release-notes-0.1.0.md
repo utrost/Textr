@@ -6,7 +6,10 @@ First release candidate of a minimal, read-only Android text viewer. Public rele
 - Open files through the system picker, compatible Open with flows, or attachment sharing.
 - Plain text, lightweight syntax highlighting, Markdown previews, and indented JSON.
 - Search, text selection/copying, text size, wrapping, and light/dark/system appearance.
-- Local recent references with individual removal and history clearing.
+- Compact reader controls, contextual menus, and About with installed version and source/license links.
+- Local recent references with remembered reading position/mode, individual removal, and history clearing.
+- Document information and per-file format overrides, with an Automatic reset.
+- Original-file and selected-text sharing through Android; temporary file copies have read-only grants and bounded retention.
 - No editing, accounts, ads, analytics, network permission, or broad storage permission.
 
 Default associations depend on the sending app and MIME type. Markdown preview has a 512 Ki-character input limit, 20,000-node limit, and nesting limit of 64. JSON preview accepts files up to 1 MiB and has a nesting limit of 128 and formatted-output limit of 5 Mi characters. Source remains readable when previews are unavailable; highlighting accepts up to 512 Ki characters and decorates up to 10,000 tokens. Images, embedded HTML, relative file links, huge logs, tabs, and file management are outside this version.

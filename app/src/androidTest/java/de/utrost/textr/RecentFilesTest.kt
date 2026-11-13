@@ -26,6 +26,26 @@ class RecentFilesTest {
 
     @Before @After fun clear() { repository.clear() }
 
+    @Test fun readingMetadataMigratesAndDisappearsWithHistoryWithoutResurrectingEntries() {
+        val target = uri(300)
+        // Simulate a real 0.1.0 history entry with no reading fields.
+        context.getSharedPreferences("recent_files", 0).edit().putString("entries",
+            """[{"uri":"$target","name":"old.conf","openedAt":1}]""").commit()
+        assertEquals(ReadingState(), repository.readingState(target))
+        val state = ReadingState(DisplayMode.HIGHLIGHTED, 1200, FileKind.INI)
+        repository.saveReadingState(target, state)
+        repository.remember(target, "renamed.conf")
+        assertEquals(state, DocumentRepository(context).readingState(target))
+        for (index in 301..330) repository.remember(uri(index), "Other")
+        assertEquals(ReadingState(), repository.readingState(target))
+        repository.saveReadingState(target, state)
+        assertFalse(repository.recentFiles().any { it.uri == target.toString() })
+        val remaining = uri(330)
+        repository.saveReadingState(remaining, state)
+        repository.clear()
+        assertEquals(ReadingState(), DocumentRepository(context).readingState(remaining))
+    }
+
     @Test fun historyLimitDeduplicationEvictionAndGrantCleanup() {
         val first = uri(0)
         provider("grant", first)

@@ -12,7 +12,8 @@ import android.system.OsConstants
 import android.system.StructPollfd
 import java.io.FilterInputStream
 
-data class RecentFile(val uri: String, val name: String, val openedAt: Long)
+data class ReadingState(val mode: DisplayMode? = null, val scroll: Int = 0, val format: FileKind? = null)
+data class RecentFile(val uri: String, val name: String, val openedAt: Long, val reading: ReadingState = ReadingState())
 
 class DocumentRepository(private val context: Context) {
     private val resolver = context.contentResolver
@@ -37,6 +38,26 @@ class DocumentRepository(private val context: Context) {
         val type = if (declaredType == null || declaredType in setOf("*/*", "application/octet-stream", "text/plain")) {
             optionalMetadata { resolver.getType(uri) } ?: declaredType
         } else declaredType
+        return withSource(uri, cancellation) { TextDocuments.read(it, name, type) }
+    }
+
+    /** Read the original bytes, including BOM and line endings, through the same cancellable path. */
+    fun copySource(uri: Uri, output: java.io.OutputStream, cancellation: CancellationSignal) {
+        withSource(uri, cancellation) { input ->
+            val buffer = ByteArray(8192)
+            var count = 0
+            while (true) {
+                val read = input.read(buffer, 0, minOf(buffer.size, MAX_FILE_BYTES + 1 - count))
+                if (read == -1) break
+                count += read
+                if (count > MAX_FILE_BYTES) throw DocumentException(ReadFailure.TOO_LARGE)
+                output.write(buffer, 0, read)
+            }
+        }
+    }
+
+    private fun <T> withSource(uri: Uri, cancellation: CancellationSignal, read: (java.io.InputStream) -> T): T {
+        if (uri.scheme !in setOf("content", "file")) throw DocumentException(ReadFailure.SOURCE)
         cancellation.throwIfCanceled()
         return resolver.openAssetFileDescriptor(uri, "r", cancellation)?.use { descriptor ->
             descriptor.createInputStream().use { stream ->
@@ -57,7 +78,7 @@ class DocumentRepository(private val context: Context) {
                         return super.read(bytes, offset, length)
                     }
                 }
-                TextDocuments.read(interruptible, name, type)
+                read(interruptible)
             }
         } ?: throw DocumentException(ReadFailure.ACCESS)
     }
@@ -84,16 +105,27 @@ class DocumentRepository(private val context: Context) {
         val array = JSONArray(preferences.getString("entries", "[]"))
         (0 until array.length()).map { index ->
             val entry = array.getJSONObject(index)
-            RecentFile(entry.getString("uri"), entry.getString("name"), entry.getLong("openedAt"))
+            RecentFile(entry.getString("uri"), entry.getString("name"), entry.getLong("openedAt"), ReadingState(
+                DisplayMode.entries.find { it.name == entry.optString("mode") },
+                entry.optInt("scroll", 0).coerceAtLeast(0),
+                FileKind.entries.find { it.name == entry.optString("format") }))
         }
     } catch (_: org.json.JSONException) { emptyList() }
 
     fun remember(uri: Uri, name: String) {
         val previous = recentFiles()
-        val updated = (listOf(RecentFile(uri.toString(), name, System.currentTimeMillis())) +
+        val state = previous.find { it.uri == uri.toString() }?.reading ?: ReadingState()
+        val updated = (listOf(RecentFile(uri.toString(), name, System.currentTimeMillis(), state)) +
             previous.filterNot { it.uri == uri.toString() }).take(30)
         save(updated)
         previous.filter { old -> updated.none { it.uri == old.uri } }.forEach { release(it.uri) }
+    }
+
+    fun readingState(uri: Uri): ReadingState = recentFiles().find { it.uri == uri.toString() }?.reading ?: ReadingState()
+
+    fun saveReadingState(uri: Uri, state: ReadingState) {
+        // Updating state must never resurrect an entry the user removed or change recency.
+        save(recentFiles().map { if (it.uri == uri.toString()) it.copy(reading = state) else it })
     }
 
     fun remove(uri: String) {
@@ -110,7 +142,13 @@ class DocumentRepository(private val context: Context) {
     private fun save(files: List<RecentFile>) {
         val array = JSONArray()
         files.forEach { file ->
-            array.put(JSONObject().put("uri", file.uri).put("name", file.name).put("openedAt", file.openedAt))
+            array.put(JSONObject().put("uri", file.uri).put("name", file.name).put("openedAt", file.openedAt).apply {
+                if (file.reading != ReadingState()) {
+                    put("mode", file.reading.mode?.name)
+                    put("scroll", file.reading.scroll)
+                    put("format", file.reading.format?.name)
+                }
+            })
         }
         preferences.edit().putString("entries", array.toString()).apply()
     }

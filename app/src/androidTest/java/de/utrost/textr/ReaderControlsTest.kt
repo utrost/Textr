@@ -30,6 +30,7 @@ class ReaderControlsTest {
 
     @Before fun resetPreferences() {
         context.getSharedPreferences("reading", Context.MODE_PRIVATE).edit().clear().commit()
+        DocumentRepository(context).clear()
     }
 
     @Test fun actualModeSelectionsAndInvalidJsonFallback() {
@@ -88,7 +89,8 @@ class ReaderControlsTest {
     @Test fun settingsApplyAndSurviveActivityRestart() {
         ActivityScenario.launch<MainActivity>(intent("sample.json")).use { scenario ->
             ready(scenario)
-            clickDescription("Reading settings")
+            clickDescription("More options")
+            click("Reading settings")
             val slider = device.wait(Until.findObject(By.res(context.packageName, "font_size")), 5000)!!
             device.click(slider.visibleBounds.left + slider.visibleBounds.width() * 3 / 4, slider.visibleBounds.centerY())
             device.findObject(By.res(context.packageName, "line_wrap")).click()
@@ -116,6 +118,7 @@ class ReaderControlsTest {
     @Test fun cancelingPickerPreservesReader() {
         ActivityScenario.launch<MainActivity>(intent("sample.json")).use { scenario ->
             ready(scenario)
+            clickDescription("More options")
             click("Open file")
             assertTrue(device.wait(Until.hasObject(By.pkg("com.google.android.documentsui")), 5000) ||
                 device.wait(Until.hasObject(By.pkg("com.android.documentsui")), 5000))
@@ -246,7 +249,7 @@ class ReaderControlsTest {
     private fun search(scenario: ActivityScenario<MainActivity>, query: String, expected: String) {
         var shown = false
         scenario.onActivity { shown = it.findViewById<EditText>(R.id.search_query).isShown }
-        if (!shown) click("Find")
+        if (!shown) clickDescription("Find")
         scenario.onActivity { it.findViewById<EditText>(R.id.search_query).setText(query) }
         await { count(scenario) == expected }
         // Dismiss IME without closing the search controls.

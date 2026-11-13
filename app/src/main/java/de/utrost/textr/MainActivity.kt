@@ -35,6 +35,7 @@ import java.util.concurrent.Future
 class ReaderSession : ViewModel() {
     // In-memory only: survive rotation without retaining document contents on disk.
     var document: PreparedDocument? = null
+    var original: TextDocument? = null
 }
 
 class MainActivity : ComponentActivity() {
@@ -49,6 +50,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var titleView: TextView
     private lateinit var toolbar: LinearLayout
     private lateinit var findButton: Button
+    private lateinit var backButton: Button
+    private lateinit var menuButton: Button
     private lateinit var modeButton: Button
     private lateinit var searchRow: LinearLayout
     private lateinit var searchField: EditText
@@ -64,6 +67,10 @@ class MainActivity : ComponentActivity() {
     private var wrap = true
     private var fontSize = 16
     private var pendingScroll = 0
+    private var formatOverride: FileKind? = null
+    private var requestedMode: DisplayMode? = null
+    private var homeShown = false
+    private var sharing = false
     private val picker = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) result.data?.let { data ->
             data.data?.let { uri ->
@@ -88,11 +95,13 @@ class MainActivity : ComponentActivity() {
         fontSize = preferences.getInt("fontSize", 16).coerceIn(12, 28)
         wrap = preferences.getBoolean("wrap", true)
         repository = DocumentRepository(applicationContext)
+        ShareFiles(this).prune()
         buildLayout()
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() { navigateBack() }
         })
         if (savedInstanceState != null) {
+            formatOverride = FileKind.entries.find { it.name == savedInstanceState.getString("format") }
             pendingScroll = savedInstanceState.getInt("scroll")
             searchField.setText(savedInstanceState.getString("query", ""))
             searchRow.visibility = if (savedInstanceState.getBoolean("search")) View.VISIBLE else View.GONE
@@ -102,7 +111,7 @@ class MainActivity : ComponentActivity() {
                 currentUri = uri?.let(Uri::parse)
                 mode = savedMode?.takeIf { it in document!!.modes } ?: document!!.defaultMode
                 render()
-            } else if (uri != null) openDocument(Uri.parse(uri), restoredMode = savedMode)
+            } else if (uri != null) openDocument(Uri.parse(uri), restoredMode = savedMode, restoring = true)
             else showHome()
         } else if (!handleIntent(intent)) showHome()
     }
@@ -126,7 +135,8 @@ class MainActivity : ComponentActivity() {
         }
         setContentView(root)
         val header = row().apply { setPadding(dp(8), dp(4), dp(8), dp(4)) }
-        header.addView(button(R.string.home) { showHome() })
+        backButton = iconButton(R.string.back_to_files, R.drawable.ic_back) { showHome() }
+        header.addView(backButton, LinearLayout.LayoutParams(dp(48), dp(48)))
         titleView = TextView(this).apply {
             isAccessibilityHeading = true
             textSize = 20f
@@ -136,21 +146,23 @@ class MainActivity : ComponentActivity() {
             setPadding(dp(8), 0, dp(4), 0)
         }
         header.addView(titleView, LinearLayout.LayoutParams(0, -2, 1f))
-        header.addView(button(R.string.settings, "⋮") { showSettings() })
+        findButton = iconButton(R.string.find, R.drawable.ic_find) { toggleSearch() }
+        header.addView(findButton, LinearLayout.LayoutParams(dp(48), dp(48)))
+        menuButton = iconButton(R.string.more_options, R.drawable.ic_more) { showMenu() }
+        header.addView(menuButton, LinearLayout.LayoutParams(dp(48), dp(48)))
         root.addView(header)
 
         toolbar = row().apply { setPadding(dp(12), 0, dp(12), 0) }
         modeButton = button(R.string.plain_text) { showModes() }.apply { id = R.id.display_mode }
-        toolbar.addView(modeButton, LinearLayout.LayoutParams(0, -2, 1f))
-        val actions = row()
-        findButton = button(R.string.find) { toggleSearch() }
-        actions.addView(findButton)
-        actions.addView(button(R.string.open_file) { openPicker() })
-        if (!wide && (resources.configuration.fontScale > 1.3f || resources.configuration.screenWidthDp < 360)) {
-            toolbar.orientation = LinearLayout.VERTICAL
-            modeButton.layoutParams = LinearLayout.LayoutParams(-1, -2)
+        modeButton.apply {
+            val arrow = getDrawable(R.drawable.ic_expand)!!.mutate().apply { setTint(foreground()); setBounds(0, 0, dp(24), dp(24)) }
+            setCompoundDrawables(null, null, arrow, null)
+            compoundDrawablePadding = dp(4)
+            val value = android.util.TypedValue()
+            theme.resolveAttribute(android.R.attr.selectableItemBackground, value, true)
+            setBackgroundResource(value.resourceId)
         }
-        toolbar.addView(actions)
+        toolbar.addView(modeButton, LinearLayout.LayoutParams(-2, -2))
         root.addView(toolbar)
 
         searchRow = row().apply { orientation = if (wide) LinearLayout.HORIZONTAL else LinearLayout.VERTICAL; visibility = View.GONE; setPadding(dp(12), 0, dp(12), 0) }
@@ -201,6 +213,15 @@ class MainActivity : ComponentActivity() {
         setOnClickListener { action() }
     }
     private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
+    private fun iconButton(label: Int, icon: Int, action: () -> Unit) = button(label, "", action).apply {
+        setPadding(dp(12), dp(12), dp(12), dp(12))
+        val image = getDrawable(icon)!!.mutate().apply { setTint(foreground()); setBounds(0, 0, dp(24), dp(24)) }
+        setCompoundDrawables(image, null, null, null)
+        val value = android.util.TypedValue()
+        theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, value, true)
+        setBackgroundResource(value.resourceId)
+        tooltipText = getString(label)
+    }
     private fun background() = Color.parseColor(if (dark) "#171C1A" else "#FAFAF7")
     private fun foreground() = Color.parseColor(if (dark) "#E3E9E5" else "#202923")
 
@@ -209,6 +230,7 @@ class MainActivity : ComponentActivity() {
         cancellation?.cancel()
         cancellation = null
         work?.cancel(true)
+        sharing = false
     }
 
     private fun clearContent(stopLoading: Boolean = true) {
@@ -222,9 +244,15 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun showHome() {
+        rememberReading()
         cancelWork()
         document = null
+        session.original = null
+        formatOverride = null
         currentUri = null
+        homeShown = true
+        backButton.visibility = View.GONE
+        findButton.visibility = View.GONE
         pendingScroll = 0
         closeSearch()
         clearContent()
@@ -237,10 +265,6 @@ class MainActivity : ComponentActivity() {
         val recentHeader = row()
         recentHeader.addView(TextView(this).apply { text = getString(R.string.recent_files); textSize = 20f; setTextColor(foreground()) }, LinearLayout.LayoutParams(0, -2, 1f))
         val recents = repository.recentFiles()
-        if (recents.isNotEmpty()) recentHeader.addView(button(R.string.clear_history) {
-            AlertDialog.Builder(this).setTitle(R.string.clear_history).setMessage(R.string.clear_history_message)
-                .setNegativeButton(R.string.cancel, null).setPositiveButton(R.string.clear_history) { _, _ -> repository.clear(); showHome() }.show()
-        })
         body.addView(recentHeader)
         if (recents.isEmpty()) body.addView(TextView(this).apply {
             text = getString(R.string.empty_history); textSize = 16f; setTextColor(foreground()); setPadding(0, dp(16), 0, 0)
@@ -250,6 +274,10 @@ class MainActivity : ComponentActivity() {
             entry.addView(Button(this).apply {
                 text = recent.name; isAllCaps = false; gravity = Gravity.START or Gravity.CENTER_VERTICAL
                 maxLines = 2; ellipsize = android.text.TextUtils.TruncateAt.END
+                val value = android.util.TypedValue()
+                theme.resolveAttribute(android.R.attr.selectableItemBackground, value, true)
+                setBackgroundResource(value.resourceId)
+                minimumHeight = dp(56)
                 setOnClickListener { openDocument(Uri.parse(recent.uri)) }
             }, LinearLayout.LayoutParams(0, -2, 1f))
             entry.addView(button(R.string.clear_history, "×") { repository.remove(recent.uri); showHome() }.apply {
@@ -257,13 +285,121 @@ class MainActivity : ComponentActivity() {
             })
             body.addView(entry)
         }
-        body.addView(button(R.string.about) {
-            AlertDialog.Builder(this).setTitle(R.string.about).setMessage(R.string.about_message)
-                .setNeutralButton(R.string.licenses) { _, _ -> showLicenses() }
-                .setPositiveButton(R.string.done, null).show()
-        })
         scroll.addView(body)
         content.addView(scroll)
+    }
+
+    private fun showMenu() {
+        PopupMenu(this, menuButton).apply {
+            fun item(label: Int, enabled: Boolean = true, action: () -> Unit) {
+                menu.add(label).apply { isEnabled = enabled; setOnMenuItemClickListener { action(); true } }
+            }
+            if (!homeShown) {
+                item(R.string.open_file) { openPicker() }
+                val ready = document != null && webView?.tag == true
+                item(if (currentUri == null && (session.original?.bytes ?: 0) < 100_000) R.string.share_text else R.string.share_file,
+                    ready && !sharing) { shareDocument() }
+                item(R.string.document_info, ready) { showDocumentInfo() }
+            } else if (repository.recentFiles().isNotEmpty()) {
+                item(R.string.clear_history) {
+                    AlertDialog.Builder(this@MainActivity).setTitle(R.string.clear_history).setMessage(R.string.clear_history_message)
+                        .setNegativeButton(R.string.cancel, null).setPositiveButton(R.string.done) { _, _ -> repository.clear(); showHome() }.show()
+                }
+            }
+            item(R.string.settings) { showSettings() }
+            item(R.string.about) { showAbout() }
+            show()
+        }
+    }
+
+    private fun showAbout() {
+        val version = packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
+        val body = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(24), dp(12), dp(24), dp(12))
+            addView(TextView(this@MainActivity).apply {
+                text = getString(R.string.about_details, version, getString(R.string.about_privacy))
+                textSize = 16f
+                setTextIsSelectable(true)
+            })
+            addView(button(R.string.source_code) { openExternal("https://github.com/utrost/Textr") })
+            addView(button(R.string.report_issue) { openExternal("https://github.com/utrost/Textr/issues") })
+            addView(button(R.string.licenses) { showLicenses() })
+        }
+        AlertDialog.Builder(this).setTitle(R.string.about).setView(ScrollView(this).apply { addView(body) })
+            .setPositiveButton(R.string.done, null).show()
+    }
+
+    private fun openExternal(url: String) {
+        try { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addCategory(Intent.CATEGORY_BROWSABLE)) }
+        catch (_: ActivityNotFoundException) { Toast.makeText(this, R.string.no_link_handler, Toast.LENGTH_SHORT).show() }
+        catch (_: SecurityException) { Toast.makeText(this, R.string.no_link_handler, Toast.LENGTH_SHORT).show() }
+    }
+
+    private fun formatName(kind: FileKind?): String = when (kind) {
+        null -> getString(R.string.automatic)
+        FileKind.TEXT -> getString(R.string.plain_text)
+        FileKind.MARKDOWN -> "Markdown"
+        else -> kind.name
+    }
+
+    private fun showDocumentInfo() {
+        val source = session.original ?: return
+        AlertDialog.Builder(this).setTitle(R.string.document_info)
+            .setMessage(getString(R.string.document_details, source.name,
+                android.text.format.Formatter.formatShortFileSize(this, source.bytes.toLong()),
+                formatName(source.kind), formatName(formatOverride)))
+            .setNeutralButton(R.string.treat_as) { _, _ -> showFormats() }
+            .setPositiveButton(R.string.done, null).show()
+    }
+
+    private fun showFormats() {
+        val formats = listOf(null) + FileKind.entries
+        AlertDialog.Builder(this).setTitle(R.string.treat_as)
+            .setSingleChoiceItems(formats.map(::formatName).toTypedArray(), formats.indexOf(formatOverride)) { dialog, index ->
+                dialog.dismiss()
+                val original = session.original ?: return@setSingleChoiceItems
+                rememberReading()
+                formatOverride = formats[index]
+                pendingScroll = 0
+                closeSearch()
+                load(currentUri) { original }
+            }.show()
+    }
+
+    private fun shareDocument() {
+        val source = session.original ?: return
+        if (currentUri == null && source.bytes < 100_000) {
+            launchShare(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, source.text))
+            return
+        }
+        val uri = currentUri
+        cancelWork()
+        sharing = true
+        val request = generation
+        val signal = CancellationSignal().also { cancellation = it }
+        Toast.makeText(this, R.string.preparing_share, Toast.LENGTH_SHORT).show()
+        work = worker.submit {
+            try {
+                val share = ShareFiles(applicationContext).prepare(uri, source, signal)
+                runOnUiThread {
+                    if (request == generation && !isDestroyed) { sharing = false; launchShare(share) }
+                }
+            } catch (_: Exception) {
+                runOnUiThread {
+                    if (request == generation && !isDestroyed) {
+                        sharing = false
+                        Toast.makeText(this, R.string.share_error, Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun launchShare(intent: Intent) {
+        try { startActivity(Intent.createChooser(intent, null)) }
+        catch (_: ActivityNotFoundException) { Toast.makeText(this, R.string.no_link_handler, Toast.LENGTH_SHORT).show() }
+        catch (_: SecurityException) { Toast.makeText(this, R.string.share_error, Toast.LENGTH_LONG).show() }
     }
 
     private fun openPicker() {
@@ -312,6 +448,8 @@ class MainActivity : ComponentActivity() {
         } else {
             val sharedText = intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString()
             if (intent.action == Intent.ACTION_SEND && sharedText != null) {
+                rememberReading()
+                formatOverride = null
                 // Shared text has no reopenable URI and is deliberately excluded from history.
                 load(null) {
                     TextDocuments.read(sharedText.byteInputStream(), getString(R.string.shared_text_name), "text/plain")
@@ -321,22 +459,32 @@ class MainActivity : ComponentActivity() {
         return true
     }
 
-    private fun openDocument(uri: Uri, mime: String? = null, restoredMode: DisplayMode? = null, grantFlags: Int = 0) {
-        load(uri, restoredMode, grantFlags) { signal -> repository.read(uri, mime, signal) }
+    private fun openDocument(uri: Uri, mime: String? = null, restoredMode: DisplayMode? = null, grantFlags: Int = 0, restoring: Boolean = false) {
+        rememberReading()
+        val state = repository.readingState(uri)
+        if (!restoring) {
+            formatOverride = state.format
+            pendingScroll = state.scroll
+        }
+        load(uri, if (restoring) restoredMode else state.mode, grantFlags) { signal -> repository.read(uri, mime, signal) }
     }
 
     private fun load(uri: Uri?, restoredMode: DisplayMode? = null, grantFlags: Int = 0, reader: (CancellationSignal) -> TextDocument) {
         cancelWork()
+        requestedMode = restoredMode
         document = null
         currentUri = uri
         val signal = CancellationSignal().also { cancellation = it }
         val request = generation
+        val selectedFormat = formatOverride
         showProgress(R.string.loading)
         work = worker.submit {
             try {
-                val prepared = DocumentRenderer.prepare(reader(signal))
+                val original = reader(signal)
+                val prepared = DocumentRenderer.prepare(original.copy(kind = selectedFormat ?: original.kind))
                 runOnUiThread {
                     if (request != generation || isDestroyed) return@runOnUiThread
+                    session.original = original
                     document = prepared
                     mode = restoredMode?.takeIf { it in prepared.modes } ?: prepared.defaultMode
                     if (uri != null) {
@@ -361,7 +509,10 @@ class MainActivity : ComponentActivity() {
 
     private fun showProgress(message: Int) {
         clearContent()
-        toolbar.visibility = View.VISIBLE
+        homeShown = false
+        backButton.visibility = View.VISIBLE
+        findButton.visibility = View.VISIBLE
+        toolbar.visibility = View.GONE
         modeButton.isEnabled = false
         findButton.isEnabled = false
         titleView.text = getString(message)
@@ -371,6 +522,8 @@ class MainActivity : ComponentActivity() {
     private fun showError(message: Int) {
         cancelWork()
         document = null
+        session.original = null
+        findButton.visibility = View.GONE
         clearContent()
         toolbar.visibility = View.GONE
         closeSearch()
@@ -403,6 +556,7 @@ class MainActivity : ComponentActivity() {
                 titleView.text = prepared.source.name
                 modeButton.text = getString(modeLabel(selectedMode))
                 modeButton.contentDescription = getString(R.string.mode_description, getString(modeLabel(selectedMode)))
+                toolbar.visibility = if (prepared.modes.size > 1) View.VISIBLE else View.GONE
                 modeButton.isEnabled = false
                 findButton.isEnabled = false
                 val view = createWebView(scroll, page)
@@ -427,6 +581,7 @@ class MainActivity : ComponentActivity() {
         cancelWork()
         clearContent(stopLoading = !rendererGone)
         toolbar.visibility = View.GONE
+        findButton.visibility = View.GONE
         closeSearch()
         titleView.text = document?.source?.name ?: getString(R.string.app_name)
         val body = LinearLayout(this).apply {
@@ -508,6 +663,7 @@ class MainActivity : ComponentActivity() {
                         modeButton.isEnabled = (document?.modes?.size ?: 0) > 1
                         findButton.isEnabled = true
                         view.scrollTo(0, scroll)
+                        rememberReading()
                         if (searchRow.visibility == View.VISIBLE) view.findAllAsync(searchField.text.toString())
                     }
                 })
@@ -592,14 +748,29 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
+        rememberReading()
         super.onSaveInstanceState(outState)
         outState.putString("uri", currentUri?.toString())
-        // While loading, mode still belongs to the previous document (or the initial
-        // plain-text default). Let the new document choose its automatic mode.
-        if (document != null) outState.putString("mode", mode.name)
+        // While loading, remember only a mode explicitly requested for this URI,
+        // never the previous document's mode. Format changes request automatic mode.
+        outState.putString("mode", if (document != null) mode.name else requestedMode?.name)
         outState.putInt("scroll", webView?.scrollY ?: pendingScroll)
         outState.putString("query", searchField.text.toString())
+        outState.putString("format", formatOverride?.name)
         outState.putBoolean("search", searchRow.visibility == View.VISIBLE)
+    }
+
+    private fun rememberReading() {
+        val uri = currentUri ?: return
+        val view = webView ?: return
+        if (document != null && view.tag == true) {
+            repository.saveReadingState(uri, ReadingState(mode, view.scrollY.coerceAtLeast(0), formatOverride))
+        }
+    }
+
+    override fun onStop() {
+        rememberReading()
+        super.onStop()
     }
 
     private fun navigateBack() {

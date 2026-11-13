@@ -11,7 +11,9 @@ Textr is a minimal, read-only text viewer for Android. Open files from other app
 - TXT, LOG, CONF/CFG, INI, JSON, Markdown, YAML, TOML, XML, and CSV, with other text files available through the system file picker.
 - Automatic display selection: rendered Markdown, formatted JSON, syntax-highlighted source for recognized syntax, and plain text otherwise.
 - Manual switching between applicable display modes, with plain-text source always available for supported text files.
-- Search, text selection and copying, adjustable font size, line wrapping, and light/dark themes.
+- Search, text selection, copying and sharing, adjustable font size, line wrapping, and light/dark themes.
+- Share original files through Android; reopen recent files at their last position and display mode.
+- Document information and a remembered **Treat as…** format override for misidentified or generic files.
 - A minimal home screen with an **Open file** action and recent files. Remove individual entries or clear the history.
 
 Opening a format does not guarantee syntax highlighting. Basic highlighting covers JSON, Markdown source, INI, YAML, TOML, and XML. Generic configuration files use plain text unless the provider identifies a supported syntax. CSV stays a text view.
@@ -22,11 +24,11 @@ Markdown previews support headings, lists, links, quotes, code blocks, and table
 
 See the [installation and default-app guide](docs/installing.md) for screenshots and step-by-step instructions.
 
-Use **Open file** to select a document through Android's system picker, or choose Textr in another app's **Open with** or **Share** menu. Shared text can also be read; text without a file reference is not added to recent history. Long-press document text to select and copy it. **Find** searches the currently displayed view.
+Use **Open file** to select a document through Android's system picker, or choose Textr in another app's **Open with** or **Share** menu. Shared text can also be read; text without a file reference is not added to recent history. Long-press document text to select, copy, or share it. The **⋮** menu offers file sharing, document information, reading settings, and About. Choose **Document info → Treat as…** to override syntax detection; **Automatic** restores normal detection. **Find** searches the currently displayed view.
 
 Android's default-app behavior depends on the sending app and the reported file type, including its MIME type. Where Android offers the choice, you can select Textr as the default handler. Textr cannot guarantee a default association for every filename extension in every app. The file picker provides another way to select text files.
 
-The last 30 recent files store references and metadata locally, without retaining document contents. Reopening depends on continued access: moved, deleted, or temporarily shared files may become unavailable. Textr prompts you to reopen unavailable files through the picker. Removing a recent entry or clearing history does not delete the underlying files.
+The last 30 recent files store references and metadata locally, including the last display mode, scroll position, and optional format override, without retaining document contents. Positions are approximate when the file or text layout changes. Removing an entry also removes its reading preferences. Reopening depends on continued access: moved, deleted, or temporarily shared files may become unavailable. Textr prompts you to reopen unavailable files through the picker. Removing a recent entry or clearing history does not delete the underlying files.
 
 Textr also handles generic `application/octet-stream` requests because some apps report configuration files that way. This can make it appear for binary files too; unsupported binary, oversized, and unreadable files produce an explanatory message.
 
@@ -34,7 +36,7 @@ See Android's documentation on [intents and file-type matching](https://develope
 
 ## Privacy and boundaries
 
-Textr is read-only, with no editing, accounts, ads, analytics, or network permission. External document providers used through the system picker may independently use network access. Document rendering disables JavaScript, network loads, images, and WebView file/content access. History and settings are excluded from app backups. Textr opts out of WebView usage metrics. Android/WebView crash diagnostics remain governed by the device and provider settings; see [Android’s WebView privacy documentation](https://developer.android.com/develop/ui/views/layout/webapps/webview-privacy).
+Textr is read-only, with no editing, accounts, ads, analytics, or network permission. External document providers used through the system picker may independently use network access. Document rendering disables JavaScript, network loads, images, and WebView file/content access. History and settings are excluded from app backups. Explicit **Share file…** creates a temporary copy of the original bytes with read-only access for the receiving app. Copies are separate from history, limited to the latest 20, and cleaned on the next app start or share after 24 hours. Short incoming shared text is sent as text; larger shared text is offered as a UTF-8 file. Merely viewing a document creates no sharing copy. Textr opts out of WebView usage metrics. Android/WebView crash diagnostics remain governed by the device and provider settings; see [Android’s WebView privacy documentation](https://developer.android.com/develop/ui/views/layout/webapps/webview-privacy).
 
 File management, tabs, huge-log support, direct cloud integrations, and store publication are outside the first version. See the [v1 scope](docs/scope.md) for the agreed requirements and acceptance criteria, and the [roadmap](docs/roadmap.md) for milestones and individual GitHub issues leading to the first public APK.
 

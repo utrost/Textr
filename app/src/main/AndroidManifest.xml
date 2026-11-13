@@ -13,6 +13,13 @@
         <meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true" />
         <!-- Only locally generated, intercepted content is ever displayed. -->
         <meta-data android:name="android.webkit.WebView.EnableSafeBrowsing" android:value="false" />
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.shared"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/shared_paths" />
+        </provider>
         <activity
             android:name=".MainActivity"
             android:exported="true"

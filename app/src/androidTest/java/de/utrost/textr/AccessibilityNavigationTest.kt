@@ -66,14 +66,16 @@ class AccessibilityNavigationTest {
             activate("Next match")
             activate("Previous match")
             activate("Close search")
+            activate("More options")
             activate("Reading settings")
             node { it.viewIdResourceName == "android:id/button1" }.performAction(AccessibilityNodeInfo.ACTION_CLICK)
             ready(scenario)
-            activate("Home")
+            activate("Back to files")
             activate("sample.json")
             ready(scenario)
-            activate("Home")
+            activate("Back to files")
             focus(node { it.contentDescription?.toString() == "Remove sample.json from recent files" })
+            activate("More options")
             activate("Clear history")
             // Confirmation action is reachable through the accessibility tree.
             node { it.viewIdResourceName == "android:id/button1" }.performAction(AccessibilityNodeInfo.ACTION_CLICK)
@@ -109,7 +111,9 @@ class AccessibilityNavigationTest {
     }
 
     private fun activate(label: String) {
-        val target = node { it.isVisibleToUser && it.isClickable && (it.contentDescription?.toString() == label || it.text?.toString().equals(label, true)) }
+        var target = node { it.isVisibleToUser && (it.contentDescription?.toString() == label || it.text?.toString().equals(label, true)) }
+        // Native popup menus expose their label as a child of the actionable row.
+        while (!target.isClickable) target = target.parent ?: throw AssertionError("No actionable parent for $label")
         focus(target)
         assertTrue("Accessibility activation: $label", target.performAction(AccessibilityNodeInfo.ACTION_CLICK))
     }

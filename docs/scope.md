@@ -2,6 +2,10 @@
 
 **Status: v1 scope implemented in the initial 0.1.0 development build.** This document records the agreed product boundaries. See the [README](../README.md) for current functionality and implementation limits, and [development notes](development.md) for build and validation instructions. Release signing support is implemented; selection of the production signing identity and publication are still pending.
 
+## Approved reader UX extension (2026-11-13)
+
+The next iteration adds contextual menus and About access, outgoing file/selected-text sharing, remembered reading position and display mode, and per-file format overrides. The original source and rendering limits remain in force. Tabs, reload, line navigation, pinning, and other backlog ideas are not part of this iteration.
+
 ## Purpose
 
 Provide a minimal, read-only Android app for opening and reading everyday text files. Users can select Textr from other apps, choose it as a default handler where Android allows, open files through the system picker, and revisit recent files.
@@ -32,13 +36,15 @@ Choose the initial display automatically and allow manual switching between appl
 - Preview budgets bound expensive rendering: JSON accepts up to 1 MiB of input and 5 Mi characters of formatted output; Markdown accepts up to 512 Ki characters, 20,000 nodes, and depth 64. Exceeding a preview budget leaves the complete source readable and explains the fallback. The source limit remains 5 MiB.
 - CSV stays a text view, with no spreadsheet interface.
 - Provide search, text selection and copying, adjustable font size, line wrapping, and light/dark themes.
+- Let users inspect document information and choose Automatic, plain text, JSON, Markdown, INI, YAML, TOML, or XML interpretation without changing file bytes. Remember the choice for recent files.
 - Keep the reader focused on the document with a small toolbar. Viewing and switching modes must never modify the source file.
 
 ## Opening files and recent history
 
 - Provide a minimal home screen with an **Open file** action using Android's system picker and a recent-files list.
 - Accept supported files opened from other apps. Default-handler availability depends on the sending app and reported file type; do not promise universal extension associations.
-- Store recent-file references and metadata locally, without retaining document contents as history.
+- Store recent-file references and metadata locally, including reading position, mode, and optional format override, without retaining document contents as history. Remove this metadata with its history entry.
+- Share original files through the Android Sharesheet with temporary read-only access. Explicit sharing may create a private temporary copy: retain at most 20 and remove copies older than 24 hours on the next start/share. Selected text uses Android’s native selection sharing. Short incoming text can be shared as text; larger incoming text is shared as a UTF-8 file.
 - Retain access where Android and the document provider permit it. If a recent file is unavailable, explain the issue and prompt the user to reopen it through the picker.
 - Allow removal of individual recent entries and clearing all history. Neither action deletes the underlying files.
 
