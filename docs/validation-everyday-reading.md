@@ -17,7 +17,7 @@ Six new instrumentation cases cover:
 
 The complete instrumentation suite contains 61 cases. PR CI runs all cases on Android 10/API 29 and Android 16/API 36, plus the JVM/build/lint job. PR checks and issue completion comments identify the final tested revision and outcome. Existing reader-control, session, source-integrity and large-font coverage remains in place.
 
-A local Android 16 combined run passed 25 feature, reader-control, session and large-font cases before the additional landscape regression was added. Initial narrow-screen testing also confirmed that the About help link remains accessible by scrolling at 200% fonts.
+A local Android 16 combined run passed 25 feature, reader-control, session and large-font cases before the additional landscape regression was added. After the layout fix, all six feature cases passed together on Android 15 at 200% fonts and 360 dp width (99.955 seconds). The About help link remains accessible by scrolling, and the final source-search screen was visually inspected. The existing session test additionally checks that reusing the same shared-text document preserves source-query options, while a fresh incoming share resets them and no query is written to preferences.
 
 ## Limits
 

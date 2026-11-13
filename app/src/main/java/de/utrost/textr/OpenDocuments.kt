@@ -39,6 +39,7 @@ class OpenDocuments(context: Context) {
         val previous = entries.find { it.key == key }
         entries.removeAll { it.key == key }
         val entry = if (uri != null) previous?.copy(name = original.name) ?: OpenDocument(key, uri, original.name)
+            else if (previous?.shared === original) previous
             else OpenDocument(key, null, original.name, shared = original)
         entries.add(entry)
         while (entries.size > LIMIT) entries.removeAt(0)

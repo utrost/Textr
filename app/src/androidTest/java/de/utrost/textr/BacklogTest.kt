@@ -176,9 +176,22 @@ class BacklogTest {
         assertEquals(5, restored.entries.size)
         assertEquals(800, restored.entries.last().reading.scroll)
         assertEquals("", restored.entries.last().query)
-        sessions.opened(null, TextDocument("Shared", "PRIVATE CONTENT", FileKind.TEXT, 15))
+        val shared = TextDocument("Shared", "PRIVATE CONTENT", FileKind.TEXT, 15)
+        val sharedEntry = sessions.opened(null, shared)
+        sharedEntry.query = "PRIVATE QUERY"
+        sharedEntry.sourceSearch = SourceSearchOptions("PRIVATE SOURCE QUERY", true, true)
+        // Switching/reformatting the same in-memory text preserves its session;
+        // a fresh incoming share replaces it, even when its text happens to match.
+        assertSame(sharedEntry, sessions.opened(null, shared))
+        assertEquals(SourceSearchOptions("PRIVATE SOURCE QUERY", true, true), sessions.entries.last().sourceSearch)
+        assertEquals("PRIVATE QUERY", sessions.entries.last().query)
         sessions.save()
         assertEquals(4, OpenDocuments(context).entries.size)
+        assertFalse(context.getSharedPreferences("open_documents", 0).getString("entries", "")!!.contains("PRIVATE"))
+        val freshShare = sessions.opened(null, shared.copy())
+        assertNotSame(sharedEntry, freshShare)
+        assertEquals(SourceSearchOptions(), freshShare.sourceSearch)
+        assertEquals("", freshShare.query)
     }
 
     @Test fun pinsUndoAndExpiryRespectLimitsAndGrants() {
