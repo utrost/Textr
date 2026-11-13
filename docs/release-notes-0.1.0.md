@@ -20,3 +20,9 @@ Default associations depend on the sending app and MIME type. Markdown preview h
 Validation uses clean API 29, 35, and 36 emulators as requested by the owner. Physical-device coverage is a follow-up. See [installation and defaults](installing.md), [development](development.md), and [release signing](releasing.md).
 
 License: GPL-3.0-only. Dependency notices are bundled in the app and source.
+
+## Additional formats
+
+- Source highlighting for Java, JavaScript, CSS, HTML, Kotlin, Python, shell, SQL, diff/patch, and iCalendar.
+- Bounded iCalendar event summaries with explicit all-day, UTC, floating-time, and supplied time-zone labels; recurrence metadata is displayed without expansion.
+- New formats participate in Treat as, Android opening/sharing, and original-byte read-only handoff. See [behavior and limits](formats.md).

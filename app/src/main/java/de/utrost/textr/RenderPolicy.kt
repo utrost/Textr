@@ -17,4 +17,4 @@ object RenderPolicy {
     }
 }
 
-enum class PreviewNotice { NONE, UNAVAILABLE, MARKDOWN_LIMIT, JSON_LIMIT, HIGHLIGHT_LIMIT }
+enum class PreviewNotice { NONE, UNAVAILABLE, MARKDOWN_LIMIT, JSON_LIMIT, HIGHLIGHT_LIMIT, CALENDAR_LIMIT }

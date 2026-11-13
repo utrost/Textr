@@ -62,6 +62,16 @@ class ShareFiles(private val context: Context) {
                 FileKind.XML -> "application/xml"
                 FileKind.YAML -> "application/yaml"
                 FileKind.TOML -> "application/toml"
+                FileKind.JAVA -> "text/x-java-source"
+                FileKind.JAVASCRIPT -> "text/javascript"
+                FileKind.CSS -> "text/css"
+                FileKind.HTML -> "text/html"
+                FileKind.KOTLIN -> "text/x-kotlin"
+                FileKind.PYTHON -> "text/x-python"
+                FileKind.SHELL -> "text/x-shellscript"
+                FileKind.SQL -> "application/sql"
+                FileKind.DIFF -> "text/x-diff"
+                FileKind.ICALENDAR -> "text/calendar"
                 else -> "text/plain"
             }
         }

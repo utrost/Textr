@@ -404,6 +404,13 @@ class MainActivity : ComponentActivity() {
         null -> getString(R.string.automatic)
         FileKind.TEXT -> getString(R.string.plain_text)
         FileKind.MARKDOWN -> "Markdown"
+        FileKind.JAVA -> "Java"
+        FileKind.JAVASCRIPT -> "JavaScript"
+        FileKind.KOTLIN -> "Kotlin"
+        FileKind.PYTHON -> "Python"
+        FileKind.SHELL -> "Shell"
+        FileKind.DIFF -> "Diff / patch"
+        FileKind.ICALENDAR -> "iCalendar"
         else -> kind.name
     }
 
@@ -656,6 +663,8 @@ class MainActivity : ComponentActivity() {
                     Toast.makeText(this, if (prepared.notice == PreviewNotice.MARKDOWN_LIMIT) R.string.markdown_limit
                         else if (prepared.notice == PreviewNotice.JSON_LIMIT) R.string.json_limit
                         else if (prepared.notice == PreviewNotice.HIGHLIGHT_LIMIT) R.string.highlight_limit
+                        else if (prepared.notice == PreviewNotice.CALENDAR_LIMIT) R.string.calendar_limit
+                        else if (prepared.source.kind == FileKind.ICALENDAR) R.string.calendar_unavailable
                         else if (prepared.source.kind == FileKind.JSON) R.string.invalid_json else R.string.preview_unavailable, Toast.LENGTH_LONG).show()
                 }
             }

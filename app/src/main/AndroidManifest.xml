@@ -48,6 +48,15 @@
                 <data android:mimeType="application/x-toml" />
                 <data android:mimeType="application/ini" />
                 <data android:mimeType="application/x-ini" />
+                <data android:mimeType="application/javascript" />
+                <data android:mimeType="application/x-javascript" />
+                <data android:mimeType="application/ecmascript" />
+                <data android:mimeType="application/x-java-source" />
+                <data android:mimeType="application/xhtml+xml" />
+                <data android:mimeType="application/x-python" />
+                <data android:mimeType="application/x-sh" />
+                <data android:mimeType="application/x-shellscript" />
+                <data android:mimeType="application/sql" />
                 <data android:mimeType="application/octet-stream" />
             </intent-filter>
             <intent-filter>
@@ -69,6 +78,15 @@
                 <data android:mimeType="application/x-toml" />
                 <data android:mimeType="application/ini" />
                 <data android:mimeType="application/x-ini" />
+                <data android:mimeType="application/javascript" />
+                <data android:mimeType="application/x-javascript" />
+                <data android:mimeType="application/ecmascript" />
+                <data android:mimeType="application/x-java-source" />
+                <data android:mimeType="application/xhtml+xml" />
+                <data android:mimeType="application/x-python" />
+                <data android:mimeType="application/x-sh" />
+                <data android:mimeType="application/x-shellscript" />
+                <data android:mimeType="application/sql" />
                 <data android:mimeType="application/octet-stream" />
             </intent-filter>
         </activity>

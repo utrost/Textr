@@ -8,8 +8,8 @@ Textr is a minimal, read-only text viewer for Android. Open files from other app
 
 - Android 10 and newer.
 - Everyday text files up to 5 MiB (5,242,880 bytes).
-- TXT, LOG, CONF/CFG, INI, JSON, Markdown, YAML, TOML, XML, and CSV, with other text files available through the system file picker.
-- Automatic display selection: rendered Markdown, formatted JSON, syntax-highlighted source for recognized syntax, and plain text otherwise.
+- TXT, LOG, CONF/CFG, INI, JSON, Markdown, YAML, TOML, XML, CSV, Java, JavaScript, CSS, HTML, Kotlin, Python, shell, SQL, diff/patch, and iCalendar, with other text files available through the system file picker.
+- Automatic display selection: rendered Markdown, formatted JSON, supported iCalendar event summaries, syntax-highlighted source for recognized syntax, and plain text otherwise.
 - Manual switching between applicable display modes, with plain-text source always available for supported text files.
 - Search, text selection, copying and sharing, adjustable font size, line wrapping, and light/dark themes.
 - Share original files through Android; reopen recent files at their last position and display mode.
@@ -18,9 +18,11 @@ Textr is a minimal, read-only text viewer for Android. Open files from other app
 - A five-document switcher, pinned recents with Undo, and read-only **Open with…** handoff.
 - A minimal home screen with an **Open file** action and recent files. Remove individual entries or clear the history.
 
-Opening a format does not guarantee syntax highlighting. Basic highlighting covers JSON, Markdown source, INI, YAML, TOML, and XML. Generic configuration files use plain text unless the provider identifies a supported syntax. CSV stays a text view.
+Opening a format does not guarantee syntax highlighting. Basic highlighting covers JSON, Markdown source, INI, YAML, TOML, XML, and the [additional source formats](docs/formats.md). Generic configuration files use plain text unless the provider identifies a supported syntax. CSV stays a text view.
 
 Markdown previews support headings, lists, links, quotes, code blocks, and tables. Images are replaced with an omission marker; embedded HTML is removed. Web and email links open in an external app only when tapped. JSON previews add indentation without modifying the file; invalid JSON remains readable as source.
+
+iCalendar previews summarize events with explicit date/time-zone labels and unexpanded recurrence metadata. Unsupported calendars remain readable as source. HTML stays an escaped source view. See [format behavior and limits](docs/formats.md).
 
 ## Opening files and choosing a default
 
@@ -71,6 +73,7 @@ Files near the size limit, especially long unbroken lines, can render slowly on 
 - Text decoding supports UTF-8, UTF-8 with a BOM, and UTF-16 LE/BE with a BOM. Other encodings produce an explanatory message.
 - Highlighting is lightweight rather than a complete language parser. It is available for sources up to 512 Ki characters and decorates up to 10,000 tokens; remaining source stays readable without colors.
 - JSON preview accepts files up to 1 MiB and has a nesting limit of 128 and a formatted-output limit of 5 Mi characters. Documents exceeding preview limits remain available as source.
+- iCalendar event previews accept up to 512 Ki characters and 200 events, with bounded lines, nesting, and output. No recurrence expansion, time-zone conversion, calendar import, or alarms.
 - Markdown preview accepts up to 512 Ki characters, 20,000 nodes, and nesting depth 64; larger or more complex documents remain readable as source.
 - Markdown images, embedded HTML, and relative file links are not supported. Web links and email links require an external handler.
 - Search operates on visible text, so preview and source searches can differ. Shared text without a URI survives rotation but is not restored after process termination.
