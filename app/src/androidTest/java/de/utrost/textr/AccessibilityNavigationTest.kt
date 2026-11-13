@@ -29,6 +29,11 @@ class AccessibilityNavigationTest {
         previousAutomationFlags = configuration.uiAutomationFlags
         configuration.uiAutomationFlags = UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES
         automation
+        val manager = context.getSystemService(android.content.Context.ACCESSIBILITY_SERVICE) as android.view.accessibility.AccessibilityManager
+        val deadline = System.nanoTime() + 10_000_000_000L
+        while (!manager.isEnabled && System.nanoTime() < deadline) Thread.sleep(100)
+        assertTrue("Accessibility connection enabled before creating the reader", manager.isEnabled)
+        instrumentation.waitForIdleSync()
     }
 
     @After fun restoreAutomationConnection() {
@@ -134,6 +139,9 @@ class AccessibilityNavigationTest {
         automation.rootInActiveWindow?.let(pending::add)
         while (pending.isNotEmpty()) {
             val item = pending.removeFirst()
+            // WebView populates virtual descendants asynchronously. Repeatedly
+            // traversing cached empty nodes can miss the updated document tree.
+            if (!item.refresh()) continue
             result.add(item)
             for (i in 0 until item.childCount) item.getChild(i)?.let(pending::add)
         }

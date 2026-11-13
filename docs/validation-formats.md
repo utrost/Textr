@@ -14,6 +14,8 @@ The suite contains 30 JVM tests and 55 Android instrumentation cases. Ten new JV
 
 Three new device cases exercise twenty implicit VIEW/SEND openings across all ten added format families, external-type association aliases, source-only HTML with JavaScript/network/file/content access disabled, format-appropriate outgoing MIME types, exact copied bytes and read-only grants, scrolling to the iCalendar format override, preview search, source switching, and activity recreation. Existing full-suite cases retain cross-APK handoff, native clipboard, accessibility, lifecycle, large-document, and privacy coverage.
 
+The older format-override check now scrolls the expanded native list, including when returning to Automatic above the current selection. Accessibility navigation waits for its automation connection before creating the reader and refreshes nodes while polling for WebView's asynchronous virtual descendants; content, focus, and action assertions remain intact.
+
 ## Local evidence
 
 All 30 JVM cases and lint pass. The three additional-format Android 15 cases pass together (63.610 seconds) at 200% system fonts and 360 dp width; this validates the expanded native format list as well as the new reading flows. JavaScript and calendar screenshots were captured and visually inspected at normal font size/density. The final parser change normalizing an omitted `VALUE` parameter to `DATE-TIME` has a passing JVM regression.
