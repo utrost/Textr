@@ -256,6 +256,10 @@ class ReaderUxTest {
         androidx.test.uiautomator.UiScrollable(androidx.test.uiautomator.UiSelector().className("android.widget.ListView"))
             .scrollIntoView(androidx.test.uiautomator.UiSelector().text(format))
         click(format)
+        // Input injection may return before the selection callback runs on API 29.
+        // Wait for the picker to close so ready() cannot accept the previous page.
+        assertTrue("Format selection should close the picker",
+            device.wait(Until.gone(By.text(context.getString(R.string.treat_as))), 5000))
     }
     private fun menu(label: String) { click(By.desc("More options")); click(label) }
     private fun click(label: String) = click(By.text(java.util.regex.Pattern.compile(java.util.regex.Pattern.quote(label), 2)))
