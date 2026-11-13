@@ -12,7 +12,7 @@ One incoming shared-text document can be retained in memory alongside URI refere
 
 URI references, names, and reading metadata are saved separately from recent history. A fresh launch starts on Home; the switcher can reopen retained references. Android activity restoration can restore the active URI after process death. Search queries and shared text are not saved in the session preferences; Android's existing activity-state restoration retains the current Find query during activity recreation. Temporary grants may expire, in which case reopening shows the existing access-expired message and picker action.
 
-Back first closes Find, then returns to Home, then exits. Returning Home leaves document entries open. Closing a document removes its session state, not its recent entry or source file. Clearing history likewise leaves open documents alone. A persisted URI grant is released only when history, open documents, and a pending Undo no longer need it.
+Back first closes Find, then returns to Home, then exits. Returning Home leaves document entries open. Closing a document removes its session state, not its recent entry or source file. Clearing history likewise leaves open documents alone. A persisted URI grant is released only when history, open documents, bookmarks and a pending Undo no longer need it.
 
 ## Recent files and Undo
 
@@ -35,3 +35,5 @@ Removing an entry offers **Undo removal** for ten seconds. The reference, readin
 The copy preserves original source bytes and uses the same bounded private cache and per-URI read-only grants as Share file. A receiving editor can make its own copy, but is not granted write access to Textr's copy or the original. Android package visibility declares VIEW intent queries; no broad package-list permission is requested. Copies expire on the next start or copy operation after 24 hours, with at most twenty retained.
 
 See [search and encoding details](everyday-reading.md) for recovery, metadata, and source-results navigation.
+
+Named bookmarks are a third independent owner of URI read access. Closing all documents and clearing history keeps bookmarked references; delete or clear bookmarks separately. See [reading extras](reading-extras.md).

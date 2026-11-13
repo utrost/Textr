@@ -66,3 +66,7 @@ iCalendar files offer a supported event summary, highlighted source, and plain t
 The source limit is 5 MiB. UTF-8 and BOM-marked UTF-16 are supported. Oversized, binary, unsupported-encoding, and unavailable files show explanations and an action to choose another file. Complex or invalid previews fall back to readable source. If Android terminates a WebView renderer, Textr offers **Retry as plain text** and **Open file**.
 
 Textr has no network permission. A selected external document provider can fetch its own content, and tapping a web/email link launches another app. Images, embedded HTML, scripts, and automatic remote resources are not rendered.
+
+## CSV, bookmarks and keyboard shortcuts
+
+CSV starts in source view. Choose **⋮ → CSV table options…** for delimiter/header settings and an optional table. **⋮ → Add bookmark…** saves a named approximate position for a file; **Bookmarks** on Home or the reader opens, renames, reconnects or deletes saved positions independently of history. Progress and bookmarks use source view for CSV. **About Textr → Keyboard shortcuts** lists Ctrl+O/F/G and Ctrl+(Shift+)Tab. See [limits and behavior](reading-extras.md).

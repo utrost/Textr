@@ -15,6 +15,7 @@ Textr opens supported text encodings up to 5 MiB. Format detection uses the file
 | Shell | `.sh`, `.bash` | Highlighted source |
 | SQL | `.sql` | Highlighted source |
 | Diff / patch | `.diff`, `.patch` | Headers, additions, and deletions distinguished |
+| CSV | `.csv` | Plain text by default; optional bounded table preview with explicit delimiter/header settings |
 | iCalendar | `.ics`, `.ical` | Event preview when supported; highlighted source and plain text available |
 
 The source lexers decorate common keywords, comments, strings, and numbers. CSS also distinguishes selectors and properties; iCalendar distinguishes property headers, parameters, and values. These are lightweight lexers, not language parsers: embedded HTML languages, JavaScript regex literals/template interpolation, nested comments, Python f-string expressions, shell heredocs, and dialect-specific syntax may receive approximate colors. Files are never executed or validated as programs. HTML is displayed as escaped source with no browser preview.
@@ -40,3 +41,7 @@ Calendar semantics follow [RFC 5545](https://www.rfc-editor.org/rfc/rfc5545.html
 The existing `text/*` association covers text MIME types including `text/calendar`, `text/css`, and `text/javascript`. Additional VIEW/SEND aliases cover providers reporting JavaScript, Java source, XHTML, Python, shell, or SQL under `application/*`. Sending apps and MIME metadata still determine whether Android offers Textr; the picker remains the fallback. Java bytecode and archives are not source formats.
 
 Sharing uses a format-appropriate MIME type such as `text/calendar` or `text/javascript`. **Open with…** still hands another app a read-only temporary copy. The receiving app decides what to do with it, including offering its own calendar-import workflow.
+
+## CSV table preview
+
+See [reading extras](reading-extras.md) for the CSV subset, limits, delimiter/header choices, source fallback and selection behavior. Cells are escaped text; formulas, links and HTML are never executed.

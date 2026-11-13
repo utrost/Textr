@@ -36,7 +36,7 @@ Choose the initial display automatically and allow manual switching between appl
 - Markdown preview supports headings, lists, links, quotes, code blocks, and tables. Images and embedded HTML are outside v1. Links open externally only when tapped.
 - JSON preview adds indentation without modifying the underlying file. Invalid JSON remains readable as source.
 - Preview budgets bound expensive rendering: JSON accepts up to 1 MiB of input and 5 Mi characters of formatted output; Markdown accepts up to 512 Ki characters, 20,000 nodes, and depth 64. Exceeding a preview budget leaves the complete source readable and explains the fallback. The source limit remains 5 MiB.
-- CSV stays a text view, with no spreadsheet interface.
+- CSV opens as text and offers an optional bounded, read-only table preview; see the approved extension below.
 - Provide search, text selection and copying, adjustable font size, line wrapping, and light/dark themes.
 - Let users inspect document information and choose Automatic, plain text, or any supported syntax interpretation without changing file bytes. Remember the choice for recent files.
 - Keep the reader focused on the document with a small toolbar. Viewing and switching modes must never modify the source file.
@@ -59,7 +59,7 @@ The following are outside v1:
 - File management and unbounded tab sessions. A bounded document switcher is included in the approved extension.
 - Huge-log support or files larger than 5 MiB.
 - Direct cloud integrations.
-- Markdown images and embedded HTML, and spreadsheet-style CSV previews.
+- Markdown images and embedded HTML, and CSV editing, formulas, sorting or filtering.
 - Store publication.
 
 ## Delivery and deferred decisions
@@ -88,7 +88,7 @@ Java, JavaScript, CSS, HTML, Kotlin, Python, shell, SQL, diff/patch, and iCalend
 
 ## Everyday reading extension (approved 2026-11-13)
 
-Issues #41–#49 track approved follow-up work. The first implementation batch adds source search with case/whole-word options and bounded results, per-file encoding overrides and decoding recovery, wide-screen tabs and active-document labels, richer Document info, and offline opening/default-app help. See [behavior and limits](everyday-reading.md). Remaining follow-ups—CSV table preview, bookmarks/progress, keyboard shortcuts and loading feedback—are planned, not available. CSV remains text-only until its dedicated issue is implemented; this future preview extends the original exclusion above. Existing read-only, source-size and offline requirements remain fixed.
+Issues #41–#49 track approved follow-up work. The first implementation batch adds source search with case/whole-word options and bounded results, per-file encoding overrides and decoding recovery, wide-screen tabs and active-document labels, richer Document info, and offline opening/default-app help. See [behavior and limits](everyday-reading.md). Issues #44–#46 add optional bounded CSV tables, approximate reading progress, independent named bookmarks and hardware shortcuts; see [reading extras](reading-extras.md). This explicitly extends the original CSV preview exclusion. Improved loading feedback (#49) remains planned. Existing read-only, source-size and offline requirements remain fixed.
 
 ## Optional foldable layout (requested 2026-11-13)
 

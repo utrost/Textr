@@ -28,4 +28,4 @@ The existing toolbar document count opens the switcher. A check mark and spoken 
 
 **Opening files and defaults** is available from the Home menu and **About Textr** in the reader. The offline help explains the picker, incoming/outgoing sharing, Android MIME/default-handler limitations, temporary access, encoding recovery and document-provider network access.
 
-CSV table previews, bookmarks/progress, keyboard shortcuts and improved slow-loading feedback are tracked separately and are not implemented by this batch. Public release remains deferred.
+CSV table previews, bookmarks/progress and keyboard shortcuts are now implemented in the [reading extras follow-up](reading-extras.md). Improved slow-loading feedback (#49) remains planned. Public release remains deferred.

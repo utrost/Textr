@@ -45,16 +45,16 @@ Implementation extends source highlighting and adds a bounded iCalendar event su
 
 ## Everyday reading (approved 2026-11-13)
 
-[Milestone 7](https://github.com/utrost/Textr/milestone/7) tracks the next improvements. The first implementation batch covers source search, encoding recovery, navigation, document metadata and offline help. CSV preview, bookmarks/progress, keyboard shortcuts and loading feedback remain open follow-ups. Public release is still deferred.
+[Milestone 7](https://github.com/utrost/Textr/milestone/7) tracks the next improvements. The first implementation batch covers source search, encoding recovery, navigation, document metadata and offline help. CSV preview, bookmarks/progress and keyboard shortcuts are implemented by the next batch (#44–#46); loading feedback (#49) remains open. Public release is still deferred.
 
 | Issue | Work | Sequence |
 | --- | --- | --- |
 | [#41](https://github.com/utrost/Textr/issues/41) | Improve search with source results and matching options | First implementation batch |
 | [#42](https://github.com/utrost/Textr/issues/42) | Reopen documents with an explicit text encoding | First implementation batch |
 | [#43](https://github.com/utrost/Textr/issues/43) | Make document switching and format selection easier to discover | First implementation batch |
-| [#44](https://github.com/utrost/Textr/issues/44) | Add an optional bounded CSV table preview | Later iteration |
-| [#45](https://github.com/utrost/Textr/issues/45) | Add reading progress and named document bookmarks | Later iteration |
-| [#46](https://github.com/utrost/Textr/issues/46) | Support hardware keyboard reader shortcuts | Later iteration |
+| [#44](https://github.com/utrost/Textr/issues/44) | Add an optional bounded CSV table preview | Implemented |
+| [#45](https://github.com/utrost/Textr/issues/45) | Add reading progress and named document bookmarks | Implemented |
+| [#46](https://github.com/utrost/Textr/issues/46) | Support hardware keyboard reader shortcuts | Implemented |
 | [#47](https://github.com/utrost/Textr/issues/47) | Show text encoding and line information in Document info | First implementation batch |
 | [#48](https://github.com/utrost/Textr/issues/48) | Add offline help for opening files and Android defaults | First implementation batch |
 | [#49](https://github.com/utrost/Textr/issues/49) | Explain slow loading and provide a clear cancel action | Later iteration |
@@ -116,3 +116,17 @@ The owner confirmed emulator-only validation on 2026-11-12 because no physical d
 Android 10+, text files up to 5 MiB, read-only behavior, and no app network permission remain fixed. Editing, unbounded tab sessions, file management, huge-log support, direct cloud integrations, Markdown images/embedded HTML, and store publication remain outside v1. New features require a separate scope decision.
 
 Close work issues with acceptance evidence and update the [tracker checklist](https://github.com/utrost/Textr/issues/14). Update this document when scope or dependencies change; use GitHub for live completion status. See the [product scope](scope.md) and [development notes](development.md) for implementation context.
+
+## Release polish follow-ups
+
+Public release remains deferred. These issues capture the release-readiness review without adding an implementation commitment to this batch.
+
+- [#49](https://github.com/utrost/Textr/issues/49): loading explanation and explicit cancellation (existing issue).
+- [#53](https://github.com/utrost/Textr/issues/53): public privacy policy and About integration.
+- [#54](https://github.com/utrost/Textr/issues/54): German interface and offline help.
+- [#55](https://github.com/utrost/Textr/issues/55): contextual opening-help and sidebar discovery.
+- [#56](https://github.com/utrost/Textr/issues/56): real-device beta, providers, accessibility and Magic V6 checks.
+- [#57](https://github.com/utrost/Textr/issues/57): optional Play App Bundle and store-listing preparation; publication remains deferred.
+- [#59](https://github.com/utrost/Textr/issues/59): investigate intermittent CSV cell accessibility in WebView 133 and validate with TalkBack; source remains the accessible baseline.
+
+Validation for #44–#46 is recorded in [reading extras validation](validation-reading-extras.md) and [PR #58](https://github.com/utrost/Textr/pull/58).

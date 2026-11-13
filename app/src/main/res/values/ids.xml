@@ -15,4 +15,8 @@
     <item name="source_result_count" type="id" />
     <item name="match_case" type="id" />
     <item name="whole_word" type="id" />
+    <item name="reading_progress" type="id" />
+    <item name="csv_delimiter" type="id" />
+    <item name="csv_header" type="id" />
+    <item name="bookmark_name" type="id" />
 </resources>

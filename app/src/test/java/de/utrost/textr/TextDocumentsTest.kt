@@ -51,7 +51,7 @@ class TextDocumentsTest {
         assertEquals(FileKind.YAML, TextDocuments.kind("settings", "application/yaml"))
         assertEquals(FileKind.TEXT, TextDocuments.kind("server.conf", "text/plain"))
         assertEquals(FileKind.INI, TextDocuments.kind("server.conf", "application/x-ini"))
-        assertEquals(FileKind.TEXT, TextDocuments.kind("spreadsheet.csv", "text/csv"))
+        assertEquals(FileKind.CSV, TextDocuments.kind("spreadsheet.csv", "text/csv"))
         assertEquals(FileKind.JSON, TextDocuments.kind("data", "application/json; charset=utf-8"))
     }
 

@@ -12,7 +12,7 @@ import android.system.OsConstants
 import android.system.StructPollfd
 import java.io.FilterInputStream
 
-data class ReadingState(val mode: DisplayMode? = null, val scroll: Int = 0, val format: FileKind? = null, val encoding: TextEncoding? = null)
+data class ReadingState(val mode: DisplayMode? = null, val scroll: Int = 0, val format: FileKind? = null, val encoding: TextEncoding? = null, val csv: CsvOptions = CsvOptions())
 data class RecentFile(val uri: String, val name: String, val openedAt: Long, val reading: ReadingState = ReadingState(), val pinned: Boolean = false)
 
 class DocumentRepository(private val context: Context) {
@@ -109,7 +109,7 @@ class DocumentRepository(private val context: Context) {
                 DisplayMode.entries.find { it.name == entry.optString("mode") },
                 entry.optInt("scroll", 0).coerceAtLeast(0),
                 FileKind.entries.find { it.name == entry.optString("format") },
-                TextEncoding.entries.find { it.name == entry.optString("encoding") }), entry.optBoolean("pinned"))
+                TextEncoding.entries.find { it.name == entry.optString("encoding") }, csvOptions(entry)), entry.optBoolean("pinned"))
         }
     } catch (_: org.json.JSONException) { emptyList() }
 
@@ -151,6 +151,8 @@ class DocumentRepository(private val context: Context) {
                     put("scroll", file.reading.scroll)
                     put("format", file.reading.format?.name)
                     put("encoding", file.reading.encoding?.name)
+                    put("delimiter", file.reading.csv.delimiter.toString())
+                    put("csvHeader", file.reading.csv.firstRowHeader)
                 }
             })
         }
@@ -215,7 +217,14 @@ class DocumentRepository(private val context: Context) {
         (old - references).forEach(::release)
     }
 
+    fun setBookmarkReferences(references: Set<String>) {
+        val old = preferences.getStringSet("bookmarks", emptySet()).orEmpty().toSet()
+        preferences.edit().putStringSet("bookmarks", references).apply()
+        (old - references).forEach(::release)
+    }
+
     private fun release(value: String) {
+        if (value in preferences.getStringSet("bookmarks", emptySet()).orEmpty()) return
         if (recentFiles().any { it.uri == value } || value in sessionReferences()) return
         val removed = preferences.getString("removed", null)
         if (removed != null && runCatching { JSONObject(removed).getString("uri") }.getOrNull() == value) return
@@ -228,3 +237,6 @@ class DocumentRepository(private val context: Context) {
     }
     companion object { const val MAX_PINS = 10; const val UNDO_MS = 10_000L }
 }
+
+internal fun csvOptions(value: JSONObject): CsvOptions = CsvOptions(
+    value.optString("delimiter", ",").firstOrNull()?.takeIf { it in CsvOptions.DELIMITERS } ?: ',', value.optBoolean("csvHeader"))
