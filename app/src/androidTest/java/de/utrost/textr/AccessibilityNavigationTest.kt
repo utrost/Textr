@@ -74,7 +74,7 @@ class AccessibilityNavigationTest {
             activate("Previous match")
             activate("Close search")
             activate("More options")
-            activate("Reading settings")
+            activate("Reading settings", scroll = true)
             node { it.viewIdResourceName == "android:id/button1" }.performAction(AccessibilityNodeInfo.ACTION_CLICK)
             ready(scenario)
             activate("Back to files")
@@ -117,8 +117,8 @@ class AccessibilityNavigationTest {
         fail("Picker did not return to Textr")
     }
 
-    private fun activate(label: String) {
-        var target = node { it.isVisibleToUser && (it.contentDescription?.toString() == label || it.text?.toString().equals(label, true)) }
+    private fun activate(label: String, scroll: Boolean = false) {
+        var target = node(scroll) { it.isVisibleToUser && (it.contentDescription?.toString() == label || it.text?.toString().equals(label, true)) }
         // Native popup menus expose their label as a child of the actionable row.
         while (!target.isClickable) target = target.parent ?: throw AssertionError("No actionable parent for $label")
         focus(target)
@@ -147,10 +147,21 @@ class AccessibilityNavigationTest {
         }
         return result
     }
-    private fun node(predicate: (AccessibilityNodeInfo) -> Boolean): AccessibilityNodeInfo {
+    private fun node(scroll: Boolean = false, predicate: (AccessibilityNodeInfo) -> Boolean): AccessibilityNodeInfo {
         val deadline = System.nanoTime() + 10_000_000_000L
+        var nextScroll = System.nanoTime() + 500_000_000L
         while (System.nanoTime() < deadline) {
-            allNodes().firstOrNull(predicate)?.let { return it }
+            val nodes = allNodes()
+            nodes.firstOrNull(predicate)?.let { return it }
+            // The native popup menu can extend below its visible area, especially
+            // while the IME is closing. Exercise the same action a screen reader uses.
+            if (scroll && System.nanoTime() >= nextScroll) {
+                nodes.firstOrNull { it.isVisibleToUser && it.isScrollable &&
+                    it.actionList.any { action -> action.id == AccessibilityNodeInfo.ACTION_SCROLL_FORWARD } }?.let {
+                    assertTrue("Accessible menu scroll", it.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD))
+                    nextScroll = System.nanoTime() + 500_000_000L
+                }
+            }
             Thread.sleep(100)
         }
         throw AssertionError("Accessibility node missing. Visible nodes: " + allNodes().map { "${it.text}/${it.contentDescription}/${it.viewIdResourceName}" })

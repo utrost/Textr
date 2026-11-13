@@ -7,4 +7,10 @@
     <item name="font_size" type="id" />
     <item name="line_wrap" type="id" />
     <item name="theme_choice" type="id" />
+    <item name="document_strip" type="id" />
+    <item name="source_query" type="id" />
+    <item name="source_results" type="id" />
+    <item name="source_result_count" type="id" />
+    <item name="match_case" type="id" />
+    <item name="whole_word" type="id" />
 </resources>

@@ -12,14 +12,14 @@ import android.system.OsConstants
 import android.system.StructPollfd
 import java.io.FilterInputStream
 
-data class ReadingState(val mode: DisplayMode? = null, val scroll: Int = 0, val format: FileKind? = null)
+data class ReadingState(val mode: DisplayMode? = null, val scroll: Int = 0, val format: FileKind? = null, val encoding: TextEncoding? = null)
 data class RecentFile(val uri: String, val name: String, val openedAt: Long, val reading: ReadingState = ReadingState(), val pinned: Boolean = false)
 
 class DocumentRepository(private val context: Context) {
     private val resolver = context.contentResolver
     private val preferences = context.getSharedPreferences("recent_files", Context.MODE_PRIVATE)
 
-    fun read(uri: Uri, mime: String?, cancellation: CancellationSignal): TextDocument {
+    fun read(uri: Uri, mime: String?, cancellation: CancellationSignal, encoding: TextEncoding? = null): TextDocument {
         if (uri.scheme !in setOf("content", "file")) throw DocumentException(ReadFailure.SOURCE)
         cancellation.throwIfCanceled()
         var name = uri.lastPathSegment?.substringAfterLast('/') ?: "Text file"
@@ -38,7 +38,7 @@ class DocumentRepository(private val context: Context) {
         val type = if (declaredType == null || declaredType in setOf("*/*", "application/octet-stream", "text/plain")) {
             optionalMetadata { resolver.getType(uri) } ?: declaredType
         } else declaredType
-        return withSource(uri, cancellation) { TextDocuments.read(it, name, type) }
+        return withSource(uri, cancellation) { TextDocuments.read(it, name, type, encoding) }
     }
 
     /** Read the original bytes, including BOM and line endings, through the same cancellable path. */
@@ -108,7 +108,8 @@ class DocumentRepository(private val context: Context) {
             RecentFile(entry.getString("uri"), entry.getString("name"), entry.getLong("openedAt"), ReadingState(
                 DisplayMode.entries.find { it.name == entry.optString("mode") },
                 entry.optInt("scroll", 0).coerceAtLeast(0),
-                FileKind.entries.find { it.name == entry.optString("format") }), entry.optBoolean("pinned"))
+                FileKind.entries.find { it.name == entry.optString("format") },
+                TextEncoding.entries.find { it.name == entry.optString("encoding") }), entry.optBoolean("pinned"))
         }
     } catch (_: org.json.JSONException) { emptyList() }
 
@@ -149,6 +150,7 @@ class DocumentRepository(private val context: Context) {
                     put("mode", file.reading.mode?.name)
                     put("scroll", file.reading.scroll)
                     put("format", file.reading.format?.name)
+                    put("encoding", file.reading.encoding?.name)
                 }
             })
         }

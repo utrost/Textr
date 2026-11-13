@@ -4,9 +4,9 @@ The owner authorized backlog issues #28–#33 on 2026-11-13. This extends the or
 
 ## Document switcher
 
-The toolbar's document count and **Open documents** menu show up to five open documents. The same accessible list is used on phones and wider screens; visible tab strips were considered but would consume reading space and truncate long filenames. Select a row to switch or its labeled close action to close it. Opening the same URI moves its existing entry to the most recently used end. A sixth document evicts the least recently used entry; its recent-history entry remains independently available.
+The toolbar's document count and **Open documents** menu show up to five open documents. The active entry has a check mark and spoken label. Screens at least 600 dp wide with font scale at most 130% also show a scrolling tab strip when two or more documents are open. Larger fonts and phones retain the compact switcher; tabs are alphabetically ordered independently of LRU eviction. Select a row to switch or its labeled close action to close it. Opening the same URI moves its existing entry to the most recently used end. A sixth document evicts the least recently used entry; its recent-history entry remains independently available.
 
-Only the active URI document retains loaded source, preview, and a WebView. Inactive URI documents are read again when selected. Each entry retains position, display mode, format override, search query, and whether Find is open. Find starts at the first matching occurrence when the document is reloaded. Changed files and layout changes can make restored positions approximate; the WebView clamps positions to the new content height.
+Only the active URI document retains loaded source, preview, and a WebView. Inactive URI documents are read again when selected. Each entry retains position, display mode, format and encoding overrides, search query, source-search options, and whether Find is open. Find starts at the first matching occurrence when the document is reloaded. Changed files and layout changes can make restored positions approximate; the WebView clamps positions to the new content height.
 
 One incoming shared-text document can be retained in memory alongside URI references. Another incoming text replaces it. It counts toward the five-document limit and is lost when the process dies. No document contents are saved as session state on disk.
 
@@ -22,7 +22,7 @@ Removing an entry offers **Undo removal** for ten seconds. The reference, readin
 
 ## Reload and navigation
 
-**Reload** explicitly rereads a URI-backed file; there is no background polling. Mode, format override, search query, and position are retained where applicable. A preview that becomes invalid falls back to a supported source mode. Missing or revoked files show a readable error and offer reopening through the picker. Incoming text without a URI has no Reload action.
+**Reload** explicitly rereads a URI-backed file; there is no background polling. Mode, format and encoding overrides, search query, and position are retained where applicable. A preview that becomes invalid falls back to a supported source mode. Missing or revoked files show a readable error and offer reopening through the picker. Incoming text without a URI has no Reload action.
 
 **Reading settings → Show source line numbers** adds logical line numbers to plain/highlighted source. Wrapped visual rows keep the same logical line number. Decorations are excluded from selection and accessibility text, and sharing always uses original bytes. Numbering is limited to 10,000 logical lines to bound DOM work; larger sources remain readable. **Go to line…** works across the complete source by rendering only the requested anchor when numbering is unavailable. LF, CRLF, and standalone CR are recognized as line endings. JSON and Markdown previews have no source-line numbering.
 
@@ -33,3 +33,5 @@ Removing an entry offers **Undo removal** for ten seconds. The reference, readin
 **Open with…** resolves compatible Android VIEW handlers and excludes Textr. The dialog explicitly identifies the handoff as a read-only copy. Selection starts that external activity directly, avoiding a resolver loop; no compatible handler or a disappeared handler produces an understandable message.
 
 The copy preserves original source bytes and uses the same bounded private cache and per-URI read-only grants as Share file. A receiving editor can make its own copy, but is not granted write access to Textr's copy or the original. Android package visibility declares VIEW intent queries; no broad package-list permission is requested. Copies expire on the next start or copy operation after 24 hours, with at most twenty retained.
+
+See [search and encoding details](everyday-reading.md) for recovery, metadata, and source-results navigation.

@@ -162,7 +162,7 @@ object DocumentRenderer {
     }
 
     /** Each request gets a fresh stream; plain text is escaped in small chunks. */
-    fun page(document: PreparedDocument, mode: DisplayMode, dark: Boolean, wrap: Boolean, lineNumbers: Boolean = false, targetLine: Int = 0): HtmlPage {
+    fun page(document: PreparedDocument, mode: DisplayMode, dark: Boolean, wrap: Boolean, lineNumbers: Boolean = false, targetLine: Int = 0, match: SourceMatch? = null): HtmlPage {
         val plain = mode == DisplayMode.PLAIN || (mode == DisplayMode.PREVIEW && document.preview == null)
         val content = if (plain) document.source.text else when (mode) {
             DisplayMode.PREVIEW -> document.preview!!
@@ -172,7 +172,7 @@ object DocumentRenderer {
         val source = mode != DisplayMode.PREVIEW || plain
         val numbered = source && lineNumbers && logicalLines(document.source.text) <= MAX_NUMBERED_LINES
         return HtmlPage(header(dark, wrap) + if (source) (if (numbered) "<pre class=\"numbered\">" else "<pre>") else "", content,
-            (if (source) "</pre>" else "") + "</body></html>", plain, plain && wrap, numbered, if (source) targetLine else 0)
+            (if (source) "</pre>" else "") + "</body></html>", plain, plain && wrap, numbered, if (source) targetLine else 0, match.takeIf { plain })
     }
 
     fun html(document: PreparedDocument, mode: DisplayMode, dark: Boolean, wrap: Boolean): String =
@@ -207,18 +207,19 @@ object DocumentRenderer {
             .addition { color: ${if (dark) "#9bcbb7" else "#245c50"}; }
             .deletion { color: ${if (dark) "#ffb4ab" else "#9a2925"}; }
             .calendar-value { white-space: pre-wrap; }
+            mark { background: #ffe08a; color: #202923; }
             </style></head><body>""".trimIndent()
     }
 }
 
 /** Keeps the 5 MiB source intact without allocating its potentially 30 MiB HTML expansion. */
-class HtmlPage(private val prefix: String, private val content: String, private val suffix: String, private val escape: Boolean, private val softBreaks: Boolean, private val numbered: Boolean = false, private val targetLine: Int = 0) {
+class HtmlPage(private val prefix: String, private val content: String, private val suffix: String, private val escape: Boolean, private val softBreaks: Boolean, private val numbered: Boolean = false, private val targetLine: Int = 0, private val match: SourceMatch? = null) {
     fun openStream(): java.io.InputStream = java.io.SequenceInputStream(java.util.Collections.enumeration(listOf(
-        prefix.byteInputStream(Charsets.UTF_8), ChunkedTextStream(content, escape, softBreaks, numbered, targetLine), suffix.byteInputStream(Charsets.UTF_8)
+        prefix.byteInputStream(Charsets.UTF_8), ChunkedTextStream(content, escape, softBreaks, numbered, targetLine, match), suffix.byteInputStream(Charsets.UTF_8)
     )))
 }
 
-private class ChunkedTextStream(private val text: String, private val escape: Boolean, private val softBreaks: Boolean, private val numbered: Boolean, private val targetLine: Int) : java.io.InputStream() {
+private class ChunkedTextStream(private val text: String, private val escape: Boolean, private val softBreaks: Boolean, private val numbered: Boolean, private val targetLine: Int, private val match: SourceMatch?) : java.io.InputStream() {
     private var line = 1
     private var offset = 0
     private var chunk = java.io.ByteArrayInputStream(ByteArray(0))
@@ -237,7 +238,26 @@ private class ChunkedTextStream(private val text: String, private val escape: Bo
         // Soft breaks add no source characters and bound that work. Only insert at
         // ASCII boundaries, never inside CRLF, surrogate pairs, or combining text.
         val softBreak = softBreaks && end < text.length && text[end - 1] in ' '..'~' && text[end] in ' '..'~'
-        val decorated = if (!numbered && targetLine == 0) {
+        val decorated = if (match != null && escape) buildString {
+            fun marker() {
+                if (numbered) append("<span aria-hidden=\"true\" class=\"line-marker\" data-line=\"$line\"></span>")
+            }
+            if (start == 0) marker()
+            for (index in part.indices) {
+                val absolute = start + index
+                if (absolute == match.start) append("<mark id=\"source-match\">")
+                when (val c = part[index]) {
+                    '&' -> append("&amp;")
+                    '<' -> append("&lt;")
+                    '>' -> append("&gt;")
+                    '"' -> append("&quot;")
+                    '\'' -> append("&#39;")
+                    else -> append(c)
+                }
+                if (absolute + 1 == match.end) append("</mark>")
+                if (part[index] == '\n' || (part[index] == '\r' && text.getOrNull(absolute + 1) != '\n')) { line++; marker() }
+            }
+        } else if (!numbered && targetLine == 0) {
             if (escape) SyntaxHighlighter.escape(part) else part
         } else buildString {
             fun marker() {

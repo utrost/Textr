@@ -11,11 +11,13 @@ Textr is a minimal, read-only text viewer for Android. Open files from other app
 - TXT, LOG, CONF/CFG, INI, JSON, Markdown, YAML, TOML, XML, CSV, Java, JavaScript, CSS, HTML, Kotlin, Python, shell, SQL, diff/patch, and iCalendar, with other text files available through the system file picker.
 - Automatic display selection: rendered Markdown, formatted JSON, supported iCalendar event summaries, syntax-highlighted source for recognized syntax, and plain text otherwise.
 - Manual switching between applicable display modes, with plain-text source always available for supported text files.
-- Search, text selection, copying and sharing, adjustable font size, line wrapping, and light/dark themes.
+- Search the displayed view, or search source with case/whole-word options, snippets and line-number results.
+- Text selection, copying and sharing, adjustable font size, line wrapping, and light/dark themes.
 - Share original files through Android; reopen recent files at their last position and display mode.
 - Document information and a remembered **Treat as…** format override for misidentified or generic files.
 - Manual reload, source line numbers and Go to line, and a Markdown heading outline.
-- A five-document switcher, pinned recents with Undo, and read-only **Open with…** handoff.
+- A five-document switcher with active-document labels and a tab strip on wide screens, pinned recents with Undo, and read-only **Open with…** handoff.
+- Per-file encoding overrides, encoding/line information, and offline help for opening files and Android defaults.
 - A minimal home screen with an **Open file** action and recent files. Remove individual entries or clear the history.
 
 Opening a format does not guarantee syntax highlighting. Basic highlighting covers JSON, Markdown source, INI, YAML, TOML, XML, and the [additional source formats](docs/formats.md). Generic configuration files use plain text unless the provider identifies a supported syntax. CSV stays a text view.
@@ -28,7 +30,7 @@ iCalendar previews summarize events with explicit date/time-zone labels and unex
 
 See the [installation and default-app guide](docs/installing.md) for screenshots and step-by-step instructions.
 
-Use **Open file** to select a document through Android's system picker, or choose Textr in another app's **Open with** or **Share** menu. Shared text can also be read; text without a file reference is not added to recent history. Long-press document text to select, copy, or share it. The **⋮** menu offers file sharing, document information, reading settings, and About. Choose **Document info → Treat as…** to override syntax detection; **Automatic** restores normal detection. **Find** searches the currently displayed view.
+Use **Open file** to select a document through Android's system picker, or choose Textr in another app's **Open with** or **Share** menu. Shared text can also be read; text without a file reference is not added to recent history. Long-press document text to select, copy, or share it. The **⋮** menu offers file sharing, document information, reading settings, and About. Choose **Treat as…** in the reader menu or Document info to override syntax detection; **Automatic** restores normal detection. **Find** searches the currently displayed view. Its **⋯** button opens **Search source…**, with case/whole-word options and results that jump to plain text. **Document info → Reopen with encoding…** handles older encodings. [Search, encoding and navigation details](docs/everyday-reading.md).
 
 Android's default-app behavior depends on the sending app and the reported file type, including its MIME type. Where Android offers the choice, you can select Textr as the default handler. Textr cannot guarantee a default association for every filename extension in every app. The file picker provides another way to select text files.
 
@@ -70,13 +72,13 @@ The app uses Kotlin, AndroidX Activity, native Android controls, and an offline 
 
 Files near the size limit, especially long unbroken lines, can render slowly on older WebViews. **Back to files** and **Open file** remain available during loading. See the [measured emulator results](docs/validation.md).
 
-- Text decoding supports UTF-8, UTF-8 with a BOM, and UTF-16 LE/BE with a BOM. Other encodings produce an explanatory message.
+- Automatic decoding supports UTF-8, UTF-8 with a BOM, and UTF-16 LE/BE with a BOM. Explicit per-file choices add Windows-1252, ISO-8859-1 and UTF-16 LE/BE without a BOM. Malformed text and conflicting BOMs are rejected.
 - Highlighting is lightweight rather than a complete language parser. It is available for sources up to 512 Ki characters and decorates up to 10,000 tokens; remaining source stays readable without colors.
 - JSON preview accepts files up to 1 MiB and has a nesting limit of 128 and a formatted-output limit of 5 Mi characters. Documents exceeding preview limits remain available as source.
 - iCalendar event previews accept up to 512 Ki characters and 200 events, with bounded lines, nesting, and output. No recurrence expansion, time-zone conversion, calendar import, or alarms.
 - Markdown preview accepts up to 512 Ki characters, 20,000 nodes, and nesting depth 64; larger or more complex documents remain readable as source.
 - Markdown images, embedded HTML, and relative file links are not supported. Web links and email links require an external handler.
-- Search operates on visible text, so preview and source searches can differ. Shared text without a URI survives rotation but is not restored after process termination.
+- Find searches visible text, so preview and source results can differ. Source search shows up to 200 literal matches for queries up to 1,000 UTF-16 code units; no regex or cross-file search. Shared text without a URI survives rotation but is not restored after process termination.
 
 ## License
 

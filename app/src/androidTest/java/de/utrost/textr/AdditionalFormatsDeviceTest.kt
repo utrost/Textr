@@ -83,7 +83,10 @@ class AdditionalFormatsDeviceTest {
         val intent = Intent(Intent.ACTION_VIEW, uri("calendar.conf"), context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         ActivityScenario.launch<MainActivity>(intent).use { scenario ->
             ready(scenario)
-            clickDescription("More options"); click("Document info"); click("Treat as…")
+            clickDescription("More options"); click("Document info")
+            val treatAs = device.wait(Until.findObject(By.res("android", "button3")), 5000)
+            assertNotNull("Document info format action", treatAs)
+            treatAs!!.click(); device.waitForIdle()
             UiScrollable(UiSelector().className("android.widget.ListView")).scrollIntoView(UiSelector().text("iCalendar"))
             click("iCalendar")
             await {
