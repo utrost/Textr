@@ -74,9 +74,13 @@ class ReadingExtrasDeviceTest {
         ActivityScenario.launch<MainActivity>(intent("selection.csv")).use { scenario ->
             ready(scenario); menu("CSV table options…"); click("Preview"); ready(scenario)
             scenario.onActivity { (it.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager).clearPrimaryClip() }
-            val cell = device.wait(Until.findObject(By.text("Copyable")), 5000)
+            val cell = visibleTextNode("Copyable")
             if (cell == null) capture(scenario, "Copyable")
-            assertNotNull(cell); cell!!.longClick(); click("Copy")
+            assertNotNull(cell)
+            val bounds = android.graphics.Rect()
+            cell!!.getBoundsInScreen(bounds)
+            device.swipe(bounds.centerX(), bounds.centerY(), bounds.centerX(), bounds.centerY(), 150)
+            click("Copy")
             await {
                 var copied = false
                 scenario.onActivity { copied = (it.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager)
@@ -346,6 +350,7 @@ class ReadingExtrasDeviceTest {
         val deadline = System.nanoTime() + 10_000_000_000L
         var labels = emptyList<String>()
         while (System.nanoTime() < deadline) {
+            if (android.os.Build.VERSION.SDK_INT >= 33) automation.clearCache()
             val pending = ArrayDeque<android.view.accessibility.AccessibilityNodeInfo>()
             automation.rootInActiveWindow?.let(pending::add)
             val current = mutableListOf<String>()

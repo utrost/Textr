@@ -851,6 +851,9 @@ class MainActivity : ComponentActivity() {
     private fun createWebView(scroll: Int, page: HtmlPage, initialAnchor: String? = null) = ReaderWebView(this).apply {
         id = R.id.reader
         tag = false
+        // Do not expose a partially constructed virtual accessibility tree while
+        // the loading indicator is shown. Publish it after the completed draw.
+        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
         onViewportDraw = { if (webView === this) updateProgress() }
         setBackgroundColor(background())
         settings.apply {
@@ -930,6 +933,7 @@ class MainActivity : ComponentActivity() {
                                 view.tag = true
                                 updateProgress()
                                 content.findViewById<View>(R.id.reader_loading)?.let(content::removeView)
+                                view.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
                                 modeButton.isEnabled = (document?.modes?.size ?: 0) > 1
                                 findButton.isEnabled = true
                                 rememberReading()

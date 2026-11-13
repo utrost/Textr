@@ -6,7 +6,7 @@ Issues #44–#46 are implemented in [PR #58](https://github.com/utrost/Textr/pul
 
 Debug APK and test APK builds, all **47 JVM tests**, and Android lint pass with JDK 17 and compile SDK 36. The seven new parser tests cover quoting, embedded line endings, explicit delimiters, ragged/empty fields, every preview budget, hostile HTML/formulas, source preservation and cancellation. Existing format detection now recognizes CSV without changing the text-first default.
 
-The eight new instrumented acceptance cases pass on **API 29 and API 36** emulators configured with `hw.keyboard=yes` (API 29: 96.469 seconds; API 36: 104.252 seconds):
+The eight new instrumented acceptance cases pass on **API 29 and API 36** emulators configured with `hw.keyboard=yes`:
 
 - CSV options and mode restoration after clearing the retained ViewModel, escaped cells, disabled JavaScript, and byte-for-byte sharing including BOM/CRLF.
 - Native long-press selection and clipboard copying from a CSV cell.
@@ -16,6 +16,8 @@ The eight new instrumented acceptance cases pass on **API 29 and API 36** emulat
 - Real modifier-key injection for Find/Open/Go to line/document switching, text-field/dialog guards, unavailable preview actions, and shortcut-help registration.
 - CSV and bookmark controls, accessible names and rename input at 200% system text size in landscape.
 - Progress reaches 100% at the native scroll boundary and remains the same height when its text crosses a wrapping boundary.
+
+The reader exposes its virtual accessibility tree after the completed page draw, together with removal of the loading indicator. This prevents accessibility clients from inspecting partially constructed table rows. The CSV checks refresh virtual nodes while waiting for visible cells and retain real gesture, clipboard and painted-header assertions.
 
 ## Full regression coverage
 
