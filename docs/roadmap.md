@@ -59,6 +59,10 @@ Implementation extends source highlighting and adds a bounded iCalendar event su
 | [#48](https://github.com/utrost/Textr/issues/48) | Add offline help for opening files and Android defaults | First implementation batch |
 | [#49](https://github.com/utrost/Textr/issues/49) | Explain slow loading and provide a clear cancel action | Later iteration |
 
+## Foldable layout (requested 2026-11-13)
+
+[#51](https://github.com/utrost/Textr/issues/51) adds an opt-in file sidebar beside the reader on sufficiently wide and tall windows, with automatic compact/large-text fallback. See [activation, behavior, and limits](foldable-layout.md). This supports the requested use of a foldable inner display without device-model detection. Physical Magic V6 and hinge/posture-specific validation remain follow-ups. Public release remains deferred.
+
 ## Original release roadmap
 
 The completed foundation and validation stages are retained below for traceability. GitHub issues are the source of truth for completion evidence. Original P0/P1 priorities describe release sequencing.

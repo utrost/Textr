@@ -8,6 +8,8 @@
     <item name="line_wrap" type="id" />
     <item name="theme_choice" type="id" />
     <item name="document_strip" type="id" />
+    <item name="file_sidebar" type="id" />
+    <item name="sidebar_setting" type="id" />
     <item name="source_query" type="id" />
     <item name="source_results" type="id" />
     <item name="source_result_count" type="id" />

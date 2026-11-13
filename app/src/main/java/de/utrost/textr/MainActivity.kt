@@ -61,6 +61,8 @@ class MainActivity : ComponentActivity() {
     private var anchor: String? = null
     private var sourceMatch: SourceMatch? = null
     private lateinit var documentStrip: HorizontalScrollView
+    private lateinit var fileSidebar: ScrollView
+    private var sidebarFits = false
     private var encodingOverride: TextEncoding? = null
     private var pendingGrantFlags = 0
     private val undoHandler = android.os.Handler(android.os.Looper.getMainLooper())
@@ -240,7 +242,25 @@ class MainActivity : ComponentActivity() {
         searchRow.addView(searchActions, LinearLayout.LayoutParams(if (wide) -2 else -1, -2))
         root.addView(searchRow)
         content = FrameLayout(this)
-        root.addView(content, LinearLayout.LayoutParams(-1, 0, 1f))
+        val readingArea = row()
+        fileSidebar = ScrollView(this).apply {
+            id = R.id.file_sidebar; visibility = View.GONE
+            setBackgroundColor(Color.parseColor(if (dark) "#202923" else "#EEF1ED"))
+        }
+        readingArea.addView(fileSidebar, LinearLayout.LayoutParams(dp(220), -1))
+        readingArea.addView(content, LinearLayout.LayoutParams(0, -1, 1f))
+        root.addView(readingArea, LinearLayout.LayoutParams(-1, 0, 1f))
+        readingArea.addOnLayoutChangeListener { view, _, _, _, _, _, _, _, _ ->
+            // Measure the actual inset-adjusted app window, including split-screen resizing.
+            val density = resources.displayMetrics.density
+            val fits = view.width / density >= 720 &&
+                (root.height - root.paddingTop - root.paddingBottom) / density >= 480 &&
+                resources.configuration.fontScale <= 1.3f
+            if (fits != sidebarFits) {
+                sidebarFits = fits
+                updateDocumentsButton()
+            }
+        }
     }
 
     private fun row() = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
@@ -677,6 +697,7 @@ class MainActivity : ComponentActivity() {
         modeButton.isEnabled = false
         findButton.isEnabled = false
         titleView.text = getString(message)
+        updateDocumentsButton()
         content.addView(ProgressBar(this), FrameLayout.LayoutParams(dp(48), dp(48), Gravity.CENTER))
     }
 
@@ -684,6 +705,7 @@ class MainActivity : ComponentActivity() {
         cancelWork()
         document = null
         session.original = null
+        updateDocumentsButton()
         findButton.visibility = View.GONE
         clearContent()
         toolbar.visibility = View.GONE
@@ -873,10 +895,15 @@ class MainActivity : ComponentActivity() {
         documentsButton.text = openDocuments.entries.size.toString()
         documentsButton.contentDescription = getString(R.string.documents_count, openDocuments.entries.size)
         documentsButton.visibility = if (openDocuments.entries.isEmpty()) View.GONE else View.VISIBLE
+        val sidebarVisible = sidebarFits && preferences.getBoolean("fileSidebar", false) && document != null && !homeShown
+        if (::fileSidebar.isInitialized) {
+            fileSidebar.visibility = if (sidebarVisible) View.VISIBLE else View.GONE
+            if (sidebarVisible) updateFileSidebar()
+        }
         if (!::documentStrip.isInitialized) return
         documentStrip.removeAllViews()
         // At large font scales keep the compact switcher so document content retains space.
-        documentStrip.visibility = if (resources.configuration.screenWidthDp >= 600 &&
+        documentStrip.visibility = if (!sidebarVisible && resources.configuration.screenWidthDp >= 600 &&
             resources.configuration.fontScale <= 1.3f && openDocuments.entries.size > 1 && document != null && !homeShown) View.VISIBLE else View.GONE
         if (documentStrip.visibility != View.VISIBLE) return
         val tabs = row()
@@ -894,6 +921,53 @@ class MainActivity : ComponentActivity() {
             tabs.addView(tab, LinearLayout.LayoutParams(dp(180), -2))
             if (active) documentStrip.post { if (tab.parent === tabs) documentStrip.smoothScrollTo(tab.left, 0) }
         }
+    }
+
+    private fun updateFileSidebar() {
+        val previousScroll = fileSidebar.scrollY
+        fileSidebar.removeAllViews()
+        val body = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(8), dp(8), dp(8), dp(16))
+        }
+        fun heading(label: Int) {
+            body.addView(TextView(this).apply {
+                text = getString(label); textSize = 16f; setTextColor(foreground())
+                isAccessibilityHeading = true; setPadding(dp(8), dp(12), dp(8), dp(8))
+            })
+        }
+        fun fileButton(name: String, description: String, action: () -> Unit) = button(R.string.open_file, name, action).apply {
+            contentDescription = description
+            gravity = Gravity.START or Gravity.CENTER_VERTICAL
+            maxLines = 2; ellipsize = android.text.TextUtils.TruncateAt.END; tooltipText = name
+        }
+        body.addView(button(R.string.open_file) { openPicker() }, LinearLayout.LayoutParams(-1, -2))
+        heading(R.string.open_documents)
+        openDocuments.entries.sortedWith(compareBy({ it.name.lowercase(java.util.Locale.ROOT) }, { it.key })).forEach { entry ->
+            val active = entry.key == (currentUri?.toString() ?: "shared-text")
+            val entryRow = row()
+            entryRow.addView(fileButton(if (active) "✓ ${entry.name}" else entry.name,
+                getString(if (active) R.string.current_document else R.string.switch_document, entry.name)) { switchDocument(entry) }
+                .apply { isSelected = active }, LinearLayout.LayoutParams(0, -2, 1f))
+            entryRow.addView(button(R.string.close_document, "×") {
+                if (active) showHome()
+                openDocuments.close(entry.key)
+                updateDocumentsButton()
+            }.apply { contentDescription = getString(R.string.close_named, entry.name) }, LinearLayout.LayoutParams(dp(48), -2))
+            body.addView(entryRow)
+        }
+        val openUris = openDocuments.entries.map { it.key }.toSet()
+        val recents = repository.recentFiles().filter { it.uri !in openUris }
+            .sortedWith(compareByDescending<RecentFile> { it.pinned }.thenByDescending { it.openedAt })
+        if (recents.isNotEmpty()) {
+            heading(R.string.recent_files)
+            recents.forEach { recent ->
+                body.addView(fileButton(if (recent.pinned) "★ ${recent.name}" else recent.name,
+                    getString(R.string.open_recent, recent.name)) { openDocument(Uri.parse(recent.uri)) }, LinearLayout.LayoutParams(-1, -2))
+            }
+        }
+        fileSidebar.addView(body)
+        fileSidebar.post { if (body.parent === fileSidebar) fileSidebar.scrollTo(0, previousScroll) }
     }
 
     private fun switchDocument(entry: OpenDocument) {
@@ -1063,6 +1137,14 @@ class MainActivity : ComponentActivity() {
             contentDescription = getString(R.string.theme)
         }
         body.addView(themes)
+        val sidebar = CheckBox(this).apply {
+            id = R.id.sidebar_setting
+            text = getString(R.string.sidebar_setting)
+            isChecked = preferences.getBoolean("fileSidebar", false)
+            minimumHeight = dp(48)
+        }
+        body.addView(sidebar)
+        body.addView(TextView(this).apply { text = getString(R.string.sidebar_help); setPadding(dp(8), 0, dp(8), dp(12)) })
         AlertDialog.Builder(this).setTitle(R.string.settings).setView(ScrollView(this).apply { addView(body) }).setNegativeButton(R.string.cancel, null)
             .setPositiveButton(R.string.done) { _, _ ->
                 if (!canInteract()) return@setPositiveButton
@@ -1071,8 +1153,11 @@ class MainActivity : ComponentActivity() {
                 fontSize = selectedSize; wrap = wrapping.isChecked; lineNumbers = numbers.isChecked
                 if (lineNumbers && (document?.source?.text?.let(DocumentRenderer::logicalLines) ?: 0) > DocumentRenderer.MAX_NUMBERED_LINES)
                     Toast.makeText(this, R.string.line_number_limit, Toast.LENGTH_LONG).show()
-                preferences.edit().putBoolean("lineNumbers", lineNumbers).putInt("fontSize", fontSize).putBoolean("wrap", wrap).putString("theme", theme).apply()
-                if (themeChanged) recreate() else if (document != null) render()
+                preferences.edit().putBoolean("fileSidebar", sidebar.isChecked).putBoolean("lineNumbers", lineNumbers).putInt("fontSize", fontSize).putBoolean("wrap", wrap).putString("theme", theme).apply()
+                if (themeChanged) recreate() else {
+                    updateDocumentsButton()
+                    if (document != null) render()
+                }
             }.create().present()
     }
 
