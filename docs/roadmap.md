@@ -1,14 +1,38 @@
-# Roadmap to the first public Textr release
+# Textr roadmap
 
 The roadmap leads to a signed, downloadable 0.1.0 APK with matching source, preserving Textr's minimal, offline, read-only scope. On 2026-11-12 the owner requested completion of implementation and deferred public release. Issue #13 remains open; no production signing key is created as part of implementation.
 
 **Live tracker:** [Roadmap #14](https://github.com/utrost/Textr/issues/14). Individual GitHub issues are the source of truth for progress, acceptance criteria, and verification evidence.
 
-## Starting point
+## Current state
 
-The local development build already provides file opening, recent history, plain text, syntax highlighting, Markdown/JSON previews, and reading controls. It passed 13 JVM tests and 8 Android 15 emulator tests, plus selected manual checks. At roadmap creation, the source has not been committed or published to the GitHub default branch, and no release exists. The issues below cover remaining work rather than reimplementing completed features.
+The initial implementation and validation issues #1–#12 are complete, merged through #23. The baseline passed 17 JVM tests and 33 instrumentation cases on Android 10 and 16 CI, plus Android 15 and live TalkBack validation. Public release remains deferred.
 
-P0 identifies critical-path work and explicit release gates. P1 identifies other required work before public release. Both are required; priority determines scheduling, not optional scope. Milestones are delivery stages for the same release, with no assumed deadlines or assignees.
+## Reader UX iteration (approved 2026-11-13)
+
+Implemented in [PR #34](https://github.com/utrost/Textr/pull/34): navigation, sharing, reading continuity, and format interpretation. These changes preserve read-only operation, Android 10+, the 5 MiB limit, and no network permission. See the [iteration milestone](https://github.com/utrost/Textr/milestone/4).
+
+| Issue | Work |
+| --- | --- |
+| [#24](https://github.com/utrost/Textr/issues/24) | Simplify reader navigation and add contextual menus and About |
+| [#25](https://github.com/utrost/Textr/issues/25) | Share original files and selected text through Android |
+| [#26](https://github.com/utrost/Textr/issues/26) | Remember reading position and display mode for recent files |
+| [#27](https://github.com/utrost/Textr/issues/27) | Add document information and a remembered Treat as format override |
+
+The following ideas are recorded for later prioritization, not scheduled for this iteration. Tabs/open-document sessions are a possible future scope extension, not part of v1.
+
+| Issue | Backlog |
+| --- | --- |
+| [#28](https://github.com/utrost/Textr/issues/28) | Reload an externally changed document while preserving reading context |
+| [#29](https://github.com/utrost/Textr/issues/29) | Add optional source line numbers and Go to line |
+| [#30](https://github.com/utrost/Textr/issues/30) | Improve recent-file metadata and add pinning and undo |
+| [#31](https://github.com/utrost/Textr/issues/31) | Navigate Markdown documents using a heading outline |
+| [#32](https://github.com/utrost/Textr/issues/32) | Add a bounded open-document switcher |
+| [#33](https://github.com/utrost/Textr/issues/33) | Hand off a document using Open with another app |
+
+## Original release roadmap
+
+The completed foundation and validation stages are retained below for traceability. GitHub issues are the source of truth for completion evidence. Original P0/P1 priorities describe release sequencing.
 
 ## 1. Foundation
 

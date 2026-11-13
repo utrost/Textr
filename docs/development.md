@@ -15,7 +15,8 @@ Install `app/build/outputs/apk/debug/app-debug.apk` with `adb install -r`. This 
 ## Structure
 
 - `MainActivity` provides the home screen, reader controls, settings, file-picker integration, incoming intents, and background loading. AndroidX Activity handles results and back navigation. An in-memory ViewModel retains the current document through configuration changes.
-- `DocumentRepository` reads Android content/file URIs using read-only descriptors and a cancellation signal. It records at most 30 recent URI/name/timestamp entries in private preferences, retaining read grants where offered and releasing them when entries are removed. It stores no document contents.
+- `DocumentRepository` reads Android content/file URIs using read-only descriptors and a cancellation signal. It records at most 30 recent URI/name/timestamp entries with optional mode/scroll/format metadata in private preferences, retaining read grants where offered and releasing them when entries are removed. It stores no document contents.
+- `ShareFiles` makes bounded temporary copies only after explicit Share actions and exposes them through a non-exported FileProvider with read-only URI grants. Original bytes (including BOM and line endings) are copied through the repository’s cancellable stream; preview output is never substituted. Copies expire after 24 hours on the next start/share, with a 20-copy cap.
 - `TextDocuments` enforces the 5 MiB byte limit while streaming, validates UTF-8 or BOM-marked UTF-16, rejects binary control characters, and classifies supported syntax from filenames or MIME types.
 - `DocumentRenderer` and `SyntaxHighlighter` are plain Kotlin/JVM components. Previews never alter source. JSON formatting preserves duplicate keys and numeric spelling; malformed or overly nested JSON falls back to source. Highlighting accepts up to 512 Ki characters and stops adding spans after 10,000 tokens to bound the WebView node count.
 - The WebView receives generated HTML through an intercepted in-memory HTTPS response, avoiding oversized data URLs. Source is escaped as a stream to avoid allocating its full HTML expansion; soft-break elements at safe ASCII boundaries bound old WebView layout work without adding source characters. Cross-boundary search and full copying have regression coverage. Controls become available after a visual-state callback confirms layout, and renderer termination offers a plain-text retry. JavaScript, network loading, images, file access, content access, and DOM storage are disabled. A restrictive content security policy and request interception provide additional isolation. External web/email links require a user tap.
@@ -32,13 +33,13 @@ With an Android device or emulator connected:
 ./gradlew :app:connectedDebugAndroidTest
 ```
 
-Device tests use a separate test-only content provider. They cover external file opening, Markdown/JSON rendering, search, recreation, unreferenced shared text, expired access, read-only descriptors, file size limits, history removal, MIME handlers, and absence of network/broad storage permissions. The test provider is not part of the application APK.
+Device tests use a separate test-only content provider. They cover external file opening, Markdown/JSON rendering, search, recreation, unreferenced shared text, expired access, read-only descriptors, file size limits, history removal, MIME handlers, and absence of network/broad storage permissions. The test provider and separate sharing receiver are not part of the application APK. Reader UX cases cover menu/About navigation, remembered reading state and migration, format overrides, original-byte sharing, real receiver read/write grant enforcement, native selected-text sharing, and temporary-copy cleanup.
 
 Reports are generated under `app/build/reports/tests/`, `app/build/reports/androidTests/`, and `app/build/reports/lint-results-debug.html`.
 
 Validation uses clean Android 10, 15, and 16 emulators (API 29, 35, and 36). The owner explicitly selected emulator validation because no physical device is available. Physical-device coverage is follow-up work, not a release gate. CI runs build, unit tests, lint, and API 29/36 instrumentation for pull requests and the default branch.
 
-Completed configurations and evidence are recorded in [validation](validation.md).
+Completed configurations and evidence are recorded in [baseline validation](validation.md) and [reader UX validation](validation-reader-ux.md).
 
 ## Manual acceptance checklist
 
@@ -56,4 +57,4 @@ Completed configurations and evidence are recorded in [validation](validation.md
 
 Use the [documented signing inputs and upgrade procedure](releasing.md), complete the compatibility checklist, and publish the corresponding source alongside any distributed GPLv3 APK. Keep keystores and local SDK paths out of Git. Store publication remains outside v1 scope.
 
-The [release roadmap](roadmap.md) tracks this work through three milestones and individual GitHub issues with acceptance criteria and dependencies.
+The [release roadmap](roadmap.md) tracks this work through milestones and individual GitHub issues with acceptance criteria and dependencies.

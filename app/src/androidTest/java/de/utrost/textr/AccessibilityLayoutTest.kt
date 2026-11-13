@@ -36,7 +36,12 @@ class AccessibilityLayoutTest {
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             ActivityScenario.launch<MainActivity>(intent).use { scenario ->
                 for (landscape in listOf(false, true)) {
-                    if (landscape) device.setOrientationLeft()
+                    // Some images restore a previous task's rotation after launch,
+                    // overriding a display lock set before the activity existed.
+                    scenario.onActivity {
+                        it.requestedOrientation = if (landscape) android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                            else android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                    }
                     ready(scenario, landscape)
                     scenario.onActivity {
                         assertTrue(it.resources.configuration.fontScale >= 1.99f)
@@ -58,7 +63,8 @@ class AccessibilityLayoutTest {
                     }
                     click(By.desc("Close search"))
                 }
-                click(By.desc("Reading settings"))
+                click(By.desc("More options"))
+                click(By.text("Reading settings"))
                 assertNotNull("Scrollable settings retain their confirmation action", device.wait(Until.findObject(By.res("android", "button1")), 5000))
                 click(By.res("android", "button1"))
             }
@@ -97,6 +103,7 @@ class AccessibilityLayoutTest {
     }
     private fun ready(scenario: ActivityScenario<MainActivity>, landscape: Boolean) {
         val deadline = System.nanoTime() + 30_000_000_000L
+        var state = "Activity not observed"
         while (System.nanoTime() < deadline) {
             var ready = false
             scenario.onActivity {
@@ -105,10 +112,12 @@ class AccessibilityLayoutTest {
                 ready = it.resources.configuration.orientation == expected &&
                     it.resources.configuration.fontScale >= 1.99f &&
                     it.findViewById<WebView>(R.id.reader)?.tag == true
+                state = "orientation=${it.resources.configuration.orientation}, expected=$expected, " +
+                    "fontScale=${it.resources.configuration.fontScale}, readerReady=${it.findViewById<WebView>(R.id.reader)?.tag}"
             }
             if (ready) return
             Thread.sleep(100)
         }
-        fail("Reader did not load")
+        fail("Reader did not reach the requested layout: $state")
     }
 }

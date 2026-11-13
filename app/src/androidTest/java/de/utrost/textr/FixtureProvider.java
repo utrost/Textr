@@ -21,6 +21,15 @@ public class FixtureProvider extends ContentProvider {
     @Override public boolean onCreate() { return true; }
 
     @Override public Bundle call(String method, String arg, Bundle extras) {
+        if ("shared-result".equals(method)) {
+            Bundle result = new Bundle();
+            result.putString("result", getContext().getSharedPreferences("receiver", 0).getString("result", ""));
+            return result;
+        }
+        if ("reset-shared".equals(method)) {
+            getContext().getSharedPreferences("receiver", 0).edit().clear().commit();
+            return Bundle.EMPTY;
+        }
         Uri target = Uri.parse(arg);
         int read = Intent.FLAG_GRANT_READ_URI_PERMISSION;
         if ("grant".equals(method)) {
@@ -71,6 +80,8 @@ public class FixtureProvider extends ContentProvider {
         final byte[] bytes;
         if ("sample.json".equals(name) || "slow.json".equals(name) || "extensionless-json".equals(name) || "UPPER.JSON".equals(name)) {
             bytes = "{\"message\":\"Textr fixture\",\"value\":42}".getBytes(StandardCharsets.UTF_8);
+        } else if ("override.conf".equals(name)) {
+            bytes = "\uFEFF{\"message\":\"Textr override\",\"value\":42}\r\n".getBytes(StandardCharsets.UTF_8);
         } else if ("copy.txt".equals(name)) {
             bytes = "Copyable Textr selection".getBytes(StandardCharsets.UTF_8);
         } else if ("copy-long.txt".equals(name)) {
