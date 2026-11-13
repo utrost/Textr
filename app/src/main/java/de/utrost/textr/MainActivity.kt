@@ -253,7 +253,7 @@ class MainActivity : ComponentActivity() {
         readingArea.addOnLayoutChangeListener { view, _, _, _, _, _, _, _, _ ->
             // Measure the actual inset-adjusted app window, including split-screen resizing.
             val density = resources.displayMetrics.density
-            val fits = view.width / density >= 720 &&
+            val fits = view.width / density >= 600 &&
                 (root.height - root.paddingTop - root.paddingBottom) / density >= 480 &&
                 resources.configuration.fontScale <= 1.3f
             if (fits != sidebarFits) {

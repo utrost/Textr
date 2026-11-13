@@ -95,6 +95,13 @@ class FoldableLayoutTest {
                 assertEquals(600, it.findViewById<WebView>(R.id.reader).scrollY)
                 assertEquals(text, ViewModelProvider(it)[ReaderSession::class.java].document!!.source.text)
             }
+            // Inner displays can report only a medium-width window at default display scaling.
+            resize(scenario, "900x1200", 600)
+            sidebar(scenario, true)
+            scenario.onActivity {
+                assertTrue(it.findViewById<WebView>(R.id.reader).width / it.resources.displayMetrics.density >= 380)
+                assertEquals("Plain text", it.findViewById<TextView>(R.id.display_mode).text.toString())
+            }
             click(By.desc("Find"))
             scenario.onActivity {
                 val field = it.findViewById<EditText>(R.id.search_query)
