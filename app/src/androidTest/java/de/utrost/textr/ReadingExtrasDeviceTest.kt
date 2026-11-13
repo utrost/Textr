@@ -92,10 +92,11 @@ class ReadingExtrasDeviceTest {
         ActivityScenario.launch<MainActivity>(intent("scrolling.csv")).use { scenario ->
             ready(scenario); menu("CSV table options…")
             click(By.res(context.packageName, "csv_header")); click("Preview"); ready(scenario)
-            val heading = device.wait(Until.findObject(By.text("Heading 1")), 10000)
+            val heading = visibleTextNode("Heading 1")
             if (heading == null) capture(scenario, "Heading 1")
             assertNotNull(heading)
-            val headerBounds = heading!!.visibleBounds
+            val headerBounds = android.graphics.Rect()
+            heading!!.getBoundsInScreen(headerBounds)
             val top = headerBounds.top
             val before = InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()!!
             val web = android.graphics.Rect()
@@ -335,9 +336,33 @@ class ReadingExtrasDeviceTest {
         }
     }
     private fun assertVisible(scenario: ActivityScenario<MainActivity>, label: String) {
-        val found = device.wait(Until.hasObject(By.text(label)), 10000)
+        val found = visibleTextNode(label) != null
         if (!found) capture(scenario, label)
         assertTrue("Missing $label", found)
+    }
+
+    private fun visibleTextNode(label: String): android.view.accessibility.AccessibilityNodeInfo? {
+        val automation = InstrumentationRegistry.getInstrumentation().uiAutomation
+        val deadline = System.nanoTime() + 10_000_000_000L
+        var labels = emptyList<String>()
+        while (System.nanoTime() < deadline) {
+            val pending = ArrayDeque<android.view.accessibility.AccessibilityNodeInfo>()
+            automation.rootInActiveWindow?.let(pending::add)
+            val current = mutableListOf<String>()
+            while (pending.isNotEmpty()) {
+                val node = pending.removeFirst()
+                // WebView adds virtual descendants asynchronously; refresh parents
+                // before traversing so a cached empty subtree cannot hide the page.
+                if (!node.refresh()) continue
+                if (node.isVisibleToUser && node.text?.toString() == label) return node
+                if (node.isVisibleToUser && node.text != null) current.add(node.text.toString())
+                for (index in 0 until node.childCount) node.getChild(index)?.let(pending::add)
+            }
+            labels = current
+            Thread.sleep(100)
+        }
+        android.util.Log.e("TextrExtrasTest", "Missing $label; visible labels: $labels")
+        return null
     }
 
     private fun awaitDocument(scenario: ActivityScenario<MainActivity>, name: String) = await {
