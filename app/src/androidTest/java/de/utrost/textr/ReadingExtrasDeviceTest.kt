@@ -104,15 +104,22 @@ class ReadingExtrasDeviceTest {
             // Chromium reports the original (offscreen) AX bounds for sticky cells.
             // Compare the painted header after a real swipe instead of those stale bounds.
             val after = InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()!!
-            var same = 0; var count = 0
+            fun ink(pixel: Int): Boolean = android.graphics.Color.red(pixel) < 120 &&
+                android.graphics.Color.green(pixel) < 120 && android.graphics.Color.blue(pixel) < 120
+            var matched = 0; var expected = 0; var actual = 0
             for (y in headerBounds.top + 12 until headerBounds.bottom - 12) {
                 for (x in headerBounds.left + 12 until headerBounds.right - 12) {
-                    if (before.getPixel(x, y) == after.getPixel(x, y)) same++
-                    count++
+                    if (ink(after.getPixel(x, y))) actual++
+                    if (ink(before.getPixel(x, y))) {
+                        expected++
+                        // Sticky positioning can shift rasterization by a subpixel.
+                        if ((-2..2).any { dy -> (-2..2).any { dx -> ink(after.getPixel(x + dx, y + dy)) } }) matched++
+                    }
                 }
             }
             before.recycle(); after.recycle()
-            assertTrue("Sticky header changed: $same/$count matching pixels", count > 0 && same.toDouble() / count > 0.98)
+            assertTrue("Header strokes moved: $matched/$expected, after=$actual", expected > 100 &&
+                matched.toDouble() / expected > 0.95 && actual.toDouble() / expected in 0.75..1.25)
             assertFalse(device.hasObject(By.text("Row 1 cell 1")))
             repeat(3) { device.swipe(web.right - 50, top + 60, web.left + 50, top + 60, 30) }
             device.waitForIdle()
@@ -203,6 +210,7 @@ class ReadingExtrasDeviceTest {
     }
 
     @Test fun keyboardShortcutsDispatchAndRespectInputDialogsAndUnavailableActions() {
+        DocumentRepository(context).remember(uri("sample.json"), "sample.json")
         ActivityScenario.launch<MainActivity>(intent("long.ini")).use { scenario ->
             ready(scenario)
             device.pressKeyCode(KeyEvent.KEYCODE_F, KeyEvent.META_CTRL_ON)
@@ -217,7 +225,7 @@ class ReadingExtrasDeviceTest {
             assertVisible(scenario, "Go to line…")
             device.pressKeyCode(KeyEvent.KEYCODE_O, KeyEvent.META_CTRL_ON)
             assertTrue(device.hasObject(By.text("Go to line…"))); click("Cancel")
-            scenario.onActivity { it.startActivity(intent("sample.json").setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_GRANT_READ_URI_PERMISSION)) }; awaitDocument(scenario, "sample.json")
+            click(By.desc("Back to files")); click("sample.json"); awaitDocument(scenario, "sample.json")
             scenario.onActivity { it.findViewById<WebView>(R.id.reader).requestFocus() }
             device.pressKeyCode(KeyEvent.KEYCODE_G, KeyEvent.META_CTRL_ON)
             assertFalse(device.hasObject(By.text("Go to line…")))
@@ -248,6 +256,11 @@ class ReadingExtrasDeviceTest {
             device.executeShellCommand("settings put system font_scale 2.0")
             replace("large-font.csv", "a,b\n1,2")
             ActivityScenario.launch<MainActivity>(intent("large-font.csv")).use { scenario ->
+                scenario.onActivity { it.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }
+                await {
+                    var configured = false
+                    scenario.onActivity { configured = it.resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE && it.resources.configuration.fontScale >= 1.99f }; configured
+                }
                 ready(scenario); menu("CSV table options…"); click("Preview"); ready(scenario)
                 scenario.onActivity { assertTrue(it.findViewById<WebView>(R.id.reader).height > 0) }
                 click(By.res(context.packageName, "display_mode")); click("Plain text"); ready(scenario)
