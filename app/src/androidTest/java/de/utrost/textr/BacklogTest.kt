@@ -76,7 +76,19 @@ class BacklogTest {
         context.getSharedPreferences("reading", 0).edit().putBoolean("lineNumbers", true).commit()
         ActivityScenario.launch<MainActivity>(intent("numbered.txt")).use { scenario ->
             ready(scenario)
-            device.wait(Until.findObject(By.textContains("Alpha source line")), 5000)!!.longClick()
+            // WebView versions split source accessibility nodes differently around
+            // hidden line markers. Select the displayed first word using a real gesture.
+            var x = 0
+            var y = 0
+            scenario.onActivity {
+                val view = it.findViewById<WebView>(R.id.reader)
+                val location = IntArray(2).also(view::getLocationOnScreen)
+                x = location[0] + (110 * it.resources.displayMetrics.density).toInt()
+                y = location[1] + (32 * it.resources.displayMetrics.density).toInt()
+                (it.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager).clearPrimaryClip()
+            }
+            device.waitForIdle()
+            device.swipe(x, y, x, y, 100)
             clickSelection("Select all"); clickSelection("Copy")
             await {
                 var value = ""
