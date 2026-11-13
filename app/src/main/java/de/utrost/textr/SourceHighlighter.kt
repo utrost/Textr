@@ -59,7 +59,8 @@ object SourceHighlighter {
                         }
                         // Continuations retain their original whitespace and text.
                         if (c == ' ' || c == '\t') index = end
-                        val semicolon = text.indexOf(';', start).takeIf { it in start until index && c != ' ' && c != '\t' } ?: index
+                        val semicolon = if (c == ' ' || c == '\t') index else
+                            (start until index).firstOrNull { text[it] == ';' } ?: index
                         fun span(from: Int, until: Int, tokenStyle: String) {
                             if (from < until) {
                                 append("<span class=\"").append(tokenStyle).append("\">")
