@@ -88,8 +88,12 @@ Java, JavaScript, CSS, HTML, Kotlin, Python, shell, SQL, diff/patch, and iCalend
 
 ## Everyday reading extension (approved 2026-11-13)
 
-Issues #41–#49 track approved follow-up work. The first implementation batch adds source search with case/whole-word options and bounded results, per-file encoding overrides and decoding recovery, wide-screen tabs and active-document labels, richer Document info, and offline opening/default-app help. See [behavior and limits](everyday-reading.md). Issues #44–#46 add optional bounded CSV tables, approximate reading progress, independent named bookmarks and hardware shortcuts; see [reading extras](reading-extras.md). This explicitly extends the original CSV preview exclusion. Improved loading feedback (#49) remains planned. Existing read-only, source-size and offline requirements remain fixed.
+Issues #41–#49 track approved follow-up work. The first implementation batch adds source search with case/whole-word options and bounded results, per-file encoding overrides and decoding recovery, wide-screen tabs and active-document labels, richer Document info, and offline opening/default-app help. See [behavior and limits](everyday-reading.md). Issues #44–#46 add optional bounded CSV tables, approximate reading progress, independent named bookmarks and hardware shortcuts; see [reading extras](reading-extras.md). This explicitly extends the original CSV preview exclusion. Improved loading feedback (#49) now separates reading, preparation and layout, with explicit cancellation and delayed explanations. Existing read-only, source-size and offline requirements remain fixed.
 
 ## Optional foldable layout (requested 2026-11-13)
 
 Issue #51 adds a locally saved, opt-in sidebar for open and recent files beside the current reader on sufficiently large windows. Compact windows and enlarged system text retain existing navigation. See [layout thresholds and limits](foldable-layout.md). This does not add simultaneous document comparison, hinge-angle/tabletop layouts, or new permissions.
+
+## Public-readiness polish (2026-11-15)
+
+The authorized extension adds English/German UI and help, dismissible opening/sidebar guidance, explicit loading cancellation, and a public privacy policy linked from About. Repository screenshots and contributor documentation describe implemented behavior. Optional Play assets and bundle preparation are tracked separately in #57; store submission and production signing remain deferred. Physical beta (#56) and CSV cell accessibility (#59) remain distinct follow-ups.

@@ -22,7 +22,7 @@ class DocumentRepository(private val context: Context) {
     fun read(uri: Uri, mime: String?, cancellation: CancellationSignal, encoding: TextEncoding? = null): TextDocument {
         if (uri.scheme !in setOf("content", "file")) throw DocumentException(ReadFailure.SOURCE)
         cancellation.throwIfCanceled()
-        var name = uri.lastPathSegment?.substringAfterLast('/') ?: "Text file"
+        var name = uri.lastPathSegment?.substringAfterLast('/') ?: context.getString(R.string.unnamed_file)
         if (uri.scheme == "content") {
             optionalMetadata {
                 resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null, cancellation)?.use { cursor ->
@@ -33,7 +33,7 @@ class DocumentRepository(private val context: Context) {
                 }
             }
         }
-        name = name.replace(Regex("[\\p{Cntrl}]"), " ").take(256).ifBlank { "Text file" }
+        name = name.replace(Regex("[\\p{Cntrl}]"), " ").take(256).ifBlank { context.getString(R.string.unnamed_file) }
         val declaredType = mime?.substringBefore(';')?.trim()?.lowercase(java.util.Locale.ROOT)?.takeIf { it.isNotBlank() }
         val type = if (declaredType == null || declaredType in setOf("*/*", "application/octet-stream", "text/plain")) {
             optionalMetadata { resolver.getType(uri) } ?: declaredType

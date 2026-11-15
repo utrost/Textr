@@ -143,4 +143,37 @@ Ctrl+Shift+Tab — Previous open document
 Document switching follows alphabetical filename order. Shortcuts leave text fields, dialogs and menus in control. Reader actions are available after loading; Go to line requires a source view. Standard copy, selection and system shortcuts are unchanged.</string>
     <string name="next_document">Next open document</string>
     <string name="previous_document">Previous open document</string>
+    <string name="laying_out">Laying out document…</string>
+    <string name="cancel_loading">Cancel and return to files</string>
+    <string name="slow_reading">Still reading the file. Its provider may be waiting for storage or a connection. You can cancel or open another file.</string>
+    <string name="slow_rendering">Large files and long lines can take longer to display. You can cancel or open another file.</string>
+    <string name="opening_discovery">Opening from another app? Learn how Open with, Share and Android defaults work.</string>
+    <string name="sidebar_discovery">More room to read: you can enable a file sidebar in Reading settings.</string>
+    <string name="dismiss_hint">Dismiss hint</string>
+    <string name="privacy_policy">Privacy policy</string>
+    <string-array name="preview_labels">
+        <item>[image omitted]</item>
+        <item>Untitled heading</item>
+        <item>Calendar events</item>
+        <item>Event summary. Times keep their supplied time zone; no conversion is applied. Recurrences are not expanded. Other calendar data remains in source.</item>
+        <item>Calendar method</item>
+        <item>Untitled event</item>
+        <item>Start</item>
+        <item>Not supplied</item>
+        <item>End (exclusive)</item>
+        <item>Location</item>
+        <item>Description</item>
+        <item>Status</item>
+        <item>Organizer</item>
+        <item>Duration (as supplied)</item>
+        <item>Recurrence rule (not expanded)</item>
+        <item>Additional recurrence dates (as supplied)</item>
+        <item>Excluded dates (as supplied)</item>
+        <item>Recurrence instance</item>
+        <item>Recurrence range</item>
+        <item>all day</item>
+        <item>time zone:</item>
+        <item>floating time; no time zone supplied</item>
+    </string-array>
+    <string name="unnamed_file">Text file</string>
 </resources>

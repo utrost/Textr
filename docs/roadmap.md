@@ -45,7 +45,7 @@ Implementation extends source highlighting and adds a bounded iCalendar event su
 
 ## Everyday reading (approved 2026-11-13)
 
-[Milestone 7](https://github.com/utrost/Textr/milestone/7) tracks the next improvements. The first implementation batch covers source search, encoding recovery, navigation, document metadata and offline help. CSV preview, bookmarks/progress and keyboard shortcuts are implemented by the next batch (#44–#46); loading feedback (#49) remains open. Public release is still deferred.
+[Milestone 7](https://github.com/utrost/Textr/milestone/7) tracks the next improvements. The first implementation batch covers source search, encoding recovery, navigation, document metadata and offline help. CSV preview, bookmarks/progress and keyboard shortcuts are implemented by the next batch (#44–#46); loading feedback (#49) is implemented in the public-readiness batch. Public release is still deferred.
 
 | Issue | Work | Sequence |
 | --- | --- | --- |
@@ -57,7 +57,7 @@ Implementation extends source highlighting and adds a bounded iCalendar event su
 | [#46](https://github.com/utrost/Textr/issues/46) | Support hardware keyboard reader shortcuts | Implemented |
 | [#47](https://github.com/utrost/Textr/issues/47) | Show text encoding and line information in Document info | First implementation batch |
 | [#48](https://github.com/utrost/Textr/issues/48) | Add offline help for opening files and Android defaults | First implementation batch |
-| [#49](https://github.com/utrost/Textr/issues/49) | Explain slow loading and provide a clear cancel action | Later iteration |
+| [#49](https://github.com/utrost/Textr/issues/49) | Explain slow loading and provide a clear cancel action | Public-readiness batch |
 
 ## Foldable layout (requested 2026-11-13)
 
@@ -119,14 +119,18 @@ Close work issues with acceptance evidence and update the [tracker checklist](ht
 
 ## Release polish follow-ups
 
-Public release remains deferred. These issues capture the release-readiness review without adding an implementation commitment to this batch.
+Public release remains deferred. The owner authorized autonomous implementation and public repository preparation on 15 November 2026. App publication remains deferred.
 
-- [#49](https://github.com/utrost/Textr/issues/49): loading explanation and explicit cancellation (existing issue).
+- [#49](https://github.com/utrost/Textr/issues/49): implemented loading stages, delayed explanations and explicit cancellation.
 - [#53](https://github.com/utrost/Textr/issues/53): public privacy policy and About integration.
-- [#54](https://github.com/utrost/Textr/issues/54): German interface and offline help.
-- [#55](https://github.com/utrost/Textr/issues/55): contextual opening-help and sidebar discovery.
+- [#54](https://github.com/utrost/Textr/issues/54): implemented German interface, preview labels and offline help.
+- [#55](https://github.com/utrost/Textr/issues/55): implemented dismissible opening-help and opt-in sidebar hints.
 - [#56](https://github.com/utrost/Textr/issues/56): real-device beta, providers, accessibility and Magic V6 checks.
 - [#57](https://github.com/utrost/Textr/issues/57): optional Play App Bundle and store-listing preparation; publication remains deferred.
 - [#59](https://github.com/utrost/Textr/issues/59): investigate intermittent CSV cell accessibility in WebView 133 and validate with TalkBack; source remains the accessible baseline.
 
 Validation for #44–#46 is recorded in [reading extras validation](validation-reading-extras.md) and [PR #58](https://github.com/utrost/Textr/pull/58).
+
+## Public repository preparation (2026-11-15)
+
+Implementation and evidence: [public-readiness validation](validation-public-readiness.md). Updated README, privacy policy/About link, contributor/security guidance, issue templates and [fresh screenshots](screenshots.md) make the source repository usable by public readers. [Play listing/bundle preparation](store/readiness.md) is separate from publication. #53 retains owner identity/contact review for store use; #56 requires hardware, #57 requires account/signing choices, #59 retains the unresolved WebView accessibility investigation, and #13 remains deferred.

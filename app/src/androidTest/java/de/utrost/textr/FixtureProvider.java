@@ -44,6 +44,12 @@ public class FixtureProvider extends ContentProvider {
             getContext().getSharedPreferences("receiver", 0).edit().clear().commit();
             return Bundle.EMPTY;
         }
+        // Shell content bindings reject colons/newlines in values. Screenshot
+        // tooling uses base64 to pass synthetic text without changing its bytes.
+        if ("replace-base64".equals(method)) {
+            replacements.put(arg, new String(android.util.Base64.decode(extras.getString("text"), android.util.Base64.DEFAULT), StandardCharsets.UTF_8));
+            revoked.remove(arg); missing.remove(arg); return Bundle.EMPTY;
+        }
         if ("replace".equals(method)) { replacements.put(arg, extras.getString("text")); revoked.remove(arg); missing.remove(arg); return Bundle.EMPTY; }
         if ("missing".equals(method)) { missing.add(arg); return Bundle.EMPTY; }
         Uri target = Uri.parse(arg);

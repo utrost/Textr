@@ -113,3 +113,7 @@ Release builds fail clearly without `TEXTR_SIGNING_PROPERTIES`. A disposable, sh
 A clean source archive of commit `9d33ce9`, with no local SDK properties or build outputs, also produced a verified signed APK using the documented external credentials and SDK environment.
 
 The disposable certificate SHA-256 was `8947ee21cba7a639d42527d0b7299707835b5c77cbcc0c031a009a01844fa257`. This is test evidence, **not the production signing identity**. Test APKs are not public release artifacts. Production key custody, final release signing, source/archive/checksum publication, and downloaded-artifact verification belong to deferred [issue #13](https://github.com/utrost/Textr/issues/13).
+
+## Subsequent validation records
+
+This page preserves the original baseline measurements and signing rehearsal. Later iterations are recorded in [reader UX](validation-reader-ux.md), [navigation backlog](validation-backlog.md), [formats](validation-formats.md), [everyday reading](validation-everyday-reading.md), [reading extras](validation-reading-extras.md), and [public-readiness validation](validation-public-readiness.md). The roadmap distinguishes emulator evidence from the still-open physical beta and CSV accessibility work.

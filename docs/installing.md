@@ -70,3 +70,11 @@ Textr has no network permission. A selected external document provider can fetch
 ## CSV, bookmarks and keyboard shortcuts
 
 CSV starts in source view. Choose **⋮ → CSV table options…** for delimiter/header settings and an optional table. **⋮ → Add bookmark…** saves a named approximate position for a file; **Bookmarks** on Home or the reader opens, renames, reconnects or deletes saved positions independently of history. Progress and bookmarks use source view for CSV. **About Textr → Keyboard shortcuts** lists Ctrl+O/F/G and Ctrl+(Shift+)Tab. See [limits and behavior](reading-extras.md).
+
+## Language, discovery and loading
+
+Textr follows the device language with English and German UI/help. On Android 13+, the system app-language settings also offer English and German. File contents stay unchanged. The empty home screen offers dismissible opening/default help; a wide-window hint points to the optional sidebar. Help remains in About after dismissal.
+
+During opening, Textr distinguishes reading the file, preparing its view and laying it out. After 1.5 seconds in a stage, an explanation appears. **Cancel and return to files** stops the operation; **Open file** remains available. No estimated percentage is shown for loading.
+
+See [fresh screenshots](screenshots.md) and the [privacy policy](privacy.md), linked from About. Earlier screenshots above document prior development iterations.

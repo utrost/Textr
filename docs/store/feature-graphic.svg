@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="500" viewBox="0 0 1024 500">
+<rect width="1024" height="500" fill="#fafaf7"/>
+<rect x="80" y="142" width="216" height="216" rx="28" fill="#356859"/>
+<path fill="#fafaf7" transform="translate(80 142) scale(2)" d="M26 28h56v9H59v43H49V37H26z"/>
+<g font-family="DejaVu Sans" fill="#202923"><text x="350" y="250" font-size="86">Textr</text><text x="354" y="308" font-size="28">Read text. Keep it simple.</text></g>
+</svg>

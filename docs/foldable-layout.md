@@ -11,3 +11,7 @@ When the sidebar is hidden, the existing compact document switcher and eligible 
 Folding, unfolding, rotation, and window resizing use Android's normal activity recreation and Textr's existing restoration of the active document, display mode, Find query, and vertical scroll offset. Scroll restoration remains approximate when reflow changes line positions; this is not a semantic bookmark. No second document or source/preview comparison is displayed. The layout does not use hinge-angle or separating-hinge information and is intended for a continuous unfolded display; tabletop and dual-screen hinge-specific layouts remain follow-ups.
 
 This follows Android's recommendation to [adapt to the available app-window size](https://developer.android.com/develop/ui/views/layout/use-window-size-classes). Emulator resize tests cover compact/wide transitions and enlarged text; they do not establish physical HONOR Magic V6 compatibility or manufacturer-specific cover-screen handoff behavior.
+
+## Discovery
+
+Eligible windows show an unobtrusive hint linking to Reading settings while the sidebar is off. Dismissal is saved locally; enabling the sidebar also hides the hint. Compact/short windows and enlarged system text do not show it. The hint never enables the sidebar automatically. [Current wide-screen screenshot](images/reading-wide.png). Physical testing remains tracked in [the beta checklist](beta-checklist.md).

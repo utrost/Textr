@@ -45,3 +45,7 @@ Sharing uses a format-appropriate MIME type such as `text/calendar` or `text/jav
 ## CSV table preview
 
 See [reading extras](reading-extras.md) for the CSV subset, limits, delimiter/header choices, source fallback and selection behavior. Cells are escaped text; formulas, links and HTML are never executed.
+
+## Localized preview labels
+
+Markdown omission/untitled-heading labels and generated calendar field/time labels follow the English/German app language. Source contents, supplied calendar values/time-zone identifiers, code and format names are not translated. CSV cell accessibility remains under [investigation](csv-accessibility.md); source is the fallback.

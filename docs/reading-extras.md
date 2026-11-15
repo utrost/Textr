@@ -37,3 +37,7 @@ Opening a bookmark rereads the current file and clamps its approximate position 
 Switching follows the tab strip’s stable alphabetical filename order (file reference breaks ties) and wraps. Reader shortcuts require a loaded document; Go to line is unavailable in previews. Text fields, dialogs and menus retain control of their shortcuts; Alt/Meta combinations and standard copy/selection shortcuts are not intercepted. Holding a shortcut does not repeatedly launch actions. All actions remain available through touch controls.
 
 Discover the list in **About Textr → Keyboard shortcuts**, or Android's keyboard shortcut helper. Dispatch and helper integration use the [Android hardware-input APIs](https://developer.android.com/develop/ui/views/touch-and-input/input-compatibility-on-large-screens).
+
+## Accessibility follow-up
+
+The CSV virtual-cell accessibility limitation remains open in [#59](https://github.com/utrost/Textr/issues/59). See the [reproduction notes](csv-accessibility.md). Source mode remains available. Generated help and controls are now also available in German.

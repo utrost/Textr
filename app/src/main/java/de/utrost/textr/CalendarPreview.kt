@@ -20,7 +20,7 @@ object CalendarPreview {
     private val readableTime = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss", Locale.ROOT)
     private data class Property(val name: String, val parameters: Map<String, String>, val value: String)
 
-    fun render(source: String): String {
+    fun render(source: String, translate: (String) -> String = { it }): String {
         require(source.length <= MAX_CHARS)
         val events = mutableListOf<List<Property>>()
         val stack = mutableListOf<String>()
@@ -64,9 +64,9 @@ object CalendarPreview {
         }
         require(stack.isEmpty() && calendars == 1 && version && events.isNotEmpty())
         return buildString {
-            append("<h1>Calendar events</h1><p>Event summary. Times keep their supplied time zone; no conversion is applied. Recurrences are not expanded. Other calendar data remains in source.</p>")
+            append("<h1>${SyntaxHighlighter.escape(translate("Calendar events"))}</h1><p>${SyntaxHighlighter.escape(translate("Event summary. Times keep their supplied time zone; no conversion is applied. Recurrences are not expanded. Other calendar data remains in source."))}</p>")
             fun field(label: String, value: String) {
-                append("<p><strong>").append(SyntaxHighlighter.escape(label)).append(":</strong><br><span class=\"calendar-value\">")
+                append("<p><strong>").append(SyntaxHighlighter.escape(translate(label))).append(":</strong><br><span class=\"calendar-value\">")
                 append(SyntaxHighlighter.escape(value)).append("</span></p>")
                 require(length <= MAX_OUTPUT)
             }
@@ -84,10 +84,10 @@ object CalendarPreview {
                     require((start.parameters["VALUE"] ?: "DATE-TIME").uppercase(Locale.ROOT) == (end.parameters["VALUE"] ?: "DATE-TIME").uppercase(Locale.ROOT))
                     if (start.parameters["TZID"] == end.parameters["TZID"] && start.value.length == end.value.length) require(end.value > start.value)
                 }
-                val title = grouped["SUMMARY"]?.single()?.value?.let(::text).orEmpty().ifBlank { "Untitled event" }
+                val title = grouped["SUMMARY"]?.single()?.value?.let(::text).orEmpty().ifBlank { translate("Untitled event") }
                 append("<h2>").append(SyntaxHighlighter.escape(title)).append("</h2>")
-                field("Start", start?.let(::time) ?: "Not supplied")
-                end?.let { field("End (exclusive)", time(it)) }
+                field("Start", start?.let { time(it, translate) } ?: translate("Not supplied"))
+                end?.let { field("End (exclusive)", time(it, translate)) }
                 for (property in properties) {
                     when (property.name) {
                         "LOCATION" -> field("Location", text(property.value))
@@ -99,7 +99,7 @@ object CalendarPreview {
                         "RDATE" -> field("Additional recurrence dates (as supplied)", raw(property))
                         "EXDATE" -> field("Excluded dates (as supplied)", raw(property))
                         "RECURRENCE-ID" -> {
-                            field("Recurrence instance", time(property))
+                            field("Recurrence instance", time(property, translate))
                             property.parameters["RANGE"]?.let { field("Recurrence range", it) }
                         }
                         "URL" -> field("URL", property.value)
@@ -113,18 +113,18 @@ object CalendarPreview {
     private fun raw(property: Property): String = property.parameters.entries.joinToString("; ") { "${it.key}=${it.value}" }
         .let { if (it.isEmpty()) property.value else "$it: ${property.value}" }
 
-    private fun time(property: Property): String {
+    private fun time(property: Property, translate: (String) -> String): String {
         val valueType = property.parameters["VALUE"]?.uppercase(Locale.ROOT) ?: "DATE-TIME"
         val zone = property.parameters["TZID"]
         if (valueType == "DATE") {
             require(zone == null && Regex("[0-9]{8}").matches(property.value))
-            return "${LocalDate.parse(property.value, date)} (all day)"
+            return "${LocalDate.parse(property.value, date)} (${translate("all day")})"
         }
         require(valueType == "DATE-TIME" && Regex("[0-9]{8}T[0-9]{6}Z?").matches(property.value))
         val utc = property.value.endsWith('Z')
         require(!utc || zone == null)
         val parsed = LocalDateTime.parse(property.value.removeSuffix("Z"), timestamp)
-        val label = if (utc) "UTC" else zone?.let { "time zone: $it" } ?: "floating time; no time zone supplied"
+        val label = if (utc) "UTC" else zone?.let { "${translate("time zone:")} $it" } ?: translate("floating time; no time zone supplied")
         return "${parsed.format(readableTime)} ($label)"
     }
 

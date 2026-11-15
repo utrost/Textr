@@ -34,7 +34,7 @@ object DocumentRenderer {
             .maxStringLength(MAX_FILE_BYTES).maxNumberLength(MAX_FILE_BYTES).build()
     ).build()
 
-    fun prepare(document: TextDocument, csv: CsvOptions = CsvOptions()): PreparedDocument {
+    fun prepare(document: TextDocument, csv: CsvOptions = CsvOptions(), translate: (String) -> String = { it }): PreparedDocument {
         RenderPolicy.checkCancellation()
         if (document.kind == FileKind.JSON && document.bytes > RenderPolicy.MAX_JSON_PREVIEW_BYTES) {
             return PreparedDocument(document, null, PreviewNotice.JSON_LIMIT)
@@ -49,8 +49,8 @@ object DocumentRenderer {
         val preview = try {
             when (document.kind) {
                 FileKind.JSON -> prettyJson(document.text)?.let { "<pre>${SyntaxHighlighter.escape(it)}</pre>" }
-                FileKind.MARKDOWN -> markdown(document.text, headings)
-                FileKind.ICALENDAR -> CalendarPreview.render(document.text)
+                FileKind.MARKDOWN -> markdown(document.text, headings, translate)
+                FileKind.ICALENDAR -> CalendarPreview.render(document.text, translate)
                 FileKind.CSV -> CsvPreview.render(document.text, csv)
                 else -> null
             }
@@ -113,7 +113,7 @@ object DocumentRenderer {
     } catch (_: java.io.IOException) { null }
       catch (_: IllegalArgumentException) { null }
 
-    fun markdown(source: String, headings: MutableList<OutlineHeading> = mutableListOf()): String {
+    fun markdown(source: String, headings: MutableList<OutlineHeading> = mutableListOf(), translate: (String) -> String = { it }): String {
         require(source.length <= RenderPolicy.MAX_MARKDOWN_CHARS)
         RenderPolicy.checkCancellation()
         val extensions = listOf(TablesExtension.create())
@@ -143,10 +143,10 @@ object DocumentRenderer {
                 }
                 val id = "heading-${headings.size + 1}"
                 headingIds[current] = id
-                headings.add(OutlineHeading(id, label.toString().take(160).ifBlank { "Untitled heading" }, current.level))
+                headings.add(OutlineHeading(id, label.toString().take(160).ifBlank { translate("Untitled heading") }, current.level))
             }
             when (current) {
-                is Image -> { current.insertBefore(Text("[image omitted]")); current.unlink() }
+                is Image -> { current.insertBefore(Text(translate("[image omitted]"))); current.unlink() }
                 is HtmlBlock, is HtmlInline -> current.unlink()
                 else -> {
                     var child = current.lastChild

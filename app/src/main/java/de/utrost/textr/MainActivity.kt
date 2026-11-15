@@ -39,6 +39,7 @@ class ReaderSession : ViewModel() {
     // In-memory only: survive rotation without retaining document contents on disk.
     var document: PreparedDocument? = null
     var original: TextDocument? = null
+    var previewLanguage: String? = null
     var openDocuments: OpenDocuments? = null
 }
 
@@ -71,6 +72,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var documentStrip: HorizontalScrollView
     private lateinit var fileSidebar: ScrollView
     private var sidebarFits = false
+    private lateinit var sidebarHint: LinearLayout
+    private var slowLoading: Runnable? = null
     private var encodingOverride: TextEncoding? = null
     private var pendingGrantFlags = 0
     private val undoHandler = android.os.Handler(android.os.Looper.getMainLooper())
@@ -152,7 +155,10 @@ class MainActivity : ComponentActivity() {
             if (document != null) {
                 currentUri = uri?.let(Uri::parse)
                 mode = savedMode?.takeIf { it in document!!.modes } ?: document!!.defaultMode
-                render()
+                val original = session.original
+                if (original != null && session.previewLanguage != resources.configuration.locales.toLanguageTags()) {
+                    load(currentUri, mode, pendingGrantFlags) { original }
+                } else render()
             } else if (uri != null) openDocument(Uri.parse(uri), restoredMode = savedMode, restoring = true, bookmark = pendingBookmark)
             else showHome()
         } else if (!handleIntent(intent)) showHome()
@@ -207,6 +213,21 @@ class MainActivity : ComponentActivity() {
         root.addView(header)
         documentStrip = HorizontalScrollView(this).apply { id = R.id.document_strip; isHorizontalScrollBarEnabled = false }
         root.addView(documentStrip)
+        sidebarHint = LinearLayout(this).apply {
+            id = R.id.sidebar_hint
+            orientation = LinearLayout.VERTICAL
+            visibility = View.GONE
+            setPadding(dp(16), 0, dp(16), 0)
+            addView(TextView(this@MainActivity).apply { setText(R.string.sidebar_discovery); setTextColor(foreground()) })
+            addView(row().apply {
+                addView(button(R.string.settings) { showSettings() })
+                addView(button(R.string.dismiss_hint) {
+                    preferences.edit().putBoolean("sidebarHintDismissed", true).apply()
+                    updateDocumentsButton()
+                })
+            })
+        }
+        root.addView(sidebarHint)
         updateDocumentsButton()
 
         toolbar = row().apply { setPadding(dp(12), 0, dp(12), 0) }
@@ -310,6 +331,7 @@ class MainActivity : ComponentActivity() {
 
     private fun cancelWork() {
         generation++
+        stopSlowLoading()
         cancellation?.cancel()
         cancellation = null
         work?.cancel(true)
@@ -317,6 +339,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun clearContent(stopLoading: Boolean = true) {
+        stopSlowLoading()
         if (::readingProgress.isInitialized) readingProgress.visibility = View.GONE
         webView?.let { view ->
             content.removeView(view)
@@ -358,6 +381,20 @@ class MainActivity : ComponentActivity() {
         if (recents.isEmpty()) body.addView(TextView(this).apply {
             text = getString(R.string.empty_history); textSize = 16f; setTextColor(foreground()); setPadding(0, dp(16), 0, 0)
         })
+        if (recents.isEmpty() && !preferences.getBoolean("openingHintDismissed", false)) {
+            body.addView(LinearLayout(this).apply {
+                id = R.id.opening_hint
+                orientation = LinearLayout.VERTICAL
+                addView(TextView(this@MainActivity).apply {
+                    setText(R.string.opening_discovery); setTextColor(foreground()); setPadding(0, dp(16), 0, 0)
+                })
+                addView(button(R.string.opening_help) { showOpeningHelp() })
+                addView(button(R.string.dismiss_hint) {
+                    preferences.edit().putBoolean("openingHintDismissed", true).apply()
+                    showHome()
+                })
+            })
+        }
         if (repository.undoAvailable()) {
             body.addView(button(R.string.undo_remove) { repository.undoRemoval(); showHome() })
             undoHandler.removeCallbacks(finishUndo)
@@ -447,6 +484,7 @@ class MainActivity : ComponentActivity() {
             })
             addView(button(R.string.source_code) { openExternal("https://github.com/utrost/Textr") })
             addView(button(R.string.report_issue) { openExternal("https://github.com/utrost/Textr/issues") })
+            addView(button(R.string.privacy_policy) { openExternal("https://github.com/utrost/Textr/blob/main/docs/privacy.md") })
             addView(button(R.string.licenses) { showLicenses() })
             addView(button(R.string.opening_help) { showOpeningHelp() })
             addView(button(R.string.keyboard_shortcuts) { showShortcutHelp() })
@@ -685,14 +723,21 @@ class MainActivity : ComponentActivity() {
         val request = generation
         val selectedFormat = formatOverride
         val selectedCsv = csvOptions
+        val language = resources.configuration.locales.toLanguageTags()
+        val english = createConfigurationContext(Configuration(resources.configuration).apply { setLocale(java.util.Locale.ENGLISH) })
+            .resources.getStringArray(R.array.preview_labels)
+        val translations = english.zip(resources.getStringArray(R.array.preview_labels)).toMap()
         showProgress(R.string.loading)
         work = worker.submit {
             try {
                 val original = reader(signal)
-                val prepared = DocumentRenderer.prepare(original.copy(kind = selectedFormat ?: original.kind), selectedCsv).also { it.fingerprint }
+                signal.throwIfCanceled()
+                runOnUiThread { if (request == generation && !isDestroyed) showProgress(R.string.rendering) }
+                val prepared = DocumentRenderer.prepare(original.copy(kind = selectedFormat ?: original.kind), selectedCsv) { translations[it] ?: it }.also { it.fingerprint }
                 runOnUiThread {
                     if (request != generation || isDestroyed) return@runOnUiThread
                     session.original = original
+                    session.previewLanguage = language
                     val key = uri?.toString() ?: "shared-text"
                     val evicted = openDocuments.entries.firstOrNull()?.takeIf {
                         openDocuments.entries.size >= OpenDocuments.LIMIT && openDocuments.entries.none { it.key == key }
@@ -736,7 +781,43 @@ class MainActivity : ComponentActivity() {
         readingProgress.visibility = View.GONE
         titleView.text = getString(message)
         updateDocumentsButton()
-        content.addView(ProgressBar(this), FrameLayout.LayoutParams(dp(48), dp(48), Gravity.CENTER))
+        showLoadingOverlay(message)
+    }
+
+    private fun stopSlowLoading() {
+        slowLoading?.let(undoHandler::removeCallbacks)
+        slowLoading = null
+    }
+
+    private fun showLoadingOverlay(message: Int) {
+        stopSlowLoading()
+        val overlay = ScrollView(this).apply {
+            id = R.id.reader_loading
+            setBackgroundColor(background())
+            isFillViewport = true
+        }
+        val body = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER
+            setPadding(dp(24), dp(16), dp(24), dp(16))
+        }
+        body.addView(ProgressBar(this), LinearLayout.LayoutParams(dp(48), dp(48)))
+        body.addView(TextView(this).apply {
+            id = R.id.loading_stage; setText(message); textSize = 18f; setTextColor(foreground())
+            accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+        })
+        val explanation = TextView(this).apply {
+            id = R.id.loading_explanation; visibility = View.GONE; setTextColor(foreground())
+            setText(if (message == R.string.loading) R.string.slow_reading else R.string.slow_rendering)
+            accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+        }
+        body.addView(explanation)
+        body.addView(button(R.string.cancel_loading) { showHome() })
+        body.addView(button(R.string.open_file) { openPicker() })
+        overlay.addView(body)
+        content.addView(overlay, FrameLayout.LayoutParams(-1, -1))
+        slowLoading = Runnable {
+            if (canInteract() && overlay.parent === content) explanation.visibility = View.VISIBLE
+        }.also { undoHandler.postDelayed(it, 1500) }
     }
 
     private fun showError(message: Int) {
@@ -794,8 +875,7 @@ class MainActivity : ComponentActivity() {
                 val view = createWebView(scroll, page, selectedAnchor)
                 webView = view
                 content.addView(view, FrameLayout.LayoutParams(-1, -1))
-                content.addView(ProgressBar(this).apply { id = R.id.reader_loading },
-                    FrameLayout.LayoutParams(dp(48), dp(48), Gravity.CENTER))
+                showLoadingOverlay(R.string.laying_out)
                 // Stream in-memory content rather than embedding multi-MiB text in a data URL.
                 view.loadUrl(DOCUMENT_URL)
                 pendingScroll = 0
@@ -932,10 +1012,12 @@ class MainActivity : ComponentActivity() {
                                 }
                                 view.tag = true
                                 updateProgress()
+                                stopSlowLoading()
                                 content.findViewById<View>(R.id.reader_loading)?.let(content::removeView)
                                 view.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
                                 modeButton.isEnabled = (document?.modes?.size ?: 0) > 1
                                 findButton.isEnabled = true
+                                updateDocumentsButton()
                                 rememberReading()
                                 // Publish the completed page after removing the loading overlay.
                                 // Accessibility clients may otherwise retain the empty loading tree.
@@ -961,6 +1043,9 @@ class MainActivity : ComponentActivity() {
             fileSidebar.visibility = if (sidebarVisible) View.VISIBLE else View.GONE
             if (sidebarVisible) updateFileSidebar()
         }
+        if (::sidebarHint.isInitialized) sidebarHint.visibility = if (sidebarFits &&
+            !preferences.getBoolean("fileSidebar", false) && !preferences.getBoolean("sidebarHintDismissed", false) &&
+            (homeShown || webView?.tag == true)) View.VISIBLE else View.GONE
         if (!::documentStrip.isInitialized) return
         documentStrip.removeAllViews()
         // At large font scales keep the compact switcher so document content retains space.

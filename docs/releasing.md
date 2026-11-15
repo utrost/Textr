@@ -50,3 +50,7 @@ Version defaults are in `app/build.gradle.kts`. For a disposable upgrade rehears
 ## Publish
 
 Complete the [roadmap](roadmap.md) release gates and record emulator evidence in the validation record. Create a version tag pointing at the tested source commit, publish the signed APK with a SHA-256 checksum, certificate fingerprint, release notes, and matching GPLv3 source. GitHub's tag source archives must correspond to that exact commit. Keep private keys and properties files outside release assets. Store publication is outside v1.
+
+## Optional Play bundle preparation
+
+The same private signing configuration supports `:app:bundleRelease`. Output: `app/build/outputs/bundle/release/app-release.aab`; verify with JDK `jarsigner -verify -verbose -certs`. Use an owner-approved upload/signing identity only. AAB files are not directly installable APKs. See [Play preparation](store/readiness.md) for key compatibility, listing drafts and the remaining account-dependent gates. Preparation does not authorize key creation, upload or publication.

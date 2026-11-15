@@ -19,4 +19,8 @@
     <item name="csv_delimiter" type="id" />
     <item name="csv_header" type="id" />
     <item name="bookmark_name" type="id" />
+    <item name="sidebar_hint" type="id" />
+    <item name="opening_hint" type="id" />
+    <item name="loading_stage" type="id" />
+    <item name="loading_explanation" type="id" />
 </resources>
