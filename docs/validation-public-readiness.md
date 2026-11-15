@@ -5,17 +5,23 @@ Date: 15 November 2026. Covers #49, #54 and #55, repository documentation/screen
 ## Local verification
 
 - Debug app/test APK compilation, 47 JVM tests and Android lint pass with JDK 17 / SDK 36.
-- All five `ReleasePolishTest` cases pass on API 36 (37.671 seconds). They cover stalled-read cancellation followed by a new file and stale callback, opening-help dismissal/recreation, wide-screen hint opt-in/dismissal, and German resources/preview labels/app language.
+- The initial five `ReleasePolishTest` cases pass on API 36 (37.671 seconds) and API 29 (38.612 seconds). They cover stalled-read cancellation followed by a new file and stale callback, opening-help dismissal/recreation, wide-screen hint opt-in/dismissal, and German resources/preview labels/app language.
+- A sixth regression checks full action/text visibility in narrow and wide dialogs at 200% system font, using German on API 36 and the system fallback on API 29. It passes on both (9.753 / 8.771 seconds). Visual review found a clipped uppercase German Cancel action; dialog actions now use normal case and the shorter German “Leseoptionen” title.
+- A seventh regression cancels a 5 MiB escaped-text document during WebView layout and opens a new JSON file. It passes on API 36 / API 29 (4.099 / 3.253 seconds).
 - The additional CSV probe records Android cell exposure and asserts accessible unchanged source across three preview/source/recreation cycles. The local API 36 probe exposed the target cell in all three iterations; it is not a claim that #59 is resolved.
 - `bundleDebug` succeeds. `bundleRelease` fails clearly without signing inputs. A local release-bundle-path rehearsal using only the existing development key passes `jarsigner` verification. The output is retained locally as a development-only artifact, not a release candidate. No production key or store upload was created.
 - Current [screenshots](screenshots.md) are actual emulator captures with verified synthetic document bytes. English/German home, Markdown, JavaScript, dark theme, German settings and optional wide sidebar were visually inspected.
 - Existing-brand store artwork has editable SVG sources and 512×512 / 1024×500 PNG exports. Listing/Data safety documents are drafts for owner review.
 
+## Full CI
+
+[PR #60 checks](https://github.com/utrost/Textr/pull/60/checks) contain the full build/unit/lint and API 29/36 suite results and report artifacts for the candidate. The pull request records the accepted source commit and final totals; local checks above describe individual runs rather than substituting for the full CI suite.
+
 ## Regression scope
 
 `ReleasePolishTest` supplements the existing rendering, provider, sharing, accessibility/layout, sessions, search and foldable tests. UI tests run with English by default and restore locale/window changes. The German resource check keeps source text intact while localizing only generated labels. The loading test waits for delayed provider text, cancels, opens another file and then allows the old provider to finish; cancelled source must not enter history or replace the new reader.
 
-Build/test failures during development are not acceptance evidence. An initial test used ActivityScenario cleanup after replacing its launch intent, causing a lifecycle timeout; it now uses the same explicit activity lifecycle pattern as the existing stale-load test. A screenshot shell-binding failure was fixed by base64 transport in the test-only fixture provider and verification of the returned source bytes before capture.
+The screenshot tool passes synthetic text through a base64 test-provider operation and verifies returned source bytes before capture, avoiding Android shell-binding restrictions on punctuation/newlines.
 
 ## Remaining limits
 

@@ -53,6 +53,39 @@ class ReleasePolishTest {
         } finally { instrumentation.runOnMainSync { activity.finish() } }
     }
 
+    @Test fun largeDocumentLayoutCanBeCancelledAndAnotherFileOpened() {
+        val activity = instrumentation.startActivitySync(intent("escaped.txt")) as MainActivity
+        try {
+            await {
+                var layingOut = false
+                instrumentation.runOnMainSync {
+                    layingOut = activity.findViewById<WebView>(R.id.reader)?.tag == false &&
+                        activity.findViewById<TextView>(R.id.loading_stage)?.text == activity.getString(R.string.laying_out)
+                }
+                layingOut
+            }
+            instrumentation.runOnMainSync {
+                fun cancel(view: View): Boolean {
+                    if (view is android.widget.Button && view.contentDescription == activity.getString(R.string.cancel_loading)) {
+                        view.performClick(); return true
+                    }
+                    if (view is android.view.ViewGroup) for (i in 0 until view.childCount) if (cancel(view.getChildAt(i))) return true
+                    return false
+                }
+                assertTrue("Cancel is exposed during WebView layout", cancel(activity.window.decorView))
+                assertNull(activity.findViewById<View>(R.id.reader_loading))
+                assertNull(activity.findViewById<WebView>(R.id.reader))
+                activity.startActivity(intent("sample.json"))
+            }
+            await {
+                var ready = false
+                instrumentation.runOnMainSync { ready = activity.findViewById<WebView>(R.id.reader)?.tag == true }
+                ready
+            }
+            assertTrue(device.wait(Until.hasObject(By.text("sample.json")), 5000))
+        } finally { instrumentation.runOnMainSync { activity.finish() } }
+    }
+
     @Test fun openingHelpIsContextualAndDismissalSurvivesRecreation() {
         ActivityScenario.launch<MainActivity>(intent()).use { scenario ->
             scenario.onActivity { assertTrue(it.findViewById<View>(R.id.opening_hint).isShown) }
@@ -110,6 +143,45 @@ class ReleasePolishTest {
             } finally { manager.applicationLocales = original }
         }
     }
+    @Test fun largeTextDialogActionsStayFullyVisibleOnCompactAndWideWindows() {
+        val size = Regex("Override size: (\\d+x\\d+)").find(device.executeShellCommand("wm size"))?.groupValues?.get(1)
+        val density = Regex("Override density: (\\d+)").find(device.executeShellCommand("wm density"))?.groupValues?.get(1)
+        val font = device.executeShellCommand("settings get system font_scale").trim()
+        val manager = if (Build.VERSION.SDK_INT >= 33) context.getSystemService(android.app.LocaleManager::class.java) else null
+        val locales = if (Build.VERSION.SDK_INT >= 33) manager?.applicationLocales else null
+        try {
+            if (Build.VERSION.SDK_INT >= 33) manager?.applicationLocales = LocaleList.forLanguageTags("de")
+            device.executeShellCommand("settings put system font_scale 2.0")
+            for ((dimensions, dpi) in listOf("720x1280" to 360, "1200x1600" to 240)) {
+                device.executeShellCommand("wm size $dimensions")
+                device.executeShellCommand("wm density $dpi")
+                ActivityScenario.launch<MainActivity>(intent()).use { scenario ->
+                    var menu = ""; var settings = ""
+                    scenario.onActivity { menu = it.getString(R.string.more_options); settings = it.getString(R.string.settings) }
+                    click(By.desc(menu)); click(By.text(settings))
+                    scenario.onActivity {
+                        val dialog = android.view.inspector.WindowInspector.getGlobalWindowViews()
+                            .first { root -> root.findViewById<View>(android.R.id.button1)?.isShown == true }
+                        for (id in listOf(android.R.id.button1, android.R.id.button2)) {
+                            val action = dialog.findViewById<TextView>(id)
+                            val visible = android.graphics.Rect()
+                            assertTrue(action.getGlobalVisibleRect(visible))
+                            assertEquals("Unclipped action height: ${action.text}", action.height, visible.height())
+                            assertEquals("Unclipped action width: ${action.text}", action.width, visible.width())
+                            assertTrue("Text fits action", action.layout.height <= action.height - action.totalPaddingTop - action.totalPaddingBottom)
+                        }
+                    }
+                    click(By.res("android", "button2"))
+                }
+            }
+        } finally {
+            if (Build.VERSION.SDK_INT >= 33) manager?.applicationLocales = locales ?: LocaleList.getEmptyLocaleList()
+            device.executeShellCommand("wm size ${size ?: "reset"}")
+            device.executeShellCommand("wm density ${density ?: "reset"}")
+            device.executeShellCommand("settings put system font_scale ${font.takeUnless { it == "null" } ?: "1.0"}")
+        }
+    }
+
     @Test fun csvSourceFallbackRemainsAccessibleAcrossPreviewChanges() {
         val uri = Uri.parse("content://de.utrost.textr.test.documents/accessibility-probe.csv")
         val csv = "Heading,Other\nCell target,Second cell\n"

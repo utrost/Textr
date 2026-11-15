@@ -6,7 +6,7 @@
     <string name="remove_recent">%1$s aus dem Verlauf entfernen</string>
     <string name="empty_history">Öffne eine Textdatei. Deine zuletzt geöffneten Dateien erscheinen hier.</string>
     <string name="home_description">Notizen, Konfigurationen und Textdateien bis 5 MiB lesen.</string>
-    <string name="settings">Leseeinstellungen</string>
+    <string name="settings">Leseoptionen</string>
     <string name="find">Suchen</string>
     <string name="find_hint">In dieser Ansicht suchen</string>
     <string name="previous_match">Vorheriger Treffer</string>
@@ -142,7 +142,7 @@
     <string name="slow_reading">Die Datei wird noch gelesen. Ihr Anbieter wartet möglicherweise auf den Speicher oder eine Verbindung. Du kannst abbrechen oder eine andere Datei öffnen.</string>
     <string name="slow_rendering">Große Dateien und lange Zeilen können beim Anzeigen länger dauern. Du kannst abbrechen oder eine andere Datei öffnen.</string>
     <string name="opening_discovery">Aus einer anderen App öffnen? Hier erfährst du mehr über Öffnen mit, Teilen und Android-Standardeinstellungen.</string>
-    <string name="sidebar_discovery">Mehr Platz zum Lesen: In den Leseeinstellungen kannst du eine Dateiseitenleiste aktivieren.</string>
+    <string name="sidebar_discovery">Mehr Platz zum Lesen: In den Leseoptionen kannst du eine Dateiseitenleiste aktivieren.</string>
     <string name="dismiss_hint">Hinweis ausblenden</string>
     <string name="privacy_policy">Datenschutzerklärung</string>
     <string-array name="preview_labels">

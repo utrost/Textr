@@ -19,7 +19,7 @@
     <string name="plain_text">Plain text</string>
     <string name="highlighted">Highlighted</string>
     <string name="preview">Preview</string>
-    <string name="loading">Opening file…</string>
+    <string name="loading">Reading file…</string>
     <string name="rendering">Preparing view…</string>
     <string name="cannot_open">Cannot open this file</string>
     <string name="open_again">Open file again</string>

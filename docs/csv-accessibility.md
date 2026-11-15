@@ -26,4 +26,4 @@ Retest the same fixture and lifecycle on newer WebView versions and with an actu
 
 ## Current probe result
 
-On 15 November 2026, the local API 36 / WebView 133.0.6943.137 probe exposed the target cell in all three iterations and passed source-fallback assertions. This small successful run does not disprove the previously intermittent failure or establish its cause. #59 remains open.
+On 15 November 2026, the local API 36 / WebView 133.0.6943.137 probe exposed the target cell in all three iterations and passed source-fallback assertions. The API 29 / WebView 74.0.3729.185 probe also exposed cells in all three iterations. This small successful run does not disprove the previously intermittent failure or establish its cause. #59 remains open.

@@ -105,6 +105,10 @@ class MainActivity : ComponentActivity() {
         dialogs.add(this)
         setOnDismissListener { dialogs.remove(this); dismissed() }
         show()
+        // Match our other controls and avoid oversized uppercase translated actions.
+        for (which in listOf(AlertDialog.BUTTON_POSITIVE, AlertDialog.BUTTON_NEGATIVE, AlertDialog.BUTTON_NEUTRAL)) {
+            getButton(which)?.isAllCaps = false
+        }
         return this
     }
     private val picker = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->

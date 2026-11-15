@@ -73,6 +73,8 @@ def launch(name=None, text=None):
         else: raise RuntimeError('Reader did not finish')
     else: shell('am','start','-W','-n',pkg+'/.MainActivity')
 
+if shell('getprop','ro.kernel.qemu').strip() != '1':
+    raise SystemExit('Use a disposable emulator; physical devices are not supported by this capture script.')
 shell('pm','clear',pkg)
 try:
     shell('wm','size','1080x1920'); shell('wm','density','420')
@@ -86,7 +88,7 @@ try:
     prefs(theme='light'); launch(); capture('reading-home.png')
     markdown='# A quieter reading space\n\nOpen a file. Read what matters.\n\n## Weekend notes\n\n- Walk by the river\n- Bring a notebook\n- Leave room for a detour\n\n> Small files, simple tools.\n\n## Packing list\n\n| Item | Ready |\n| --- | --- |\n| Notebook | Yes |\n| Water | Yes |\n| Camera | Later |\n\n## Example\n\n```json\n{ "mode": "read", "offline": true }\n```\n'
     launch('Weekend.md',markdown); capture('reading-markdown.png')
-    launch('welcome.js','// A small example, read without editing.\n\nconst reader = {\n  name: "Textr",\n  offline: true,\n  maxFiles: 5\n};\n\nfunction welcome(name) {\n  return `Hello, ${name}!`;\n}\n\nfor (const file of ["notes.md", "app.json"]) {\n  console.log(welcome(file));\n}\n'); capture('reading-javascript.png')
+    launch('welcome.js','// A file, ready to read.\n\nconst reader = {\n  name: "Textr",\n  offline: true,\n  maxFiles: 5\n};\n\nfunction welcome(name) {\n  return `Hello, ${name}!`;\n}\n\nconst files = [\n  "notes.md",\n  "app.json"\n];\nfiles.forEach(welcome);\n'); capture('reading-javascript.png')
     shell('wm','size','1600x1200'); shell('wm','density','240')
     prefs(theme='light', fileSidebar=True, sidebarHintDismissed=True)
     launch('Weekend.md',markdown); capture('reading-wide.png')
@@ -94,7 +96,7 @@ try:
     prefs(theme='light')
     shell('cmd','locale','set-app-locales',pkg,'--locales','de')
     launch(); capture('reading-german.png')
-    click('Weitere Optionen'); click('Leseeinstellungen'); time.sleep(1); capture('reading-settings-de.png')
+    click('Weitere Optionen'); click('Leseoptionen'); time.sleep(1); capture('reading-settings-de.png')
     shell('input','keyevent','4')
     prefs(theme='dark', sidebarHintDismissed=True)
     shell('cmd','locale','set-app-locales',pkg,'--locales','en')
