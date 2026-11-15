@@ -2,7 +2,19 @@
 
 Public release and production-key selection are deferred at the owner's request. Signing support and same-key upgrades were validated with a disposable test identity; see [validation](validation.md). The procedure below is for a future authorized release.
 
-Release APKs use an owner-controlled signing key. The repository and pull-request CI never contain a key or password. Debug APKs use Android's separate development key and cannot replace a release installation (or vice versa) unless signed by the same identity; uninstalling removes private settings/history.
+Owner-published release APKs use an owner-controlled signing key. F-Droid can build an unsigned release APK from source and sign it after its own checks. The repository and pull-request CI never contain a key or password. Debug APKs use Android's separate development key and cannot replace a release installation (or vice versa) unless signed by the same identity; uninstalling removes private settings/history.
+
+## Unsigned build for F-Droid
+
+From a clean checkout with JDK 17 and SDK 36 configured, build the APK without signing credentials:
+
+```sh
+./gradlew :app:assembleRelease -PtextrUnsignedRelease=true
+```
+
+The output is `app/build/outputs/apk/release/app-release-unsigned.apk`. The flag explicitly removes the release signing configuration and bypasses only the owner-credential check. It does not change the application ID, version, build type, or debuggable setting. Verify the unsigned artifact with `apksigner verify` (which must fail because there is no signature) and inspect its package/version, permissions, and manifest with `aapt`. This APK is an intermediate build input, not an installable public release. The F-Droid submission and signing/update-channel choice are tracked in [#64](https://github.com/utrost/Textr/issues/64) and [#65](https://github.com/utrost/Textr/issues/65); no app-store publication is authorized by this build path.
+
+Without `-PtextrUnsignedRelease=true`, release APK and bundle builds still require the owner-controlled signing file described below.
 
 ## Prepare the signing identity
 
@@ -34,7 +46,7 @@ From a clean checkout of the intended release commit, with JDK 17 and SDK 36 con
 TEXTR_SIGNING_PROPERTIES=/secure/path/textr-signing.properties ./gradlew :app:assembleRelease
 ```
 
-Without this environment variable or required fields, release builds fail with an explanation. The output is `app/build/outputs/apk/release/app-release.apk`. Check the signature with the SDK's Build Tools 36.0.0:
+Without this environment variable or required fields, owner-signed release builds fail with an explanation. The output is `app/build/outputs/apk/release/app-release.apk`. Check the signature with the SDK's Build Tools 36.0.0:
 
 ```sh
 "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs app/build/outputs/apk/release/app-release.apk

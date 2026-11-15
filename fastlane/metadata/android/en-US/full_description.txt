@@ -1,0 +1,11 @@
+Textr is a minimal, read-only text viewer for Android 10 and newer. It has no accounts, ads, analytics or app network permission.
+
+Open files through Android's system picker or another app's Open with or Share action. Switch between plain text, highlighted source and supported Markdown, JSON and calendar previews. CSV files start as text and offer an optional table view.
+
+Search the displayed view or complete source, select and copy text, adjust text size and wrapping, and choose a light or dark theme. Revisit recent files, switch between up to five open documents, and save named bookmarks. An optional sidebar uses the wider window of a foldable or tablet. Controls and help are available in English and German.
+
+Textr reads everyday text files up to 5 MiB, including TXT, LOG, configuration files, JSON, Markdown, YAML, TOML, XML, CSV, Java, JavaScript, CSS, HTML source, Kotlin, Python, shell, SQL, diff and iCalendar. Preview and highlighting limits apply; plain text remains available.
+
+Textr does not edit or manage files. Android's default-app choices depend on the sending app and reported file type. External document providers may independently use the network. Tapped links open in another app. Markdown images and embedded HTML are not rendered; calendar recurrence is not expanded.
+
+License: GPL-3.0-only. Source and help: https://github.com/utrost/Textr

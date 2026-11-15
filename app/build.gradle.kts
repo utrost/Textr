@@ -7,8 +7,13 @@ plugins {
 // Credentials stay in an owner-managed file outside the checkout. Debug/PR
 // builds neither require nor receive release credentials.
 val signingPath = providers.environmentVariable("TEXTR_SIGNING_PROPERTIES").orNull
+// F-Droid builds this APK from source and signs it after verification. Keep
+// owner releases signed by default; the unsigned path must be requested.
+val unsignedRelease = providers.gradleProperty("textrUnsignedRelease")
+    .map { it.toBooleanStrict() }
+    .getOrElse(false)
 val releaseCredentials = Properties().apply {
-    signingPath?.let { path -> file(path).inputStream().use { load(it) } }
+    if (!unsignedRelease) signingPath?.let { path -> file(path).inputStream().use { load(it) } }
 }
 val verifyReleaseCredentials = tasks.register("verifyReleaseCredentials") {
     doLast {
@@ -41,11 +46,13 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.create("ownerRelease") {
-                releaseCredentials.getProperty("storeFile")?.let { storeFile = file(it) }
-                storePassword = releaseCredentials.getProperty("storePassword")
-                keyAlias = releaseCredentials.getProperty("keyAlias")
-                keyPassword = releaseCredentials.getProperty("keyPassword")
+            if (!unsignedRelease) {
+                signingConfig = signingConfigs.create("ownerRelease") {
+                    releaseCredentials.getProperty("storeFile")?.let { storeFile = file(it) }
+                    storePassword = releaseCredentials.getProperty("storePassword")
+                    keyAlias = releaseCredentials.getProperty("keyAlias")
+                    keyPassword = releaseCredentials.getProperty("keyPassword")
+                }
             }
         }
     }
@@ -58,7 +65,7 @@ android {
 }
 
 tasks.configureEach {
-    if (name == "preReleaseBuild") dependsOn(verifyReleaseCredentials)
+    if (name == "preReleaseBuild" && !unsignedRelease) dependsOn(verifyReleaseCredentials)
 }
 
 dependencies {
