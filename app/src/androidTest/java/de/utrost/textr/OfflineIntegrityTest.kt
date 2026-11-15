@@ -52,6 +52,11 @@ class OfflineIntegrityTest {
                 Thread.sleep(300)
                 assertEquals("No automatic external launch", 0, monitor.hits)
                 val link = device.wait(Until.findObject(By.text("Open external")), 5000)
+                if (link == null) {
+                    val hierarchy = java.io.ByteArrayOutputStream()
+                    device.dumpWindowHierarchy(hierarchy)
+                    android.util.Log.e("TextrOfflineTest", hierarchy.toString("UTF-8"))
+                }
                 assertNotNull("Rendered link is reachable", link)
                 link!!.click()
                 val deadline = System.nanoTime() + 5_000_000_000L

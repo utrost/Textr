@@ -1046,7 +1046,12 @@ class MainActivity : ComponentActivity() {
                                         // Announce the completed page without disabling/re-enabling
                                         // the native WebView accessibility bridge.
                                         view.postOnAnimation {
-                                            if (webView === view) view.sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED)
+                                            if (webView === view) {
+                                                val event = android.view.accessibility.AccessibilityEvent.obtain(
+                                                    android.view.accessibility.AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED)
+                                                event.contentChangeTypes = android.view.accessibility.AccessibilityEvent.CONTENT_CHANGE_TYPE_SUBTREE
+                                                view.sendAccessibilityEventUnchecked(event)
+                                            }
                                         }
                                         if (searchRow.visibility == View.VISIBLE) view.findAllAsync(searchField.text.toString())
                                     }
