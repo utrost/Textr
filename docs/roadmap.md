@@ -138,3 +138,9 @@ Implementation and evidence: [public-readiness validation](validation-public-rea
 ## Pending acceptance of public-readiness work
 
 [PR #60](https://github.com/utrost/Textr/pull/60) is a draft. #49, #54 and #55 are implemented on its branch and remain open pending acceptance. README, screenshots and repository/store documentation are uploaded with the candidate. The final CI run passes build/unit/lint but has one failure on each platform: #59's refreshed-node accessibility probe on API 36 and [#61's recent-file readiness timeout](https://github.com/utrost/Textr/issues/61) on API 29. See [exact results](validation-public-readiness.md). Resolve these before merging; no public app release is authorized.
+
+## F-Droid preparation
+
+[PR #67](https://github.com/utrost/Textr/pull/67) is stacked on #60. It implements [#62](https://github.com/utrost/Textr/issues/62), a secret-free unsigned release build with CI checks that preserve the owner-signing guard, and [#63](https://github.com/utrost/Textr/issues/63), English/German upstream listing metadata with synthetic screenshots. The build path is in [release signing](releasing.md); the metadata is in `fastlane/metadata/android/`. Both issues remain open until the PR is accepted.
+
+Next F-Droid steps are [#64](https://github.com/utrost/Textr/issues/64) for a validated `fdroiddata` recipe, [#65](https://github.com/utrost/Textr/issues/65) for the signing/update-channel choice, and [#66](https://github.com/utrost/Textr/issues/66) for owner-authorized submission after release and inclusion-policy gates. No F-Droid listing or public binary exists yet.
