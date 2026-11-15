@@ -935,9 +935,9 @@ class MainActivity : ComponentActivity() {
     private fun createWebView(scroll: Int, page: HtmlPage, initialAnchor: String? = null) = ReaderWebView(this).apply {
         id = R.id.reader
         tag = false
-        // Do not expose a partially constructed virtual accessibility tree while
-        // the loading indicator is shown. Publish it after the completed draw.
-        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+        // Keep the WebView accessibility bridge enabled throughout loading.
+        // Do not invalidate its virtual tree by toggling descendant exposure.
+        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
         onViewportDraw = { if (webView === this) updateProgress() }
         setBackgroundColor(background())
         settings.apply {
@@ -1018,13 +1018,12 @@ class MainActivity : ComponentActivity() {
                                 updateProgress()
                                 stopSlowLoading()
                                 content.findViewById<View>(R.id.reader_loading)?.let(content::removeView)
-                                view.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
                                 modeButton.isEnabled = (document?.modes?.size ?: 0) > 1
                                 findButton.isEnabled = true
                                 updateDocumentsButton()
                                 rememberReading()
-                                // Publish the completed page after removing the loading overlay.
-                                // Accessibility clients may otherwise retain the empty loading tree.
+                                // Announce the completed page without disabling/re-enabling
+                                // the native WebView accessibility bridge.
                                 view.postOnAnimation {
                                     if (webView === view) view.sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED)
                                 }

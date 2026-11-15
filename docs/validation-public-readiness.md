@@ -23,6 +23,10 @@ Date: 15 November 2026. Covers #49, #54 and #55, repository documentation/screen
 
 The screenshot tool passes synthetic text through a base64 test-provider operation and verifies returned source bytes before capture, avoiding Android shell-binding restrictions on punctuation/newlines.
 
+## Full-suite findings
+
+The first complete candidate run passed all 79 API 29 cases but exposed four API 36 failures: a stale native-menu snapshot and missing virtual nodes in link, selection and source-fallback checks. The reader now keeps WebView accessibility enabled through loading instead of disabling/re-enabling descendant exposure. The foldable test reacquires stale UiAutomator snapshots with a bounded retry; its behavioral assertions are unchanged. The focused Android 16 rerun passes all 21 foldable, offline-integrity, reader-UX and public-readiness cases together (147.996 seconds). Full CI must verify the corrected candidate before merge. The separate intermittent CSV/TalkBack investigation remains open.
+
 ## Remaining limits
 
 - #59: WebView 133 CSV virtual-cell accessibility remains unresolved. See [reproduction and source-fallback evidence](csv-accessibility.md). No speech/TalkBack success claim is made.
