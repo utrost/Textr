@@ -1046,7 +1046,8 @@ class MainActivity : ComponentActivity() {
                                         // Announce the completed page without disabling/re-enabling
                                         // the native WebView accessibility bridge.
                                         view.postOnAnimation {
-                                            if (webView === view) {
+                                            val accessibility = getSystemService(android.view.accessibility.AccessibilityManager::class.java)
+                                            if (webView === view && accessibility.isEnabled) {
                                                 val event = android.view.accessibility.AccessibilityEvent.obtain(
                                                     android.view.accessibility.AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED)
                                                 event.contentChangeTypes = android.view.accessibility.AccessibilityEvent.CONTENT_CHANGE_TYPE_SUBTREE
