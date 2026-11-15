@@ -1,0 +1,1 @@
+Erste Textr-Version: Textdateien öffnen und durchsuchen; Markdown-, JSON- und Kalendervorschauen lesen; Quelltext hervorheben; zuletzt geöffnete Dateien und Lesezeichen nutzen; optionale Seitenleiste für breite Fenster. Schreibgeschützt und offline, mit deutscher und englischer Oberfläche.

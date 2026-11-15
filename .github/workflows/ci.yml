@@ -33,6 +33,44 @@ jobs:
         run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
       - name: Build and check
         run: ./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug --stacktrace
+      - name: Verify unsigned F-Droid release build
+        run: |
+          ./gradlew :app:assembleRelease -PtextrUnsignedRelease=true --stacktrace
+          apk=app/build/outputs/apk/release/app-release-unsigned.apk
+          test -f "$apk"
+          if "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify "$apk"; then
+            echo 'Expected an unsigned F-Droid build, but the APK has a valid signature.' >&2
+            exit 1
+          fi
+          badging=$("$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk")
+          printf '%s\n' "$badging" | grep -F "package: name='de.utrost.textr'"
+          if printf '%s\n' "$badging" | grep -q 'application-debuggable'; then
+            echo 'F-Droid release APK must not be debuggable.' >&2
+            exit 1
+          fi
+          if "$ANDROID_HOME/build-tools/36.0.0/aapt" dump permissions "$apk" | grep -Fq 'android.permission.INTERNET'; then
+            echo 'F-Droid release APK must not declare INTERNET permission.' >&2
+            exit 1
+          fi
+      - name: Check owner signing guard and disposable signed build
+        run: |
+          if ./gradlew :app:verifyReleaseCredentials > signing-guard.log 2>&1; then
+            echo 'Owner release signing unexpectedly passed without credentials.' >&2
+            exit 1
+          fi
+          grep -Fq 'Release signing requires TEXTR_SIGNING_PROPERTIES' signing-guard.log
+          test_dir=$(mktemp -d)
+          trap 'rm -rf "$test_dir" signing-guard.log' EXIT
+          export TEXTR_TEST_PASS="$(openssl rand -hex 24)"
+          keytool -genkeypair -keystore "$test_dir/disposable.p12" -storetype PKCS12 \
+            -alias textr-test -keyalg RSA -keysize 2048 -validity 2 \
+            -dname 'CN=Textr Disposable Build Check' \
+            -storepass:env TEXTR_TEST_PASS -keypass:env TEXTR_TEST_PASS -noprompt >/dev/null 2>&1
+          printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=textr-test\nkeyPassword=%s\n' \
+            "$test_dir/disposable.p12" "$TEXTR_TEST_PASS" "$TEXTR_TEST_PASS" > "$test_dir/signing.properties"
+          chmod 600 "$test_dir/signing.properties"
+          TEXTR_SIGNING_PROPERTIES="$test_dir/signing.properties" ./gradlew :app:assembleRelease --stacktrace
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify app/build/outputs/apk/release/app-release.apk
       - name: Retain test and lint reports
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

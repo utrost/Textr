@@ -2,6 +2,8 @@
 
 These are drafts for a future owner-approved submission. Nothing in this directory has been uploaded to a store.
 
+F-Droid's [upstream English and German metadata](../../fastlane/metadata/android/) reuses the listing copy and synthetic screenshots in the supported source layout. The unsigned APK build path is documented in [release signing](../releasing.md). F-Droid build-recipe validation and submission remain separate open issues [#64](https://github.com/utrost/Textr/issues/64) and [#66](https://github.com/utrost/Textr/issues/66).
+
 - [Readiness and build/signing instructions](readiness.md)
 - [English/German listing copy](listing.md)
 - [Data safety draft](data-safety.md)

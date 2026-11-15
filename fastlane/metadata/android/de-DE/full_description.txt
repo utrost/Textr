@@ -1,0 +1,11 @@
+Textr ist eine einfache Lese-App für Textdateien ab Android 10. Sie hat keine Konten, Werbung, Analysefunktionen oder eigene Netzwerkberechtigung.
+
+Öffne Dateien über die Android-Systemauswahl oder über „Öffnen mit“ und „Teilen“ in anderen Apps. Wechsle zwischen Klartext, hervorgehobenem Quelltext und unterstützten Vorschauen für Markdown, JSON und Kalender. CSV-Dateien starten als Text und bieten eine optionale Tabellenansicht.
+
+Durchsuche die Ansicht oder den vollständigen Quelltext, markiere und kopiere Text, passe Textgröße und Zeilenumbruch an und wähle eine helle oder dunkle Darstellung. Öffne zuletzt gelesene Dateien erneut, wechsle zwischen bis zu fünf Dokumenten und speichere benannte Lesezeichen. Eine optionale Seitenleiste nutzt breite Fenster auf Foldables und Tablets. Oberfläche und Hilfe sind auf Deutsch und Englisch verfügbar.
+
+Textr liest Textdateien bis 5 MiB, darunter TXT, LOG, Konfigurationen, JSON, Markdown, YAML, TOML, XML, CSV, Java, JavaScript, CSS, HTML-Quelltext, Kotlin, Python, Shell, SQL, Diff und iCalendar. Für Vorschau und Hervorhebung gelten Grenzen; Klartext bleibt verfügbar.
+
+Textr bearbeitet und verwaltet keine Dateien. Androids Standard-App-Auswahl hängt von der sendenden App und dem gemeldeten Dateityp ab. Externe Dokumentanbieter können selbst das Netzwerk nutzen. Angetippte Links öffnen sich in einer anderen App. Markdown-Bilder und eingebettetes HTML werden nicht dargestellt; Kalenderwiederholungen werden nicht aufgelöst.
+
+Lizenz: GPL-3.0-only. Quellcode und Hilfe: https://github.com/utrost/Textr

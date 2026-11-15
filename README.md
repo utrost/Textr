@@ -8,6 +8,8 @@ Textr is a minimal, read-only text viewer for Android. Open files from other app
 
 **Status:** working development build, version 0.1.0. The source is public. There is no public APK or Play Store release yet; production signing and app publication remain deferred. You can [build and install it locally](#build-and-install).
 
+F-Droid listing metadata and a secret-free unsigned release build are prepared; no F-Droid submission or listing exists yet. See [release build options](docs/releasing.md) and the [F-Droid backlog](https://github.com/utrost/Textr/issues/66).
+
 | Markdown preview | JavaScript source | Optional wide-screen sidebar |
 | --- | --- | --- |
 | ![Markdown preview in Textr](docs/images/reading-markdown.png) | ![JavaScript source with syntax highlighting](docs/images/reading-javascript.png) | ![Textr with its optional file sidebar on a wide emulator window](docs/images/reading-wide.png) |
