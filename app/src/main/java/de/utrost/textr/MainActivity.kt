@@ -74,6 +74,7 @@ class MainActivity : ComponentActivity() {
     private var sidebarFits = false
     private lateinit var sidebarHint: LinearLayout
     private var slowLoading: Runnable? = null
+    private var loadingControls: View? = null
     private var encodingOverride: TextEncoding? = null
     private var pendingGrantFlags = 0
     private val undoHandler = android.os.Handler(android.os.Looper.getMainLooper())
@@ -343,7 +344,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun clearContent(stopLoading: Boolean = true) {
-        stopSlowLoading()
+        removeLoadingControls()
         if (::readingProgress.isInitialized) readingProgress.visibility = View.GONE
         webView?.let { view ->
             content.removeView(view)
@@ -785,7 +786,7 @@ class MainActivity : ComponentActivity() {
         readingProgress.visibility = View.GONE
         titleView.text = getString(message)
         updateDocumentsButton()
-        showLoadingOverlay(message)
+        showLoadingControls(message)
     }
 
     private fun stopSlowLoading() {
@@ -793,8 +794,15 @@ class MainActivity : ComponentActivity() {
         slowLoading = null
     }
 
-    private fun showLoadingOverlay(message: Int) {
+    private fun removeLoadingControls() {
         stopSlowLoading()
+        loadingControls?.let { (it.parent as? android.view.ViewGroup)?.removeView(it) }
+        loadingControls = null
+    }
+
+    private fun showLoadingControls(message: Int) {
+        removeLoadingControls()
+        val besideReader = webView != null
         val overlay = ScrollView(this).apply {
             id = R.id.reader_loading
             setBackgroundColor(background())
@@ -804,7 +812,7 @@ class MainActivity : ComponentActivity() {
             orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER
             setPadding(dp(24), dp(16), dp(24), dp(16))
         }
-        body.addView(ProgressBar(this), LinearLayout.LayoutParams(dp(48), dp(48)))
+        body.addView(ProgressBar(this), LinearLayout.LayoutParams(dp(if (besideReader) 24 else 48), dp(if (besideReader) 24 else 48)))
         body.addView(TextView(this).apply {
             id = R.id.loading_stage; setText(message); textSize = 18f; setTextColor(foreground())
             accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
@@ -814,13 +822,22 @@ class MainActivity : ComponentActivity() {
             setText(if (message == R.string.loading) R.string.slow_reading else R.string.slow_rendering)
             accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
         }
-        body.addView(explanation)
         body.addView(button(R.string.cancel_loading) { showHome() })
         body.addView(button(R.string.open_file) { openPicker() })
+        body.addView(explanation)
         overlay.addView(body)
-        content.addView(overlay, FrameLayout.LayoutParams(-1, -1))
+        loadingControls = overlay
+        if (besideReader) {
+            // A separate native panel keeps the WebView visible to the platform
+            // while it builds its virtual accessibility tree. Never cover it with
+            // an opaque loading sibling in the same FrameLayout.
+            val available = (root.height - root.paddingTop - root.paddingBottom)
+                .takeIf { it > 0 } ?: resources.displayMetrics.heightPixels
+            root.addView(overlay, root.indexOfChild(searchRow) + 1,
+                LinearLayout.LayoutParams(-1, minOf(dp(240), available / 2).coerceAtLeast(dp(80))))
+        } else content.addView(overlay, FrameLayout.LayoutParams(-1, -1))
         slowLoading = Runnable {
-            if (canInteract() && overlay.parent === content) explanation.visibility = View.VISIBLE
+            if (canInteract() && loadingControls === overlay) explanation.visibility = View.VISIBLE
         }.also { undoHandler.postDelayed(it, 1500) }
     }
 
@@ -879,7 +896,7 @@ class MainActivity : ComponentActivity() {
                 val view = createWebView(scroll, page, selectedAnchor)
                 webView = view
                 content.addView(view, FrameLayout.LayoutParams(-1, -1))
-                showLoadingOverlay(R.string.laying_out)
+                showLoadingControls(R.string.laying_out)
                 // Stream in-memory content rather than embedding multi-MiB text in a data URL.
                 view.loadUrl(DOCUMENT_URL)
                 pendingScroll = 0
@@ -1002,32 +1019,39 @@ class MainActivity : ComponentActivity() {
                 view.postVisualStateCallback(0, object : WebView.VisualStateCallback() {
                     override fun onComplete(requestId: Long) {
                         if (webView !== view) return
-                        (view as ReaderWebView).afterNextDraw = {
+                        val reader = view as ReaderWebView
+                        reader.afterNextDraw = {
                             if (webView === view) {
-                                if (initialAnchor != null) view.loadUrl("$DOCUMENT_URL#$initialAnchor") else {
-                                    @Suppress("DEPRECATION")
-                                    val bottom = (view.contentHeight * view.scale).toInt() - view.height
-                                    val saved = pendingBookmark
-                                    val position = saved?.let { (bottom.coerceAtLeast(0) * it.fraction).toInt() } ?: scroll
-                                    view.scrollTo(0, position.coerceIn(0, bottom.coerceAtLeast(0)))
-                                    if (saved != null && saved.fingerprint != document?.fingerprint)
-                                        Toast.makeText(this@MainActivity, R.string.bookmark_changed, Toast.LENGTH_LONG).show()
-                                    pendingBookmark = null
+                                removeLoadingControls()
+                                // Removing the native panel expands the viewport. Restore
+                                // position only after that final layout has been drawn.
+                                reader.afterNextDraw = {
+                                    if (webView === view) {
+                                        if (initialAnchor != null) view.loadUrl("$DOCUMENT_URL#$initialAnchor") else {
+                                            @Suppress("DEPRECATION")
+                                            val bottom = (view.contentHeight * view.scale).toInt() - view.height
+                                            val saved = pendingBookmark
+                                            val position = saved?.let { (bottom.coerceAtLeast(0) * it.fraction).toInt() } ?: scroll
+                                            view.scrollTo(0, position.coerceIn(0, bottom.coerceAtLeast(0)))
+                                            if (saved != null && saved.fingerprint != document?.fingerprint)
+                                                Toast.makeText(this@MainActivity, R.string.bookmark_changed, Toast.LENGTH_LONG).show()
+                                            pendingBookmark = null
+                                        }
+                                        view.tag = true
+                                        updateProgress()
+                                        modeButton.isEnabled = (document?.modes?.size ?: 0) > 1
+                                        findButton.isEnabled = true
+                                        updateDocumentsButton()
+                                        rememberReading()
+                                        // Announce the completed page without disabling/re-enabling
+                                        // the native WebView accessibility bridge.
+                                        view.postOnAnimation {
+                                            if (webView === view) view.sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED)
+                                        }
+                                        if (searchRow.visibility == View.VISIBLE) view.findAllAsync(searchField.text.toString())
+                                    }
                                 }
-                                view.tag = true
-                                updateProgress()
-                                stopSlowLoading()
-                                content.findViewById<View>(R.id.reader_loading)?.let(content::removeView)
-                                modeButton.isEnabled = (document?.modes?.size ?: 0) > 1
-                                findButton.isEnabled = true
-                                updateDocumentsButton()
-                                rememberReading()
-                                // Announce the completed page without disabling/re-enabling
-                                // the native WebView accessibility bridge.
-                                view.postOnAnimation {
-                                    if (webView === view) view.sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED)
-                                }
-                                if (searchRow.visibility == View.VISIBLE) view.findAllAsync(searchField.text.toString())
+                                view.invalidate()
                             }
                         }
                         view.invalidate()

@@ -38,7 +38,7 @@ Device tests use a separate test-only content provider. They cover external file
 
 Reports are generated under `app/build/reports/tests/`, `app/build/reports/androidTests/`, and `app/build/reports/lint-results-debug.html`.
 
-Validation uses clean Android 10, 15, and 16 emulators (API 29, 35, and 36). The owner explicitly selected emulator validation because no physical device is available. Physical-device coverage is follow-up work, not a release gate. CI runs build, unit tests, lint, and API 29/36 instrumentation for pull requests and the default branch.
+Validation uses clean Android 10, 15, and 16 emulators (API 29, 35, and 36). The owner explicitly selected emulator validation because no physical device is available. That satisfies the original compatibility work; the later physical-device beta in #56 remains open before claiming provider, TalkBack or Magic V6 validation. CI runs build, unit tests, lint, and API 29/36 instrumentation for pull requests and the default branch.
 
 Completed configurations and evidence are recorded in [baseline validation](validation.md) and [reader UX validation](validation-reader-ux.md).
 
@@ -75,4 +75,4 @@ Everyday-reading behavior and limits are documented in [search, encoding and nav
 
 English resources are the fallback; `values-de` translates UI and offline help. `preview_labels` arrays align generated Markdown/calendar labels without translating document contents. The renderer receives a translation function, keeping its JVM tests independent of Android. A language change regenerates retained previews. Android 13+ exposes English/German through app-language settings.
 
-Loading uses a generation guard and cancellation signal, with separate read/prepare/layout stages and a 1.5-second delayed explanation. Loading controls remain available until the completed WebView draw. Discovery hints persist dismissal locally and follow the sidebar window/font thresholds. `ReleasePolishTest` covers cancellation, stale callbacks, hint persistence and localization. See [current validation](validation-public-readiness.md), [screenshots](screenshots.md), [contribution guidance](../CONTRIBUTING.md), and [Play preparation](store/readiness.md).
+Loading uses a generation guard and cancellation signal, with separate read/prepare/layout stages and a 1.5-second delayed explanation. During layout, native loading controls occupy a separate panel so the WebView remains visible. Removing that panel expands the viewport; reading-position restoration waits for the next draw at its final size. Discovery hints persist dismissal locally and follow the sidebar window/font thresholds. `ReleasePolishTest` covers cancellation, stale callbacks, hint persistence and localization. See [current validation](validation-public-readiness.md), [screenshots](screenshots.md), [contribution guidance](../CONTRIBUTING.md), and [Play preparation](store/readiness.md).

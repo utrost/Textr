@@ -16,11 +16,11 @@ adb logcat -d -s TextrCsvAccessibility
 adb exec-out run-as de.utrost.textr cat cache/csv-accessibility-0.xml
 ```
 
-The test uses synthetic CSV, toggles preview/source and recreates the activity three times. It records whether the preview cell appears and saves each Android hierarchy. It **asserts source accessibility, preserved contents and disabled JavaScript**, not successful preview cell navigation. The source fallback is the behavior this test guarantees.
+The test uses synthetic CSV, toggles preview/source and recreates the activity three times. It records whether the preview cell appears and saves each Android hierarchy. It **asserts source accessibility, preserved contents and disabled JavaScript**, not successful preview cell navigation. These are acceptance assertions, not a guarantee across all WebView versions or lifecycle sequences. Longer candidate runs have also intermittently missed source and link nodes; a passing short probe is insufficient to close the issue.
 
 ## Investigation boundaries
 
-Removing the nested scroll container, adding explicit table roles, adding cell focusability, refreshing accessibility nodes, clearing UiAutomation’s cache, and longer waits did not consistently resolve the earlier failure. Some wrapper labels collapsed descendants and were removed. The application now keeps the WebView accessibility bridge enabled during loading and announces the completed draw, avoiding a descendant-exposure toggle at the loading boundary. No JavaScript bridge, network permission or unverified semantic workaround has been added.
+Removing the nested scroll container, adding explicit table roles, adding cell focusability, refreshing accessibility nodes, clearing UiAutomation’s cache, and longer waits did not consistently resolve the earlier failure. Some wrapper labels collapsed descendants and were removed. The application now keeps the WebView accessibility bridge enabled during loading and announces the completed draw, avoiding a descendant-exposure toggle at the loading boundary. Loading controls occupy a separate native panel rather than covering the WebView while its virtual tree is built. These lifecycle changes require full-suite verification and do not by themselves establish a CSV fix. No JavaScript bridge, network permission or semantic workaround has been added.
 
 Retest the same fixture and lifecycle on newer WebView versions and with an actual TalkBack service before concluding that this is a WebView-version defect. The available emulator version is not evidence about current stable WebView. Real spoken feedback and Magic V6 behavior belong to [#56’s beta](beta-checklist.md). Keep #59 open until cell-navigation evidence supports a fix or an accessible compatibility fallback.
 

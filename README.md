@@ -68,7 +68,7 @@ Use `gradlew.bat` on Windows. Debug builds use a development signing key and are
 - Previews and highlighting have [bounded complexity and size](docs/formats.md); larger or invalid previews fall back to source. Large text files and long lines may display slowly.
 - Markdown images, embedded HTML and relative file links are unsupported. Calendar recurrence is not expanded; no events or alarms are imported.
 - Search is literal, within one file; source results are capped at 200. No editing, file management, unbounded tabs, or huge-log support.
-- CSV cell accessibility is intermittently affected on WebView 133; [#59](https://github.com/utrost/Textr/issues/59) tracks investigation. Plain text remains available. Emulator checks do not replace human TalkBack or physical foldable testing.
+- WebView 133 has shown intermittent missing accessibility nodes in CSV previews and document text; [#59](https://github.com/utrost/Textr/issues/59) tracks investigation. Plain text remains available. Emulator checks do not replace human TalkBack or physical foldable testing.
 - Public APK release, real-device beta and optional Play distribution have separate remaining gates in the [roadmap](docs/roadmap.md).
 
 ## Contribute and get help
