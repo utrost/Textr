@@ -33,3 +33,14 @@ The first complete candidate run passed all 79 API 29 cases but exposed four API
 - #56: no physical device, provider beta, or actual Magic V6 fold/crease validation. [Checklist](beta-checklist.md).
 - #53/#57: privacy text and About link are prepared; store developer identity/contact, final policy URL suitability, account declarations and signing choices need owner review. Public repository policy/contact uses the existing `utrost` handle and public project issues.
 - #13: no public APK or production signing identity. Source-repository publication does not change that decision.
+
+## Final candidate status — not accepted for merge
+
+[CI run 43719037135](https://github.com/utrost/Textr/actions/runs/43719037135) tested application/test commit `c0c8bc42ef840b45638fb9c4e4575222f49e916b`. Build, 47 JVM tests and lint pass. Downloaded JUnit artifacts confirm **78/79 passing on API 29** and **78/79 passing on API 36**, each with one failure, zero errors and zero skips.
+
+- API 36: the CSV/source probe still misses visible source text after switching modes, even when refreshing platform nodes and clearing the automation cache. Fresh visible labels contain the toolbar/progress controls but omit document text. The earlier link/menu assertions pass. [#59](https://github.com/utrost/Textr/issues/59) remains unresolved; this is not merely a cached UiAutomator lookup.
+- API 29: `ReaderUxTest.recentReopenAndNewActivityRestorePositionAndMode` times out waiting for readiness after returning home and reopening `long.ini`. [#61](https://github.com/utrost/Textr/issues/61) records the reproduction and investigation. Its cause is not established.
+
+Local evidence is narrower: the final application code passed all 79 API 36 tests (9m 26s), the targeted intent/offline/reading-extras run passed 11 cases (122.249s), and the final refreshed-node probe revision passed seven public-readiness cases (47.241s). These passes do not override the hosted failures.
+
+PR #60 remains a draft, with #49/#54/#55 implemented but not closed. Documentation, seven screenshots and store-preparation assets are uploaded on its branch; they are not yet merged into `main`. No failing assertion was removed or disabled. Public binary release remains deferred. Later documentation-only status edits do not change the tested application code.

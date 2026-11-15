@@ -27,3 +27,7 @@ Retest the same fixture and lifecycle on newer WebView versions and with an actu
 ## Current probe result
 
 On 15 November 2026, the local API 36 / WebView 133.0.6943.137 probe exposed the target cell in all three iterations and passed source-fallback assertions. The API 29 / WebView 74.0.3729.185 probe also exposed cells in all three iterations. This small successful run does not disprove the previously intermittent failure or establish its cause. #59 remains open.
+
+## Full-suite counterexample
+
+The final hosted API 36 run at commit `c0c8bc42ef840b45638fb9c4e4575222f49e916b` fails the source assertion even with fresh platform nodes. Iteration 0 does not expose the preview cell; iteration 1 exposes it, then Plain text exposes only reader/progress labels and omits source text. [Retained run and reports](https://github.com/utrost/Textr/actions/runs/43719037135). This disproves treating the short local passes as a reliable source-accessibility guarantee. #59 remains a merge blocker for PR #60; no assertion is disabled to make CI pass.

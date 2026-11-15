@@ -4,6 +4,8 @@ Textr is a minimal, read-only text viewer for Android. Open files from other app
 
 **Android 10+ · Offline · English and German · GPL-3.0-only**
 
+**Candidate status:** the public-readiness changes in [PR #60](https://github.com/utrost/Textr/pull/60) are implemented but unmerged. Final hosted checks have two remaining blockers: [WebView accessibility #59](https://github.com/utrost/Textr/issues/59) and [Android 10 reopening timeout #61](https://github.com/utrost/Textr/issues/61). See [validation results](docs/validation-public-readiness.md).
+
 **Status:** working development build, version 0.1.0. The source is public. There is no public APK or Play Store release yet; production signing and app publication remain deferred. You can [build and install it locally](#build-and-install).
 
 | Markdown preview | JavaScript source | Optional wide-screen sidebar |

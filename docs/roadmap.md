@@ -134,3 +134,7 @@ Validation for #44–#46 is recorded in [reading extras validation](validation-r
 ## Public repository preparation (2026-11-15)
 
 Implementation and evidence: [public-readiness validation](validation-public-readiness.md). Updated README, privacy policy/About link, contributor/security guidance, issue templates and [fresh screenshots](screenshots.md) make the source repository usable by public readers. [Play listing/bundle preparation](store/readiness.md) is separate from publication. #53 retains owner identity/contact review for store use; #56 requires hardware, #57 requires account/signing choices, #59 retains the unresolved WebView accessibility investigation, and #13 remains deferred.
+
+## Pending acceptance of public-readiness work
+
+[PR #60](https://github.com/utrost/Textr/pull/60) is a draft. #49, #54 and #55 are implemented on its branch and remain open pending acceptance. README, screenshots and repository/store documentation are uploaded with the candidate. The final CI run passes build/unit/lint but has one failure on each platform: #59's refreshed-node accessibility probe on API 36 and [#61's recent-file readiness timeout](https://github.com/utrost/Textr/issues/61) on API 29. See [exact results](validation-public-readiness.md). Resolve these before merging; no public app release is authorized.
