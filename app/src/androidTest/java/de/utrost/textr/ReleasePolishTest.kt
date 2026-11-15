@@ -192,12 +192,12 @@ class ReleasePolishTest {
                 click(By.res(context.packageName, "display_mode")); click(By.text(context.getString(R.string.preview)))
                 ready(scenario)
                 // Diagnostic only: this must not be mistaken for a cell-navigation assertion.
-                val visible = device.wait(Until.hasObject(By.textContains("Cell target")), 1500)
+                val visible = accessibleTextContains("Cell target", 1500)
                 android.util.Log.i("TextrCsvAccessibility", "iteration=$iteration cellExposed=$visible webview=${WebView.getCurrentWebViewPackage()?.versionName}")
                 device.dumpWindowHierarchy(java.io.File(context.cacheDir, "csv-accessibility-$iteration.xml"))
                 click(By.res(context.packageName, "display_mode")); click(By.text(context.getString(R.string.plain_text)))
                 ready(scenario)
-                assertTrue("Source remains in Android accessibility tree", device.wait(Until.hasObject(By.textContains("Cell target")), 5000))
+                assertTrue("Source remains in Android accessibility tree", accessibleTextContains("Cell target", 5000))
                 scenario.onActivity {
                     val source = androidx.lifecycle.ViewModelProvider(it)[ReaderSession::class.java].document!!.source
                     assertEquals(csv, source.text)
@@ -206,6 +206,35 @@ class ReleasePolishTest {
                 scenario.recreate()
             }
         }
+    }
+
+    private fun accessibleTextContains(text: String, timeoutMillis: Long): Boolean {
+        val automation = InstrumentationRegistry.getInstrumentation().uiAutomation
+        val deadline = System.nanoTime() + timeoutMillis * 1_000_000
+        var labels = emptyList<String>()
+        while (System.nanoTime() < deadline) {
+            // The probe recreates virtual trees rapidly. Read fresh platform
+            // nodes, as the CSV native-selection regression does, rather than
+            // repeatedly traversing UiAutomator's cached empty descendants.
+            if (Build.VERSION.SDK_INT >= 33) automation.clearCache()
+            val pending = ArrayDeque<android.view.accessibility.AccessibilityNodeInfo>()
+            automation.rootInActiveWindow?.let(pending::add)
+            val current = mutableListOf<String>()
+            while (pending.isNotEmpty()) {
+                val node = pending.removeFirst()
+                if (!node.refresh()) continue
+                if (node.isVisibleToUser) {
+                    val label = node.text?.toString().orEmpty()
+                    if (label.contains(text)) return true
+                    if (label.isNotEmpty()) current.add(label)
+                }
+                for (index in 0 until node.childCount) node.getChild(index)?.let(pending::add)
+            }
+            labels = current
+            Thread.sleep(100)
+        }
+        android.util.Log.i("TextrCsvAccessibility", "Missing $text; fresh visible labels: $labels")
+        return false
     }
 
     private fun click(selector: BySelector) {

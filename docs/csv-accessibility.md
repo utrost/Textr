@@ -16,7 +16,7 @@ adb logcat -d -s TextrCsvAccessibility
 adb exec-out run-as de.utrost.textr cat cache/csv-accessibility-0.xml
 ```
 
-The test uses synthetic CSV, toggles preview/source and recreates the activity three times. It records whether the preview cell appears and saves each Android hierarchy. It **asserts source accessibility, preserved contents and disabled JavaScript**, not successful preview cell navigation. These are acceptance assertions, not a guarantee across all WebView versions or lifecycle sequences. Longer candidate runs have also intermittently missed source and link nodes; a passing short probe is insufficient to close the issue.
+The test uses synthetic CSV, toggles preview/source and recreates the activity three times. It records whether the preview cell appears and saves each Android hierarchy. It refreshes Android accessibility nodes on each probe (and clears the automation cache where supported), matching the native CSV selection test. It **asserts source accessibility, preserved contents and disabled JavaScript**, not successful preview cell navigation. These are acceptance assertions, not a guarantee across all WebView versions or lifecycle sequences. Longer candidate runs have also intermittently missed source and link nodes; a passing short probe is insufficient to close the issue.
 
 ## Investigation boundaries
 
