@@ -32,6 +32,10 @@ Make the already implemented reader features reliable enough for the next testin
 
 The last recorded PR #60 candidate CI evidence has failures (see [validation](validation-public-readiness.md)), and no hosted run is recorded for `fix/reader-validation` at this review. Local green reports do not replace that merge gate. Do not close #59 merely because a native fallback exists.
 
+## Approved feature extension — HTML Markdown reading view
+
+Requested after the alpha roadmap review: [#68 conversion](https://github.com/utrost/Textr/issues/68) and [#69 reader integration](https://github.com/utrost/Textr/issues/69). The candidate on `feat/html-markdown` adds bounded local/shared HTML conversion, an explicit English/German reading mode, safe links, headings/outline and source fallback. See [behavior and limits](html-reading.md). This is newer than `v0.1-alpha`; the existing APK is unchanged. Local acceptance passes build/lint, 59 JVM tests and the HTML/format/large-text confirmation cases on API 29/36; [validation](validation-html-reading.md) retains the initial full-suite result and test-synchronization correction. Hosted CI and merge acceptance remain pending. Live URL fetching remains outside scope.
+
 ## Next — private beta feedback and reading reliability
 
 Use [#56 real-device beta](https://github.com/utrost/Textr/issues/56) to collect findings from the alpha. A physical device is not currently available to the implementation workflow; device-dependent checks remain open until evidence exists. Historical emulator-only acceptance for the original baseline does not imply that these new checks passed.

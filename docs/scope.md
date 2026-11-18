@@ -84,7 +84,7 @@ Implementation acceptance covers opening via the picker and another app; applica
 
 ## Additional formats (approved 2026-11-13)
 
-Java, JavaScript, CSS, HTML, Kotlin, Python, shell, SQL, diff/patch, and iCalendar receive bounded source highlighting and manual format choices. Supported iCalendar events also receive a read-only summary preview. HTML remains source-only. Calendar import, alarms, recurrence expansion, and time-zone conversion are excluded. Existing size, privacy, source-integrity, and rendering guarantees apply. See [format details and exact preview limits](formats.md).
+Java, JavaScript, CSS, HTML, Kotlin, Python, shell, SQL, diff/patch, and iCalendar receive bounded source highlighting and manual format choices. Supported iCalendar events also receive a read-only summary preview. HTML opens as source; the approved HTML reading extension below adds a bounded conversion option. Calendar import, alarms, recurrence expansion, and time-zone conversion are excluded. Existing size, privacy, source-integrity, and rendering guarantees apply. See [format details and exact preview limits](formats.md).
 
 ## Everyday reading extension (approved 2026-11-13)
 
@@ -97,3 +97,7 @@ Issue #51 adds a locally saved, opt-in sidebar for open and recent files beside 
 ## Public-readiness polish (2026-11-15)
 
 The authorized extension adds English/German UI and help, dismissible opening/sidebar guidance, explicit loading cancellation, and a public privacy policy linked from About. Repository screenshots and contributor documentation describe implemented behavior. Optional Play assets and bundle preparation are tracked separately in #57; store submission and production signing remain deferred. Physical beta (#56) and CSV cell accessibility (#59) remain distinct follow-ups.
+
+## HTML reading extension (requested 2026-11-18)
+
+Issues [#68](https://github.com/utrost/Textr/issues/68) and [#69](https://github.com/utrost/Textr/issues/69) authorize local/saved HTML and explicitly shared HTML content to be converted to a Markdown reading view. Original source/highlighting, read-only sharing, encoding and history rules remain available. The converter omits active content/resources and uses the existing restricted Markdown renderer. This does not enable embedded raw HTML in Markdown, website downloading, scripts, remote images or generated-Markdown export. See [supported structures and limits](html-reading.md). This candidate is newer than the private `0.1-alpha` APK.

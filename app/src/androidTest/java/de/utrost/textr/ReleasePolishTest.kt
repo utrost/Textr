@@ -162,6 +162,15 @@ class ReleasePolishTest {
                     var menu = ""; var settings = ""
                     scenario.onActivity { menu = it.getString(R.string.more_options); settings = it.getString(R.string.settings) }
                     click(By.desc(menu)); click(By.text(settings))
+                    await("Settings dialog is attached and measured before checking clipping") {
+                        var measured = false
+                        scenario.onActivity {
+                            val action = android.view.inspector.WindowInspector.getGlobalWindowViews()
+                                .firstNotNullOfOrNull { root -> root.findViewById<TextView>(android.R.id.button1) }
+                            measured = action?.isShown == true && action.isLaidOut && action.width > 0 && action.height > 0
+                        }
+                        measured
+                    }
                     scenario.onActivity {
                         val dialog = android.view.inspector.WindowInspector.getGlobalWindowViews()
                             .first { root -> root.findViewById<View>(android.R.id.button1)?.isShown == true }

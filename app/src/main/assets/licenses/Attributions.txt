@@ -36,3 +36,8 @@ Gradle wrapper (build tooling, not part of the APK)
 Copyright Gradle, Inc. and contributors.
 Apache License 2.0. See Apache-2.0.txt.
 https://github.com/gradle/gradle
+
+jsoup 1.24.1
+Copyright (c) 2009-2026 Jonathan Hedley
+MIT license. See Jsoup-MIT.txt.
+https://jsoup.org/

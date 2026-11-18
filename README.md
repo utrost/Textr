@@ -26,7 +26,7 @@ Textr is a minimal, read-only text viewer for Android. Open files from other app
 - Provides English and German controls, errors, preview labels and offline help, following the device/app language. Document contents are never translated.
 - Shows reading, preparation and layout stages, with cancellation and explanations when loading takes longer.
 
-Opening a format does not guarantee highlighting. Generic configuration files use plain text unless their syntax is recognized. HTML is displayed as source. CSV starts as text; table preview requires explicit delimiter/header choices. See [formats and limits](docs/formats.md).
+Opening a format does not guarantee highlighting. Generic configuration files use plain text unless their syntax is recognized. HTML opens as source; the candidate adds an optional offline [Markdown reading view](docs/html-reading.md) for saved/shared HTML. CSV starts as text; table preview requires explicit delimiter/header choices. See [formats and limits](docs/formats.md).
 
 ## Open a file
 
@@ -68,7 +68,7 @@ Use `gradlew.bat` on Windows. Debug builds use a development signing key and are
 
 - Automatic decoding supports UTF-8 and BOM-marked UTF-16. Explicit encoding choices also support Windows-1252, ISO-8859-1 and UTF-16 without a BOM.
 - Previews and highlighting have [bounded complexity and size](docs/formats.md); larger or invalid previews fall back to source. Large text files and long lines may display slowly.
-- Markdown images, embedded HTML and relative file links are unsupported. Calendar recurrence is not expanded; no events or alarms are imported.
+- Markdown images, raw embedded HTML and relative file links are unsupported. Local HTML conversion is available in the newer candidate; it never loads the original page or remote resources. Calendar recurrence is not expanded; no events or alarms are imported.
 - Search is literal, within one file; source results are capped at 200. No editing, file management, unbounded tabs, or huge-log support.
 - WebView 133 can omit CSV cells and source nodes. **⋮ → Accessible table… → Show source** provides a native compatibility route for bounded CSV documents. See [behavior and validation](docs/validation-reader-polish.md). Human spoken-feedback and physical foldable checks remain follow-ups.
 - Public APK release, real-device beta and optional Play distribution have separate remaining gates in the [roadmap](docs/roadmap.md).

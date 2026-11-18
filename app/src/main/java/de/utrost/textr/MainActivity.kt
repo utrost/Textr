@@ -612,7 +612,7 @@ class MainActivity : ComponentActivity() {
         if (!canInteract()) return
         val source = session.original ?: return
         if (!openWith && currentUri == null && source.bytes < 100_000) {
-            launchShare(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, source.text))
+            launchShare(Intent(Intent.ACTION_SEND).setType(if (source.kind == FileKind.HTML) "text/html" else "text/plain").putExtra(Intent.EXTRA_TEXT, source.text))
             return
         }
         val uri = currentUri
@@ -688,7 +688,8 @@ class MainActivity : ComponentActivity() {
         if (uri != null) {
             openDocument(uri, intent.type, grantFlags = intent.flags)
         } else {
-            val sharedText = intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString()
+            val sharedHtml = intent.getStringExtra(Intent.EXTRA_HTML_TEXT)
+            val sharedText = sharedHtml ?: intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString()
             if (intent.action == Intent.ACTION_SEND && sharedText != null) {
                 rememberReading()
                 closeSearch()
@@ -697,9 +698,10 @@ class MainActivity : ComponentActivity() {
                 encodingOverride = null
                 csvOptions = CsvOptions()
                 pendingBookmark = null
+                val htmlInput = sharedHtml != null || TextDocuments.kind("", intent.type) == FileKind.HTML
                 // Shared text has no reopenable URI and is deliberately excluded from history.
                 load(null) {
-                    TextDocuments.read(sharedText.byteInputStream(), getString(R.string.shared_text_name), "text/plain")
+                    TextDocuments.read(sharedText.byteInputStream(), getString(if (htmlInput) R.string.shared_html_name else R.string.shared_text_name), if (htmlInput) "text/html" else "text/plain")
                 }
             } else showError(R.string.unsupported_uri)
         }
@@ -920,6 +922,7 @@ class MainActivity : ComponentActivity() {
                 pendingScroll = 0
                 if (prepared.notice != PreviewNotice.NONE) {
                     Toast.makeText(this, if (prepared.notice == PreviewNotice.MARKDOWN_LIMIT) R.string.markdown_limit
+                        else if (prepared.notice == PreviewNotice.HTML_LIMIT) R.string.html_limit
                         else if (prepared.notice == PreviewNotice.JSON_LIMIT) R.string.json_limit
                         else if (prepared.notice == PreviewNotice.HIGHLIGHT_LIMIT) R.string.highlight_limit
                         else if (prepared.notice == PreviewNotice.CALENDAR_LIMIT) R.string.calendar_limit
@@ -1443,7 +1446,7 @@ class MainActivity : ComponentActivity() {
     private fun modeLabel(value: DisplayMode): Int = when (value) {
         DisplayMode.PLAIN -> R.string.plain_text
         DisplayMode.HIGHLIGHTED -> R.string.highlighted
-        DisplayMode.PREVIEW -> R.string.preview
+        DisplayMode.PREVIEW -> if (document?.source?.kind == FileKind.HTML) R.string.html_reading_view else R.string.preview
     }
 
     private fun showModes() {

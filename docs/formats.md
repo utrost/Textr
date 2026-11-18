@@ -9,7 +9,7 @@ Textr opens supported text encodings up to 5 MiB. Format detection uses the file
 | Java | `.java` | Highlighted source |
 | JavaScript | `.js`, `.mjs`, `.cjs` | Highlighted source |
 | CSS | `.css` | Highlighted source |
-| HTML | `.html`, `.htm`, `.xhtml` | Highlighted source |
+| HTML | `.html`, `.htm`, `.xhtml` | Highlighted source by default; optional bounded Markdown reading view (newer candidate) |
 | Kotlin | `.kt`, `.kts` | Highlighted source |
 | Python | `.py`, `.pyw` | Highlighted source |
 | Shell | `.sh`, `.bash` | Highlighted source |
@@ -18,7 +18,7 @@ Textr opens supported text encodings up to 5 MiB. Format detection uses the file
 | CSV | `.csv` | Plain text by default; optional bounded table preview with explicit delimiter/header settings |
 | iCalendar | `.ics`, `.ical` | Event preview when supported; highlighted source and plain text available |
 
-The source lexers decorate common keywords, comments, strings, and numbers. CSS also distinguishes selectors and properties; iCalendar distinguishes property headers, parameters, and values. These are lightweight lexers, not language parsers: embedded HTML languages, JavaScript regex literals/template interpolation, nested comments, Python f-string expressions, shell heredocs, and dialect-specific syntax may receive approximate colors. Files are never executed or validated as programs. HTML is displayed as escaped source with no browser preview.
+The source lexers decorate common keywords, comments, strings, and numbers. CSS also distinguishes selectors and properties; iCalendar distinguishes property headers, parameters, and values. These are lightweight lexers, not language parsers: embedded HTML languages, JavaScript regex literals/template interpolation, nested comments, Python f-string expressions, shell heredocs, and dialect-specific syntax may receive approximate colors. Files are never executed or validated as programs. HTML opens as escaped source. The newer candidate offers an offline [HTML-to-Markdown reading view](html-reading.md); the original HTML is never rendered directly.
 
 Existing highlighting budgets apply: at most 512 Ki characters and 10,000 decorated tokens. Text beyond the token budget remains visible without colors; larger files use plain text. Original whitespace, line endings, Unicode, and characters remain intact. Line numbering, Go to line, search, selection, and copying work on source views; sharing and Open with preserve original bytes.
 

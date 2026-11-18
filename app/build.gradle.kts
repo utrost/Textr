@@ -66,6 +66,7 @@ dependencies {
     implementation("org.commonmark:commonmark:0.32.0")
     implementation("org.commonmark:commonmark-ext-gfm-tables:0.32.0")
     implementation("com.fasterxml.jackson.core:jackson-core:2.23.0")
+    implementation("org.jsoup:jsoup:1.24.1")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test:runner:1.7.0")
     androidTestImplementation("androidx.test:core:1.7.0")

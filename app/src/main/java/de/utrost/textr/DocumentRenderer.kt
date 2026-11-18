@@ -24,7 +24,11 @@ data class PreparedDocument(val source: TextDocument, val preview: String?, val 
         if (source.kind !in setOf(FileKind.TEXT, FileKind.CSV) && source.text.length <= RenderPolicy.MAX_HIGHLIGHT_CHARS) add(DisplayMode.HIGHLIGHTED)
         if (preview != null) add(DisplayMode.PREVIEW)
     }
-    val defaultMode: DisplayMode get() = if (source.kind == FileKind.CSV) DisplayMode.PLAIN else modes.last()
+    val defaultMode: DisplayMode get() = when (source.kind) {
+        FileKind.CSV -> DisplayMode.PLAIN
+        FileKind.HTML -> if (DisplayMode.HIGHLIGHTED in modes) DisplayMode.HIGHLIGHTED else DisplayMode.PLAIN
+        else -> modes.last()
+    }
     val fingerprint: String by lazy { java.security.MessageDigest.getInstance("SHA-256").digest(source.text.toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) } }
 }
 
@@ -45,11 +49,15 @@ object DocumentRenderer {
         if (document.kind == FileKind.ICALENDAR && document.text.length > CalendarPreview.MAX_CHARS) {
             return PreparedDocument(document, null, PreviewNotice.CALENDAR_LIMIT)
         }
+        if (document.kind == FileKind.HTML && document.text.length > HtmlMarkdown.MAX_CHARS) {
+            return PreparedDocument(document, null, PreviewNotice.HTML_LIMIT)
+        }
         val headings = mutableListOf<OutlineHeading>()
         val preview = try {
             when (document.kind) {
                 FileKind.JSON -> prettyJson(document.text)?.let { "<pre>${SyntaxHighlighter.escape(it)}</pre>" }
                 FileKind.MARKDOWN -> markdown(document.text, headings, translate)
+                FileKind.HTML -> markdown(HtmlMarkdown.convert(document.text, translate), headings, translate)
                 FileKind.ICALENDAR -> CalendarPreview.render(document.text, translate)
                 FileKind.CSV -> CsvPreview.render(document.text, csv, translate)
                 else -> null
@@ -64,7 +72,7 @@ object DocumentRenderer {
         RenderPolicy.checkCancellation()
         val notice = if (preview == null && document.kind == FileKind.CSV) PreviewNotice.CSV_UNAVAILABLE else if (preview == null && document.kind != FileKind.TEXT && document.text.length > RenderPolicy.MAX_HIGHLIGHT_CHARS) {
             PreviewNotice.HIGHLIGHT_LIMIT
-        } else if (preview == null && document.kind in setOf(FileKind.MARKDOWN, FileKind.JSON, FileKind.ICALENDAR)) {
+        } else if (preview == null && document.kind in setOf(FileKind.MARKDOWN, FileKind.JSON, FileKind.ICALENDAR, FileKind.HTML)) {
             PreviewNotice.UNAVAILABLE
         } else PreviewNotice.NONE
         return PreparedDocument(document, preview, notice, if (preview != null) headings else emptyList())

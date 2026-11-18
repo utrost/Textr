@@ -63,7 +63,7 @@ class AdditionalFormatsDeviceTest {
                     scenario.onActivity {
                         val doc = ViewModelProvider(it)[ReaderSession::class.java].document!!
                         assertEquals(example.kind, doc.source.kind); assertEquals(example.text, doc.source.text)
-                        if (example.kind == FileKind.ICALENDAR) assertNotNull(doc.preview) else assertNull(doc.preview)
+                        if (example.kind in setOf(FileKind.ICALENDAR, FileKind.HTML)) assertNotNull(doc.preview) else assertNull(doc.preview)
                         assertEquals(if (example.kind == FileKind.ICALENDAR) "Preview" else "Highlighted", it.findViewById<TextView>(R.id.display_mode).text.toString())
                         val web = it.findViewById<WebView>(R.id.reader)
                         assertFalse(web.settings.javaScriptEnabled); assertTrue(web.settings.blockNetworkLoads)
