@@ -82,7 +82,9 @@ class ReaderUxTest {
             }
             assertTrue(position > 0)
             click(By.desc("Back to files"))
-            click("long.ini")
+            // A stale title node can still say long.ini after Back and resolve
+            // to the new Textr title at click time. Only activate the recent button.
+            click(By.clazz(android.widget.Button::class.java).text("long.ini").clickable(true))
             ready(scenario)
             assertPosition(scenario, position)
         }

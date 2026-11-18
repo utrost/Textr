@@ -97,17 +97,19 @@ class MainActivity : ComponentActivity() {
     private var requestedMode: DisplayMode? = null
     private var homeShown = false
     private var sharing = false
-    private val dialogs = mutableSetOf<AlertDialog>()
+    private val dialogs = mutableSetOf<android.app.Dialog>()
     private var activeMenu: PopupMenu? = null
+    private var accessibleCsvDialog: AccessibleCsvDialog? = null
+    private var pendingAccessibleCsv: Bundle? = null
     private fun canInteract() = !isDestroyed && !isFinishing && !worker.isShutdown
 
-    private fun AlertDialog.present(dismissed: () -> Unit = {}): AlertDialog {
+    private fun <T : android.app.Dialog> T.present(dismissed: () -> Unit = {}): T {
         if (!canInteract()) return this
         dialogs.add(this)
         setOnDismissListener { dialogs.remove(this); dismissed() }
         show()
         // Match our other controls and avoid oversized uppercase translated actions.
-        for (which in listOf(AlertDialog.BUTTON_POSITIVE, AlertDialog.BUTTON_NEGATIVE, AlertDialog.BUTTON_NEUTRAL)) {
+        if (this is AlertDialog) for (which in listOf(AlertDialog.BUTTON_POSITIVE, AlertDialog.BUTTON_NEGATIVE, AlertDialog.BUTTON_NEUTRAL)) {
             getButton(which)?.isAllCaps = false
         }
         return this
@@ -146,6 +148,7 @@ class MainActivity : ComponentActivity() {
             override fun handleOnBackPressed() { navigateBack() }
         })
         if (savedInstanceState != null) {
+            pendingAccessibleCsv = savedInstanceState.getBundle("accessibleCsv")
             formatOverride = FileKind.entries.find { it.name == savedInstanceState.getString("format") }
             encodingOverride = TextEncoding.entries.find { it.name == savedInstanceState.getString("encoding") }
             csvOptions = CsvOptions(savedInstanceState.getString("csvDelimiter")?.firstOrNull()?.takeIf { it in CsvOptions.DELIMITERS } ?: ',', savedInstanceState.getBoolean("csvHeader"))
@@ -357,6 +360,8 @@ class MainActivity : ComponentActivity() {
 
     private fun showHome() {
         if (!canInteract()) return
+        accessibleCsvDialog?.dismiss()
+        pendingAccessibleCsv = null
         rememberReading()
         cancelWork()
         document = null
@@ -456,7 +461,10 @@ class MainActivity : ComponentActivity() {
                 item(R.string.reload, ready && currentUri != null) { reloadDocument() }
                 item(R.string.treat_as, ready) { showFormats() }
                 item(R.string.document_info, ready) { showDocumentInfo() }
-                if (document?.source?.kind == FileKind.CSV) item(R.string.csv_options, ready) { showCsvOptions() }
+                if (document?.source?.kind == FileKind.CSV) {
+                    item(R.string.csv_accessible, ready && document?.preview != null) { showAccessibleCsv() }
+                    item(R.string.csv_options, ready) { showCsvOptions() }
+                }
                 item(R.string.add_bookmark, ready && currentUri != null && !(document?.source?.kind == FileKind.CSV && mode == DisplayMode.PREVIEW)) { addBookmark() }
                 if (mode != DisplayMode.PREVIEW) item(R.string.go_to_line, ready) { showGoToLine() }
                 if (mode == DisplayMode.PREVIEW && document?.headings?.isNotEmpty() == true) item(R.string.outline, ready) { showOutline() }
@@ -718,6 +726,7 @@ class MainActivity : ComponentActivity() {
 
     private fun load(uri: Uri?, restoredMode: DisplayMode? = null, grantFlags: Int = 0, reader: (CancellationSignal) -> TextDocument) {
         if (!canInteract()) return
+        accessibleCsvDialog?.dismiss()
         cancelWork()
         requestedMode = restoredMode
         document = null
@@ -775,8 +784,15 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun showProgress(message: Int) {
-        clearContent()
+    private fun showProgress(message: Int, keepReader: Boolean = false) {
+        if (keepReader && webView != null) {
+            removeLoadingControls()
+            webView?.apply {
+                stopLoading()
+                tag = false
+                (this as ReaderWebView).afterNextDraw = null
+            }
+        } else clearContent()
         homeShown = false
         backButton.visibility = View.VISIBLE
         findButton.visibility = View.VISIBLE
@@ -867,7 +883,7 @@ class MainActivity : ComponentActivity() {
         val scroll = webView?.scrollY ?: pendingScroll
         cancelWork()
         val request = generation
-        showProgress(R.string.rendering)
+        showProgress(R.string.rendering, keepReader = true)
         val selectedMode = mode
         val selectedMatch = sourceMatch
         val selectedLine = targetLine
@@ -885,7 +901,7 @@ class MainActivity : ComponentActivity() {
             }
             runOnUiThread {
                 if (request != generation || isDestroyed) return@runOnUiThread
-                clearContent()
+                removeLoadingControls()
                 titleView.text = prepared.source.name
                 updateDocumentsButton()
                 modeButton.text = getString(modeLabel(selectedMode))
@@ -893,12 +909,14 @@ class MainActivity : ComponentActivity() {
                 toolbar.visibility = if (prepared.modes.size > 1) View.VISIBLE else View.GONE
                 modeButton.isEnabled = false
                 findButton.isEnabled = false
-                val view = createWebView(scroll, page, selectedAnchor)
+                // Reuse the attached reader when changing modes/settings. Replacing
+                // it tears down Chromium's accessibility bridge on every transition.
+                val view = createWebView(scroll, page, selectedAnchor, request, webView as? ReaderWebView)
                 webView = view
-                content.addView(view, FrameLayout.LayoutParams(-1, -1))
+                if (view.parent == null) content.addView(view, FrameLayout.LayoutParams(-1, -1))
                 showLoadingControls(R.string.laying_out)
                 // Stream in-memory content rather than embedding multi-MiB text in a data URL.
-                view.loadUrl(DOCUMENT_URL)
+                view.loadUrl(view.documentUrl)
                 pendingScroll = 0
                 if (prepared.notice != PreviewNotice.NONE) {
                     Toast.makeText(this, if (prepared.notice == PreviewNotice.MARKDOWN_LIMIT) R.string.markdown_limit
@@ -936,6 +954,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private class ReaderWebView(context: android.content.Context) : WebView(context) {
+        var documentUrl = DOCUMENT_URL
         var afterNextDraw: (() -> Unit)? = null
         var onViewportDraw: (() -> Unit)? = null
 
@@ -949,7 +968,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun createWebView(scroll: Int, page: HtmlPage, initialAnchor: String? = null) = ReaderWebView(this).apply {
+    private fun createWebView(scroll: Int, page: HtmlPage, initialAnchor: String?, renderGeneration: Int,
+                              existing: ReaderWebView?) = (existing ?: ReaderWebView(this)).apply {
+        val pageUrl = "$DOCUMENT_URL?render=$renderGeneration"
+        documentUrl = pageUrl
+        fun current() = webView === this && generation == renderGeneration && canInteract()
         id = R.id.reader
         tag = false
         // Keep the WebView accessibility bridge enabled throughout loading.
@@ -986,7 +1009,7 @@ class MainActivity : ComponentActivity() {
         webViewClient = object : WebViewClient() {
             private var laidOut = false
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse =
-                if (request.isForMainFrame && request.url.toString().substringBefore('#') == DOCUMENT_URL) {
+                if (request.isForMainFrame && request.url.toString().substringBefore('#') == pageUrl) {
                     WebResourceResponse("text/html", "UTF-8", page.openStream())
                 } else WebResourceResponse("text/plain", "UTF-8", ByteArrayInputStream(ByteArray(0)))
 
@@ -997,10 +1020,10 @@ class MainActivity : ComponentActivity() {
             }
 
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
-                if (request.isForMainFrame && request.url.toString().substringBefore('#') == DOCUMENT_URL && request.url.fragment != null) return false
+                if (request.isForMainFrame && request.url.toString().substringBefore('#') == pageUrl && request.url.fragment != null) return false
                 if (request.hasGesture() && request.isForMainFrame) {
                     val uri = request.url
-                    if (uri.toString().substringBefore('#') == DOCUMENT_URL && uri.fragment != null) return false
+                    if (uri.toString().substringBefore('#') == pageUrl && uri.fragment != null) return false
                     if (uri.scheme in setOf("https", "http", "mailto") && uri.host != "textr.invalid") {
                         try { startActivity(Intent(Intent.ACTION_VIEW, uri).addCategory(Intent.CATEGORY_BROWSABLE)) }
                         catch (_: ActivityNotFoundException) { Toast.makeText(this@MainActivity, R.string.no_link_handler, Toast.LENGTH_SHORT).show() }
@@ -1011,23 +1034,24 @@ class MainActivity : ComponentActivity() {
             }
 
             override fun onPageFinished(view: WebView, url: String) {
-                if (laidOut || url.substringBefore('#') != DOCUMENT_URL) return
+                if (!current() || laidOut || url.substringBefore('#') != pageUrl) return
                 laidOut = true
+                view.clearHistory()
                 // The visual callback promises the DOM on the next draw, not the
                 // current native contentHeight. Clamp only after that draw so an
                 // initial zero height cannot erase a saved reading position.
                 view.postVisualStateCallback(0, object : WebView.VisualStateCallback() {
                     override fun onComplete(requestId: Long) {
-                        if (webView !== view) return
+                        if (!current()) return
                         val reader = view as ReaderWebView
                         reader.afterNextDraw = {
-                            if (webView === view) {
+                            if (current()) {
                                 removeLoadingControls()
                                 // Removing the native panel expands the viewport. Restore
                                 // position only after that final layout has been drawn.
                                 reader.afterNextDraw = {
-                                    if (webView === view) {
-                                        if (initialAnchor != null) view.loadUrl("$DOCUMENT_URL#$initialAnchor") else {
+                                    if (current()) {
+                                        if (initialAnchor != null) view.loadUrl("$pageUrl#$initialAnchor") else {
                                             @Suppress("DEPRECATION")
                                             val bottom = (view.contentHeight * view.scale).toInt() - view.height
                                             val saved = pendingBookmark
@@ -1043,11 +1067,15 @@ class MainActivity : ComponentActivity() {
                                         findButton.isEnabled = true
                                         updateDocumentsButton()
                                         rememberReading()
+                                        pendingAccessibleCsv?.let { saved ->
+                                            pendingAccessibleCsv = null
+                                            if (saved.getString("uri") == currentUri?.toString()) showAccessibleCsv(saved)
+                                        }
                                         // Announce the completed page without disabling/re-enabling
                                         // the native WebView accessibility bridge.
                                         view.postOnAnimation {
                                             val accessibility = getSystemService(android.view.accessibility.AccessibilityManager::class.java)
-                                            if (webView === view && accessibility.isEnabled) {
+                                            if (current() && accessibility.isEnabled) {
                                                 val event = android.view.accessibility.AccessibilityEvent.obtain(
                                                     android.view.accessibility.AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED)
                                                 event.contentChangeTypes = android.view.accessibility.AccessibilityEvent.CONTENT_CHANGE_TYPE_SUBTREE
@@ -1191,6 +1219,18 @@ class MainActivity : ComponentActivity() {
         pendingScroll = webView?.scrollY ?: pendingScroll
         val encoding = encodingOverride
         load(uri, mode, pendingGrantFlags) { signal -> repository.read(uri, null, signal, encoding) }
+    }
+
+    private fun showAccessibleCsv(restored: Bundle? = null) {
+        val prepared = document ?: return
+        if (!canInteract() || accessibleCsvDialog != null || prepared.source.kind != FileKind.CSV || prepared.preview == null) return
+        val shareLabel = if (currentUri == null && (session.original?.bytes ?: 0) < 100_000) R.string.share_text else R.string.share_file
+        val uri = currentUri
+        val dialog = AccessibleCsvDialog(this, prepared.source.text, csvOptions, dark, fontSize, restored, shareLabel) {
+            if (canInteract() && document === prepared && currentUri == uri) shareDocument()
+        }
+        accessibleCsvDialog = dialog
+        dialog.present { if (accessibleCsvDialog === dialog) accessibleCsvDialog = null }
     }
 
     private fun showCsvOptions() {
@@ -1374,7 +1414,7 @@ class MainActivity : ComponentActivity() {
         }
         AlertDialog.Builder(this).setTitle(R.string.outline)
             .setAdapter(adapter) { _, index ->
-                if (canInteract()) { closeSearch(); webView?.loadUrl("$DOCUMENT_URL#${headings[index].id}") }
+                if (canInteract()) { closeSearch(); (webView as? ReaderWebView)?.let { it.loadUrl("${it.documentUrl}#${headings[index].id}") } }
             }.create().present()
     }
 
@@ -1511,6 +1551,8 @@ class MainActivity : ComponentActivity() {
         outState.putString("pendingBookmark", pendingBookmark?.id)
         outState.putString("pickerBookmark", pickerBookmark?.id)
         outState.putBoolean("search", searchRow.visibility == View.VISIBLE)
+        val accessible = accessibleCsvDialog?.readingState()?.apply { putString("uri", currentUri?.toString()) } ?: pendingAccessibleCsv
+        outState.putBundle("accessibleCsv", accessible)
     }
 
     private fun rememberReading() {

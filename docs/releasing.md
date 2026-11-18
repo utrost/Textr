@@ -4,6 +4,12 @@ Public release and production-key selection are deferred at the owner's request.
 
 Release APKs use an owner-controlled signing key. The repository and pull-request CI never contain a key or password. Debug APKs use Android's separate development key and cannot replace a release installation (or vice versa) unless signed by the same identity; uninstalling removes private settings/history.
 
+## Private 0.1-alpha test build
+
+On 18 November 2026 the owner requested a release APK for private testing, uploaded to the repository. This authorizes a **draft prerelease**, not public publication or production-key selection. The release variant is version `0.1-alpha` (code 1), signed with the existing local Android development identity. Its private key and temporary properties file stay outside the repository and release assets. Future production builds use a separately retained owner key; changing identities requires uninstalling this alpha, which removes private settings/history.
+
+The draft includes the APK, SHA-256 checksum, public signing certificate fingerprint, and exact tagged GPLv3 source. Draft assets require repository write access; publishing the draft would make the testing APK public.
+
 ## Prepare the signing identity
 
 Reuse an existing Textr release key if one exists. Losing it prevents updates to installations signed with it. For a first release, the owner can create a key outside the checkout with JDK 17's `keytool`:

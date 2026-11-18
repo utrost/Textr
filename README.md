@@ -4,9 +4,9 @@ Textr is a minimal, read-only text viewer for Android. Open files from other app
 
 **Android 10+ · Offline · English and German · GPL-3.0-only**
 
-**Candidate status:** the public-readiness changes in [PR #60](https://github.com/utrost/Textr/pull/60) are implemented but unmerged. Final hosted checks have two remaining blockers: [WebView accessibility #59](https://github.com/utrost/Textr/issues/59) and [Android 10 reopening timeout #61](https://github.com/utrost/Textr/issues/61). See [validation results](docs/validation-public-readiness.md).
+**Candidate status:** the public-readiness changes in [PR #60](https://github.com/utrost/Textr/pull/60) are implemented but unmerged. A local follow-up addresses its [WebView accessibility #59](https://github.com/utrost/Textr/issues/59) and [Android 10 reopening #61](https://github.com/utrost/Textr/issues/61) blockers. See the [reader-polish fixes and validation](docs/validation-reader-polish.md), including remaining acceptance limits, and the [original candidate results](docs/validation-public-readiness.md).
 
-**Status:** working development build, version 0.1.0. The source is public. There is no public APK or Play Store release yet; production signing and app publication remain deferred. You can [build and install it locally](#build-and-install).
+**Status:** private-testing alpha, version 0.1-alpha. The source is public. There is no public APK or Play Store release yet; production signing and app publication remain deferred. You can [build and install it locally](#build-and-install).
 
 | Markdown preview | JavaScript source | Optional wide-screen sidebar |
 | --- | --- | --- |
@@ -70,7 +70,7 @@ Use `gradlew.bat` on Windows. Debug builds use a development signing key and are
 - Previews and highlighting have [bounded complexity and size](docs/formats.md); larger or invalid previews fall back to source. Large text files and long lines may display slowly.
 - Markdown images, embedded HTML and relative file links are unsupported. Calendar recurrence is not expanded; no events or alarms are imported.
 - Search is literal, within one file; source results are capped at 200. No editing, file management, unbounded tabs, or huge-log support.
-- WebView 133 has shown intermittent missing accessibility nodes in CSV previews and document text; [#59](https://github.com/utrost/Textr/issues/59) tracks investigation. Plain text remains available. Emulator checks do not replace human TalkBack or physical foldable testing.
+- WebView 133 can omit CSV cells and source nodes. **⋮ → Accessible table… → Show source** provides a native compatibility route for bounded CSV documents. See [behavior and validation](docs/validation-reader-polish.md). Human spoken-feedback and physical foldable checks remain follow-ups.
 - Public APK release, real-device beta and optional Play distribution have separate remaining gates in the [roadmap](docs/roadmap.md).
 
 ## Contribute and get help

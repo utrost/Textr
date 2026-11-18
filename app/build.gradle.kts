@@ -31,7 +31,7 @@ android {
         minSdk = 29
         targetSdk = 36
         versionCode = providers.gradleProperty("textrVersionCode").orNull?.toInt() ?: 1
-        versionName = providers.gradleProperty("textrVersionName").orNull ?: "0.1.0"
+        versionName = providers.gradleProperty("textrVersionName").orNull ?: "0.1-alpha"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     compileOptions {

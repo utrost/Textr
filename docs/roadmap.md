@@ -127,7 +127,8 @@ Public release remains deferred. The owner authorized autonomous implementation 
 - [#55](https://github.com/utrost/Textr/issues/55): implemented dismissible opening-help and opt-in sidebar hints.
 - [#56](https://github.com/utrost/Textr/issues/56): real-device beta, providers, accessibility and Magic V6 checks.
 - [#57](https://github.com/utrost/Textr/issues/57): optional Play App Bundle and store-listing preparation; publication remains deferred.
-- [#59](https://github.com/utrost/Textr/issues/59): investigate intermittent CSV cell accessibility in WebView 133 and validate with TalkBack; plain source remains available, with lifecycle accessibility regressions also under investigation.
+- [#59](https://github.com/utrost/Textr/issues/59): native accessible CSV table/source compatibility view implemented and tested with TalkBack; the underlying WebView defect remains a version/physical-review follow-up.
+- [#61](https://github.com/utrost/Textr/issues/61): recent-file readiness timeout traced to a stale title click; the test now activates the recent-file button and retains its readiness/mode/position assertions.
 
 Validation for #44–#46 is recorded in [reading extras validation](validation-reading-extras.md) and [PR #58](https://github.com/utrost/Textr/pull/58).
 
@@ -138,3 +139,7 @@ Implementation and evidence: [public-readiness validation](validation-public-rea
 ## Pending acceptance of public-readiness work
 
 [PR #60](https://github.com/utrost/Textr/pull/60) is a draft. #49, #54 and #55 are implemented on its branch and remain open pending acceptance. README, screenshots and repository/store documentation are uploaded with the candidate. The final CI run passes build/unit/lint but has one failure on each platform: #59's refreshed-node accessibility probe on API 36 and [#61's recent-file readiness timeout](https://github.com/utrost/Textr/issues/61) on API 29. See [exact results](validation-public-readiness.md). Resolve these before merging; no public app release is authorized.
+
+The 18 November local follow-up retains #49/#54/#55, adds generated German CSV headings, adds native accessible CSV table/source views for #59, and fixes #61's confirmed stale title activation in the test. [Reader-polish validation](validation-reader-polish.md) records the diagnosis, native cell-focus regression and platform results. Hosted CI and merge acceptance remain pending; hardware and spoken TalkBack review remain tracked separately.
+
+Local acceptance for the 18 November follow-up passes build, lint, 48 JVM tests and all 82 instrumentation cases on each of API 29/36, with zero failures/errors/skips. Three additional checks pass with real TalkBack enabled on API 36. Exact source/APK identities and reproduction commands are in [reader-polish validation](validation-reader-polish.md). PR #60 and the issues remain pending hosted acceptance/merge; public release is still deferred.

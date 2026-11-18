@@ -23,4 +23,9 @@
     <item name="opening_hint" type="id" />
     <item name="loading_stage" type="id" />
     <item name="loading_explanation" type="id" />
+    <item name="csv_accessible_table" type="id" />
+    <item name="csv_accessible_query" type="id" />
+    <item name="csv_accessible_results" type="id" />
+    <item name="csv_accessible_source" type="id" />
+    <item name="csv_accessible_source_toggle" type="id" />
 </resources>

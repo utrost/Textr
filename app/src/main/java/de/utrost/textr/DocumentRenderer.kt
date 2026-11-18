@@ -51,7 +51,7 @@ object DocumentRenderer {
                 FileKind.JSON -> prettyJson(document.text)?.let { "<pre>${SyntaxHighlighter.escape(it)}</pre>" }
                 FileKind.MARKDOWN -> markdown(document.text, headings, translate)
                 FileKind.ICALENDAR -> CalendarPreview.render(document.text, translate)
-                FileKind.CSV -> CsvPreview.render(document.text, csv)
+                FileKind.CSV -> CsvPreview.render(document.text, csv, translate)
                 else -> null
             }
         } catch (_: StackOverflowError) {

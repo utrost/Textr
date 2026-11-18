@@ -23,11 +23,14 @@ class ReleasePolishTest {
     private val instrumentation get() = InstrumentationRegistry.getInstrumentation()
     private val context get() = instrumentation.targetContext
     private val device get() = UiDevice.getInstance(instrumentation)
+    private val automation get() = instrumentation.getUiAutomation(Configurator.getInstance().uiAutomationFlags)
+    private val talkbackRequested get() = InstrumentationRegistry.getArguments().getString("talkback") == "true"
     private fun intent(name: String? = null) = Intent(context, MainActivity::class.java).apply {
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         if (name != null) { action = Intent.ACTION_VIEW; data = Uri.parse("content://de.utrost.textr.test.documents/$name") }
     }
     @Before fun reset() {
+        if (talkbackRequested) Configurator.getInstance().uiAutomationFlags = android.app.UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES
         context.getSharedPreferences("reading", 0).edit().clear().commit()
         context.getSharedPreferences("open_documents", 0).edit().clear().commit()
         DocumentRepository(context).apply { setSessionReferences(emptySet()); clear() }
@@ -173,6 +176,34 @@ class ReleasePolishTest {
                     }
                     click(By.res("android", "button2"))
                 }
+                val uri = Uri.parse("content://de.utrost.textr.test.documents/large-native.csv")
+                context.contentResolver.call(uri, "replace", uri.toString(), android.os.Bundle().apply { putString("text", "Name,Value\nLarge target,Second value\n") })
+                ActivityScenario.launch<MainActivity>(intent("large-native.csv")).use { scenario ->
+                    ready(scenario)
+                    var nativeLabel = ""; var nativeMenu = ""
+                    scenario.onActivity { nativeLabel = it.getString(R.string.csv_accessible); nativeMenu = it.getString(R.string.more_options) }
+                    click(By.desc(nativeMenu)); click(By.text(nativeLabel))
+                    scenario.onActivity {
+                        val dialog = android.view.inspector.WindowInspector.getGlobalWindowViews()
+                            .first { root -> root.findViewById<View>(R.id.csv_accessible_table) != null }
+                        for (id in listOf(android.R.id.button2, android.R.id.button3)) {
+                            val action = dialog.findViewById<TextView>(id)
+                            val visible = android.graphics.Rect()
+                            assertTrue(action.getGlobalVisibleRect(visible))
+                            assertEquals("Native table action height", action.height, visible.height())
+                            assertEquals("Native table action width", action.width, visible.width())
+                            assertTrue("Native action text fits", action.layout.height <= action.height - action.totalPaddingTop - action.totalPaddingBottom)
+                        }
+                    }
+                    await("Native table cells remain reachable at 200% text") {
+                        if (accessibleNode { it.text?.toString() == "Large target" } != null) true
+                        else {
+                            accessibleNode { it.isScrollable }?.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+                            false
+                        }
+                    }
+                    click(By.res("android", "button2"))
+                }
             }
         } finally {
             if (Build.VERSION.SDK_INT >= 33) manager?.applicationLocales = locales ?: LocaleList.getEmptyLocaleList()
@@ -191,25 +222,231 @@ class ReleasePolishTest {
                 ready(scenario)
                 click(By.res(context.packageName, "display_mode")); click(By.text(context.getString(R.string.preview)))
                 ready(scenario)
-                // Diagnostic only: this must not be mistaken for a cell-navigation assertion.
+                // WebView diagnostic only; the native compatibility table owns cell-navigation guarantees.
                 val visible = accessibleTextContains("Cell target", 1500)
                 android.util.Log.i("TextrCsvAccessibility", "iteration=$iteration cellExposed=$visible webview=${WebView.getCurrentWebViewPackage()?.versionName}")
                 device.dumpWindowHierarchy(java.io.File(context.cacheDir, "csv-accessibility-$iteration.xml"))
                 click(By.res(context.packageName, "display_mode")); click(By.text(context.getString(R.string.plain_text)))
                 ready(scenario)
+                click(By.desc(context.getString(R.string.more_options)))
+                click(By.text(context.getString(R.string.csv_accessible)))
+                click(By.res(context.packageName, "csv_accessible_source_toggle"))
                 assertTrue("Source remains in Android accessibility tree", accessibleTextContains("Cell target", 5000))
                 scenario.onActivity {
                     val source = androidx.lifecycle.ViewModelProvider(it)[ReaderSession::class.java].document!!.source
                     assertEquals(csv, source.text)
                     assertFalse(it.findViewById<WebView>(R.id.reader).settings.javaScriptEnabled)
                 }
+                click(By.text(context.getString(R.string.done)))
                 scenario.recreate()
             }
         }
     }
 
+    @Test fun accessibleCsvCellsKeepTableSemanticsAndFocusAcrossModeChanges() {
+        assertTalkBackRunningIfRequested()
+        // UiAutomation exercises the real Android accessibility bridge; DOM search
+        // and painted text alone cannot establish screen-reader cell navigation.
+        val uri = Uri.parse("content://de.utrost.textr.test.documents/accessibility-navigation.csv")
+        val csv = "Heading,Other\nCell target,Second cell\n"
+        context.contentResolver.call(uri, "replace", uri.toString(), android.os.Bundle().apply { putString("text", csv) })
+        ActivityScenario.launch<MainActivity>(intent("accessibility-navigation.csv")).use { scenario ->
+            repeat(4) {
+                ready(scenario)
+                click(By.res(context.packageName, "display_mode")); click(By.text(context.getString(R.string.preview)))
+                ready(scenario)
+                click(By.desc(context.getString(R.string.more_options)))
+                click(By.text(context.getString(R.string.csv_accessible)))
+                for (label in listOf("Heading", "Other", "Cell target", "Second cell")) {
+                    await("CSV cell cannot receive accessibility focus: $label") {
+                        accessibleNode { node -> node.text?.toString() == label }?.let { node ->
+                            val manager = context.getSystemService(android.view.accessibility.AccessibilityManager::class.java)
+                            if (manager.isTouchExplorationEnabled) {
+                                if (!node.isAccessibilityFocused) node.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS)
+                                node.refresh() && node.isAccessibilityFocused
+                            } else node.isFocusable && node.actionList.any {
+                                it.id == android.view.accessibility.AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS
+                            }
+                        } == true
+                    }
+                }
+                val table = accessibleNode { it.collectionInfo?.let { info -> info.rowCount >= 2 && info.columnCount == 2 } == true }
+                assertNotNull("CSV retains native table row/column semantics", table)
+                scenario.recreate()
+                await { accessibleNode { it.text?.toString() == "Cell target" } != null }
+                click(By.text(context.getString(R.string.done)))
+                click(By.res(context.packageName, "display_mode")); click(By.text(context.getString(R.string.plain_text)))
+                ready(scenario)
+                click(By.desc(context.getString(R.string.more_options)))
+                click(By.text(context.getString(R.string.csv_accessible)))
+                click(By.res(context.packageName, "csv_accessible_source_toggle"))
+                assertTrue("Source stays accessible after navigating cells", accessibleTextContains("Cell target", 5000))
+                click(By.text(context.getString(R.string.done)))
+                assertTalkBackRunningIfRequested()
+            }
+        }
+    }
+
+    @Test fun accessibleCsvSearchCopyRestorationAndSharingKeepOriginalBytes() {
+        val uri = Uri.parse("content://de.utrost.textr.test.documents/native-table.csv")
+        val value = "Far <&> value"
+        val csv = "\uFEFFName;Type;Third;Fourth;Value\r\n" + (0 until 80).joinToString("\r\n") { row ->
+            (0 until 5).joinToString(";") { column -> if (row == 70 && column == 4) value else "Row $row field $column" }
+        } + "\r\n"
+        context.contentResolver.call(uri, "replace", uri.toString(), android.os.Bundle().apply { putString("text", csv) })
+        DocumentRepository(context).apply {
+            remember(uri, "native-table.csv")
+            saveReadingState(uri, ReadingState(csv = CsvOptions(';', true)))
+        }
+        ActivityScenario.launch<MainActivity>(intent("native-table.csv")).use { scenario ->
+            ready(scenario)
+            click(By.desc(context.getString(R.string.more_options))); click(By.text(context.getString(R.string.csv_accessible)))
+            fun root() = android.view.inspector.WindowInspector.getGlobalWindowViews()
+                .first { it.findViewById<View>(R.id.csv_accessible_table) != null }
+            scenario.onActivity { root().findViewById<android.widget.EditText>(R.id.csv_accessible_query).setText(value) }
+            await { accessibleNode { it.text?.toString() == value && it.collectionItemInfo != null } != null }
+            scenario.recreate()
+            await { accessibleNode { it.text?.toString() == value && it.collectionItemInfo != null } != null }
+            scenario.onActivity {
+                assertEquals(value, root().findViewById<android.widget.EditText>(R.id.csv_accessible_query).text.toString())
+                assertEquals(it.getString(R.string.csv_cell_matches, 1, 1), root().findViewById<TextView>(R.id.csv_accessible_results).text.toString())
+                fun cell(view: View): TextView? {
+                    if (view is TextView && view.id != R.id.csv_accessible_query && view.text.toString() == value) return view
+                    if (view is android.view.ViewGroup) for (i in 0 until view.childCount) cell(view.getChildAt(i))?.let { return it }
+                    return null
+                }
+                val selected = cell(root())!!
+                assertTrue(selected.isTextSelectable)
+                android.text.Selection.setSelection(selected.text as android.text.Spannable, 0, value.length)
+                assertTrue(selected.onTextContextMenuItem(android.R.id.copy))
+                assertEquals(value, it.getSystemService(android.content.ClipboardManager::class.java).primaryClip!!.getItemAt(0).text.toString())
+            }
+            val target = accessibleNode { it.text?.toString() == value && it.collectionItemInfo != null }!!
+            assertEquals(71, target.collectionItemInfo.rowIndex)
+            assertEquals(4, target.collectionItemInfo.columnIndex)
+            click(By.res(context.packageName, "csv_accessible_source_toggle"))
+            await { accessibleNode { it.viewIdResourceName == context.packageName + ":id/csv_accessible_source" } != null }
+            scenario.recreate()
+            await { accessibleNode { it.viewIdResourceName == context.packageName + ":id/csv_accessible_source" } != null }
+            scenario.onActivity {
+                val source = root().findViewById<TextView>(R.id.csv_accessible_source)
+                assertTrue(source.isTextSelectable)
+                assertEquals(csv.removePrefix("\uFEFF"), source.text.toString())
+                val hierarchy = android.util.SparseArray<android.os.Parcelable>()
+                root().saveHierarchyState(hierarchy)
+                val parcel = android.os.Parcel.obtain()
+                try {
+                    val state = android.os.Bundle().apply { putSparseParcelableArray("views", hierarchy) }
+                    state.writeToParcel(parcel, 0)
+                    assertFalse("Native hierarchy must not save document contents", String(parcel.marshall(), Charsets.UTF_16LE).contains("Row 69 field 2"))
+                } finally { parcel.recycle() }
+                assertTrue(root().findViewById<android.widget.CheckBox>(R.id.csv_accessible_source_toggle).isChecked)
+                assertEquals(value, root().findViewById<android.widget.EditText>(R.id.csv_accessible_query).text.toString())
+            }
+            val captured = java.util.concurrent.atomic.AtomicReference<Intent>()
+            val monitor = object : android.app.Instrumentation.ActivityMonitor() {
+                override fun onStartActivity(launch: Intent): android.app.Instrumentation.ActivityResult? {
+                    @Suppress("DEPRECATION")
+                    val inner = if (launch.action == Intent.ACTION_CHOOSER) launch.getParcelableExtra<Intent>(Intent.EXTRA_INTENT) else launch
+                    if (inner?.action != Intent.ACTION_SEND) return null
+                    captured.set(inner)
+                    return android.app.Instrumentation.ActivityResult(0, null)
+                }
+            }
+            instrumentation.addMonitor(monitor)
+            try {
+                val share = accessibleNode { it.text?.toString() == context.getString(R.string.share_file) && it.isClickable }
+                assertNotNull("Native share action is accessible", share)
+                assertTrue(share!!.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK))
+                await { captured.get() != null }
+                val shared = captured.get()
+                assertTrue(shared.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION != 0)
+                assertEquals(0, shared.flags and Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                @Suppress("DEPRECATION") val sharedUri = shared.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)!!
+                assertArrayEquals(csv.toByteArray(Charsets.UTF_8), context.contentResolver.openInputStream(sharedUri)!!.use { it.readBytes() })
+                assertArrayEquals(csv.toByteArray(Charsets.UTF_8), context.contentResolver.openInputStream(uri)!!.use { it.readBytes() })
+            } finally { instrumentation.removeMonitor(monitor) }
+        }
+    }
+
+    @Test fun nativeTablePreparationCanBeCancelledAtTheCellBudget() {
+        val uri = Uri.parse("content://de.utrost.textr.test.documents/native-budget.csv")
+        val csv = (List(100) { "value" }.joinToString(",") + "\n").repeat(100)
+        context.contentResolver.call(uri, "replace", uri.toString(), android.os.Bundle().apply { putString("text", csv) })
+        val activity = instrumentation.startActivitySync(intent("native-budget.csv")) as MainActivity
+        fun readyFile(name: String) = await {
+            var loaded = false
+            instrumentation.runOnMainSync {
+                loaded = activity.findViewById<WebView>(R.id.reader)?.tag == true &&
+                    androidx.lifecycle.ViewModelProvider(activity)[ReaderSession::class.java].document?.source?.name == name
+            }
+            loaded
+        }
+        try {
+            readyFile("native-budget.csv")
+            var menuLabel = ""; var tableLabel = ""
+            instrumentation.runOnMainSync { menuLabel = activity.getString(R.string.more_options); tableLabel = activity.getString(R.string.csv_accessible) }
+            click(By.desc(menuLabel))
+            // Activate the actual popup item on the UI thread. Waiting for an
+            // accessibility IPC/idle round trip can let a fast device finish the
+            // entire table before this cancellation assertion begins.
+            instrumentation.runOnMainSync {
+                fun menu(view: View): android.widget.ListView? {
+                    if (view is android.widget.ListView && (0 until view.adapter.count).any { index ->
+                            (view.adapter.getItem(index) as? android.view.MenuItem)?.title?.toString() == tableLabel
+                        }) return view
+                    if (view is android.view.ViewGroup) for (index in 0 until view.childCount) menu(view.getChildAt(index))?.let { return it }
+                    return null
+                }
+                val list = android.view.inspector.WindowInspector.getGlobalWindowViews().firstNotNullOf(::menu)
+                val position = (0 until list.adapter.count).first { (list.adapter.getItem(it) as? android.view.MenuItem)?.title?.toString() == tableLabel }
+                assertTrue(list.performItemClick(list.getChildAt(position - list.firstVisiblePosition), position, list.adapter.getItemId(position)))
+                val root = android.view.inspector.WindowInspector.getGlobalWindowViews()
+                    .first { it.findViewById<View>(R.id.csv_accessible_query) != null }
+                assertFalse("Table is still being prepared", root.findViewById<View>(R.id.csv_accessible_query).isEnabled)
+                assertTrue(root.findViewById<View>(android.R.id.button2).performClick())
+            }
+            await {
+                android.view.inspector.WindowInspector.getGlobalWindowViews()
+                    .none { it.findViewById<View>(R.id.csv_accessible_query)?.isShown == true }
+            }
+            // ActivityScenario matches the original launch intent and loses its
+            // lifecycle tracking after singleTop replaces that intent. Own this
+            // activity explicitly, as the existing incoming-intent tests do.
+            instrumentation.runOnMainSync { activity.startActivity(intent("sample.json").setFlags(0)) }
+            readyFile("sample.json")
+        } finally { instrumentation.runOnMainSync { activity.finish() } }
+    }
+
+    private fun assertTalkBackRunningIfRequested() {
+        if (!talkbackRequested) return
+        // Connecting automation normally suppresses other services. Keep TalkBack
+        // active and verify that this run really exercises coexistence with it.
+        automation
+        val manager = context.getSystemService(android.view.accessibility.AccessibilityManager::class.java)
+        await("TalkBack must be bound with touch exploration for a requested TalkBack run") {
+            manager.isTouchExplorationEnabled &&
+                manager.getEnabledAccessibilityServiceList(android.accessibilityservice.AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
+                    .any { it.resolveInfo.serviceInfo.packageName == "com.google.android.marvin.talkback" }
+        }
+    }
+
+    private fun accessibleNode(matches: (android.view.accessibility.AccessibilityNodeInfo) -> Boolean): android.view.accessibility.AccessibilityNodeInfo? {
+        val automation = automation
+        if (Build.VERSION.SDK_INT >= 33) automation.clearCache()
+        val pending = ArrayDeque<android.view.accessibility.AccessibilityNodeInfo>()
+        automation.rootInActiveWindow?.let(pending::add)
+        while (pending.isNotEmpty()) {
+            val node = pending.removeFirst()
+            if (!node.refresh()) continue
+            if (node.isVisibleToUser && matches(node)) return node
+            for (i in 0 until node.childCount) node.getChild(i)?.let(pending::add)
+        }
+        return null
+    }
+
     private fun accessibleTextContains(text: String, timeoutMillis: Long): Boolean {
-        val automation = InstrumentationRegistry.getInstrumentation().uiAutomation
+        val automation = automation
         val deadline = System.nanoTime() + timeoutMillis * 1_000_000
         var labels = emptyList<String>()
         while (System.nanoTime() < deadline) {
@@ -245,9 +482,11 @@ class ReleasePolishTest {
     private fun ready(scenario: ActivityScenario<MainActivity>) = await {
         var ready = false; scenario.onActivity { ready = it.findViewById<WebView>(R.id.reader)?.tag == true }; ready
     }
-    private fun await(condition: () -> Boolean) {
+    private fun await(message: String = "Reader polish condition timed out", condition: () -> Boolean) {
         val until = System.nanoTime() + 30_000_000_000L
         while (System.nanoTime() < until) { if (condition()) return; Thread.sleep(100) }
-        fail("Timed out")
+        device.dumpWindowHierarchy(java.io.File(context.cacheDir, "reader-polish-timeout.xml"))
+        android.util.Log.e("TextrCsvAccessibility", message)
+        fail(message)
     }
 }

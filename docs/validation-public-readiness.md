@@ -2,6 +2,8 @@
 
 Date: 15 November 2026. Covers #49, #54 and #55, repository documentation/screenshots, and preparatory portions of #53/#57/#59. Public binary release and production signing remain deferred.
 
+This record describes the original candidate. The [18 November reader-polish follow-up](validation-reader-polish.md) records subsequent #59/#61 fixes and verification without changing the historical failures below.
+
 ## Local verification
 
 - Debug app/test APK compilation, 47 JVM tests and Android lint pass with JDK 17 / SDK 36.

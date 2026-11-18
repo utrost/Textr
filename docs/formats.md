@@ -48,4 +48,4 @@ See [reading extras](reading-extras.md) for the CSV subset, limits, delimiter/he
 
 ## Localized preview labels
 
-Markdown omission/untitled-heading labels and generated calendar field/time labels follow the English/German app language. Source contents, supplied calendar values/time-zone identifiers, code and format names are not translated. CSV cell accessibility remains under [investigation](csv-accessibility.md); source is the fallback.
+Markdown omission/untitled-heading labels, generated calendar field/time labels and generated CSV column headings follow the English/German app language. Source contents, supplied calendar values/time-zone identifiers, code and format names are not translated. The native **Accessible table…** option provides table and source access when WebView descendants are missing; see [behavior](reading-extras.md) and [investigation](csv-accessibility.md).

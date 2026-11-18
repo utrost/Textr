@@ -168,6 +168,12 @@
         <item>ganztägig</item>
         <item>Zeitzone:</item>
         <item>Ortszeit; keine Zeitzone angegeben</item>
+        <item>Spalte</item>
     </string-array>
     <string name="unnamed_file">Textdatei</string>
+    <string name="csv_accessible">Barrierefreie Tabelle…</string>
+    <string name="csv_empty_cell">Leere Zelle</string>
+    <string name="csv_column">Spalte %1$d</string>
+    <string name="csv_cell_matches">Zelle %1$d von %2$d</string>
+    <string name="csv_show_source">Quelltext anzeigen</string>
 </resources>
