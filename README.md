@@ -12,7 +12,7 @@ Textr is a minimal, read-only text viewer for Android. Open files from other app
 | --- | --- | --- |
 | ![Markdown preview in Textr](docs/images/reading-markdown.png) | ![JavaScript source with syntax highlighting](docs/images/reading-javascript.png) | ![Textr with its optional file sidebar on a wide emulator window](docs/images/reading-wide.png) |
 
-[More screenshots and capture details](docs/screenshots.md)
+[More screenshots and capture details](docs/screenshots.md) · [Feature roadmap](docs/roadmap.md)
 
 ## What it does
 
