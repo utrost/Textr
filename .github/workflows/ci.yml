@@ -87,9 +87,8 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           script: |
-            adb shell getprop dalvik.vm.heapgrowthlimit
-            adb shell getprop dalvik.vm.heapsize
-            ./gradlew :app:connectedDebugAndroidTest --stacktrace
+            .github/scripts/prepare-test-device.sh
+            ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.minimumHeapMiB=128 --stacktrace
       - name: Retain device reports
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
