@@ -192,6 +192,17 @@ class ReleasePolishTest {
                     var nativeLabel = ""; var nativeMenu = ""
                     scenario.onActivity { nativeLabel = it.getString(R.string.csv_accessible); nativeMenu = it.getString(R.string.more_options) }
                     click(By.desc(nativeMenu)); click(By.text(nativeLabel))
+                    await("Native table dialog is laid out") {
+                        var ready = false
+                        scenario.onActivity {
+                            ready = android.view.inspector.WindowInspector.getGlobalWindowViews().any { root ->
+                                val table = root.findViewById<View>(R.id.csv_accessible_table)
+                                val action = root.findViewById<View>(android.R.id.button2)
+                                table?.isAttachedToWindow == true && action?.isLaidOut == true && action.width > 0 && action.height > 0
+                            }
+                        }
+                        ready
+                    }
                     scenario.onActivity {
                         val dialog = android.view.inspector.WindowInspector.getGlobalWindowViews()
                             .first { root -> root.findViewById<View>(R.id.csv_accessible_table) != null }

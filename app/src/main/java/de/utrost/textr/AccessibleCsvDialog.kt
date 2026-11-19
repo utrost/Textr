@@ -19,7 +19,7 @@ import android.widget.*
 /** Bounded native alternative to WebView's intermittently incomplete virtual cells. */
 class AccessibleCsvDialog(
     context: Context, private val source: String, options: CsvOptions, dark: Boolean, fontSize: Int,
-    restored: Bundle?, shareLabel: Int, share: () -> Unit,
+    restored: Bundle?, shareLabel: Int, font: ReadingFont = ReadingFont.SANS, lineSpacing: Int = 160, share: () -> Unit,
 ) : Dialog(context) {
     private val cancelButton = Button(context)
     private val shareButton = Button(context)
@@ -67,6 +67,8 @@ class AccessibleCsvDialog(
                     text = value
                     isSaveEnabled = false
                     textSize = fontSize.toFloat()
+                    typeface = android.graphics.Typeface.create(font.css, android.graphics.Typeface.NORMAL)
+                    setLineSpacing(0f, lineSpacing / 100f)
                     setTextColor(foreground)
                     setPadding(dp(12), dp(8), dp(12), dp(8))
                     minHeight = dp(48)
@@ -132,6 +134,7 @@ class AccessibleCsvDialog(
             textSize = fontSize.toFloat()
             setTextColor(foreground)
             typeface = android.graphics.Typeface.MONOSPACE
+            setLineSpacing(0f, lineSpacing / 100f)
             setPadding(dp(8), dp(8), dp(8), dp(8))
         }
         sourceScroll.addView(sourceText)

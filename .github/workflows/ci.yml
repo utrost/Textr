@@ -83,9 +83,13 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_2
+          pre-emulator-launch-script: python3 .github/scripts/configure-test-avd.py "$HOME/.android/avd/test.avd/config.ini"
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
-          script: ./gradlew :app:connectedDebugAndroidTest --stacktrace
+          script: |
+            adb shell getprop dalvik.vm.heapgrowthlimit
+            adb shell getprop dalvik.vm.heapsize
+            ./gradlew :app:connectedDebugAndroidTest --stacktrace
       - name: Retain device reports
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

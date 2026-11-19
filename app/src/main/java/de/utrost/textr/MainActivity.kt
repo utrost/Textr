@@ -92,6 +92,17 @@ class MainActivity : ComponentActivity() {
     private var dark = false
     private var wrap = true
     private var fontSize = 16
+    private var readingProfile: ReadingProfile? = null
+    private var readingFont = ReadingFont.SANS
+    private var lineSpacing = 160
+
+    private fun applyReadingProfile() {
+        val effective = readingProfile ?: ReadingProfile.defaults(preferences)
+        fontSize = effective.fontSize
+        wrap = effective.wrap
+        readingFont = effective.font
+        lineSpacing = effective.lineSpacing
+    }
     private var pendingScroll = 0
     private var formatOverride: FileKind? = null
     private var requestedMode: DisplayMode? = null
@@ -135,8 +146,7 @@ class MainActivity : ComponentActivity() {
         val barStyle = if (dark) SystemBarStyle.dark(Color.TRANSPARENT)
             else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
         enableEdgeToEdge(statusBarStyle = barStyle, navigationBarStyle = barStyle)
-        fontSize = preferences.getInt("fontSize", 16).coerceIn(12, 28)
-        wrap = preferences.getBoolean("wrap", true)
+        applyReadingProfile()
         lineNumbers = preferences.getBoolean("lineNumbers", false)
         repository = DocumentRepository(applicationContext)
         repository.setBookmarkReferences(bookmarks.entries().map { it.uri }.toSet())
@@ -148,6 +158,8 @@ class MainActivity : ComponentActivity() {
             override fun handleOnBackPressed() { navigateBack() }
         })
         if (savedInstanceState != null) {
+            readingProfile = ReadingProfile.fromJson(savedInstanceState.getString("readingProfile")?.let { org.json.JSONObject(it) })
+            applyReadingProfile()
             pendingAccessibleCsv = savedInstanceState.getBundle("accessibleCsv")
             formatOverride = FileKind.entries.find { it.name == savedInstanceState.getString("format") }
             encodingOverride = TextEncoding.entries.find { it.name == savedInstanceState.getString("encoding") }
@@ -369,6 +381,8 @@ class MainActivity : ComponentActivity() {
         formatOverride = null
         encodingOverride = null
         csvOptions = CsvOptions()
+        readingProfile = null
+        applyReadingProfile()
         pendingBookmark = null
         currentUri = null
         updateDocumentsButton()
@@ -697,6 +711,8 @@ class MainActivity : ComponentActivity() {
                 formatOverride = null
                 encodingOverride = null
                 csvOptions = CsvOptions()
+                readingProfile = null
+                applyReadingProfile()
                 pendingBookmark = null
                 val htmlInput = sharedHtml != null || TextDocuments.kind("", intent.type) == FileKind.HTML
                 // Shared text has no reopenable URI and is deliberately excluded from history.
@@ -719,6 +735,8 @@ class MainActivity : ComponentActivity() {
             searchRow.visibility = if (bookmark == null && existing?.searching == true) View.VISIBLE else View.GONE
             formatOverride = state.format
             encodingOverride = state.encoding
+            readingProfile = state.profile
+            applyReadingProfile()
             csvOptions = state.csv
             pendingScroll = state.scroll
         }
@@ -894,7 +912,7 @@ class MainActivity : ComponentActivity() {
         anchor = null
         work = worker.submit {
             val page = try {
-                DocumentRenderer.page(prepared, selectedMode, dark, wrap, lineNumbers, selectedLine, selectedMatch)
+                DocumentRenderer.page(prepared, selectedMode, dark, wrap, lineNumbers, selectedLine, selectedMatch, readingFont, lineSpacing)
             } catch (_: java.util.concurrent.CancellationException) {
                 return@submit
             } catch (_: RuntimeException) {
@@ -1186,6 +1204,7 @@ class MainActivity : ComponentActivity() {
         else entry.shared?.let { shared ->
             rememberReading(); closeSearch()
             pendingScroll = entry.reading.scroll; formatOverride = entry.reading.format; encodingOverride = null
+            readingProfile = entry.reading.profile; applyReadingProfile()
             csvOptions = entry.reading.csv; pendingBookmark = null
             searchField.setText(entry.query); searchRow.visibility = if (entry.searching) View.VISIBLE else View.GONE
             load(null, entry.reading.mode) { shared }
@@ -1229,7 +1248,7 @@ class MainActivity : ComponentActivity() {
         if (!canInteract() || accessibleCsvDialog != null || prepared.source.kind != FileKind.CSV || prepared.preview == null) return
         val shareLabel = if (currentUri == null && (session.original?.bytes ?: 0) < 100_000) R.string.share_text else R.string.share_file
         val uri = currentUri
-        val dialog = AccessibleCsvDialog(this, prepared.source.text, csvOptions, dark, fontSize, restored, shareLabel) {
+        val dialog = AccessibleCsvDialog(this, prepared.source.text, csvOptions, dark, fontSize, restored, shareLabel, readingFont, lineSpacing) {
             if (canInteract() && document === prepared && currentUri == uri) shareDocument()
         }
         accessibleCsvDialog = dialog
@@ -1303,7 +1322,7 @@ class MainActivity : ComponentActivity() {
             Toast.makeText(this, R.string.bookmark_limit, Toast.LENGTH_LONG).show(); return
         }
         val fraction = readingFraction()
-        val state = ReadingState(mode, 0, formatOverride, encodingOverride, csvOptions)
+        val state = ReadingState(mode, 0, formatOverride, encodingOverride, csvOptions, readingProfile)
         bookmarkName(getString(R.string.bookmark_default, (fraction * 100).toInt())) { label ->
             if (bookmarks.add(uri.toString(), prepared.source.name, label, fraction, prepared.fingerprint, state))
                 Toast.makeText(this, R.string.bookmark_saved, Toast.LENGTH_SHORT).show()
@@ -1480,7 +1499,7 @@ class MainActivity : ComponentActivity() {
         val sizeLabel = TextView(this).apply { text = getString(R.string.font_size_value, fontSize) }
         body.addView(sizeLabel)
         var selectedSize = fontSize
-        body.addView(SeekBar(this).apply {
+        val sizeControl = SeekBar(this).apply {
             id = R.id.font_size
             max = 16; progress = fontSize - 12
             minimumHeight = dp(48)
@@ -1492,7 +1511,8 @@ class MainActivity : ComponentActivity() {
                 override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
                 override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
             })
-        }, LinearLayout.LayoutParams(-1, dp(48)))
+        }
+        body.addView(sizeControl, LinearLayout.LayoutParams(-1, dp(48)))
         val wrapping = CheckBox(this).apply {
             id = R.id.line_wrap
             text = getString(R.string.wrap_lines)
@@ -1500,6 +1520,55 @@ class MainActivity : ComponentActivity() {
             minimumHeight = dp(48)
         }
         body.addView(wrapping)
+        val onlyDocument = CheckBox(this).apply {
+            id = R.id.document_reading_setting
+            setText(R.string.document_reading_setting)
+            isChecked = readingProfile != null
+            visibility = if (document != null) View.VISIBLE else View.GONE
+            minimumHeight = dp(48)
+        }
+        body.addView(onlyDocument)
+        body.addView(TextView(this).apply { setText(R.string.reading_preferences_help) })
+        body.addView(TextView(this).apply { setText(R.string.reading_font) })
+        val fonts = Spinner(this).apply {
+            id = R.id.reading_font
+            minimumHeight = dp(48)
+            contentDescription = getString(R.string.reading_font)
+            adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
+                listOf(getString(R.string.font_sans), getString(R.string.font_serif), getString(R.string.font_monospace)))
+            setSelection(readingFont.ordinal)
+        }
+        body.addView(fonts)
+        var selectedSpacing = lineSpacing
+        val spacingLabel = TextView(this).apply { text = getString(R.string.line_spacing_value, selectedSpacing) }
+        body.addView(spacingLabel)
+        val spacingControl = SeekBar(this).apply {
+            id = R.id.line_spacing
+            max = 10; progress = (lineSpacing - 120) / 10
+            minimumHeight = dp(48)
+            contentDescription = getString(R.string.line_spacing)
+            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                    selectedSpacing = 120 + progress * 10
+                    spacingLabel.text = getString(R.string.line_spacing_value, selectedSpacing)
+                }
+                override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+                override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
+            })
+        }
+        body.addView(spacingControl, LinearLayout.LayoutParams(-1, dp(48)))
+        if (document != null) body.addView(button(R.string.use_global_reading_defaults) {
+            val defaults = ReadingProfile.defaults(preferences)
+            onlyDocument.isChecked = false
+            selectedSize = defaults.fontSize
+            selectedSpacing = defaults.lineSpacing
+            sizeLabel.text = getString(R.string.font_size_value, selectedSize)
+            spacingLabel.text = getString(R.string.line_spacing_value, selectedSpacing)
+            sizeControl.progress = defaults.fontSize - 12
+            wrapping.isChecked = defaults.wrap
+            fonts.setSelection(defaults.font.ordinal)
+            spacingControl.progress = (defaults.lineSpacing - 120) / 10
+        }.apply { id = R.id.reset_document_reading })
         val numbers = CheckBox(this).apply { text = getString(R.string.line_numbers); isChecked = lineNumbers; minimumHeight = dp(48) }
         body.addView(numbers)
         body.addView(TextView(this).apply { text = getString(R.string.theme) })
@@ -1526,10 +1595,15 @@ class MainActivity : ComponentActivity() {
                 if (!canInteract()) return@setPositiveButton
                 val theme = themeValues[themes.selectedItemPosition]
                 val themeChanged = theme != preferences.getString("theme", "system")
-                fontSize = selectedSize; wrap = wrapping.isChecked; lineNumbers = numbers.isChecked
+                val selected = ReadingProfile(selectedSize, wrapping.isChecked, ReadingFont.entries[fonts.selectedItemPosition], selectedSpacing)
+                if (onlyDocument.isChecked && document != null) readingProfile = selected
+                else { readingProfile = null; selected.save(preferences) }
+                applyReadingProfile()
+                lineNumbers = numbers.isChecked
                 if (lineNumbers && (document?.source?.text?.let(DocumentRenderer::logicalLines) ?: 0) > DocumentRenderer.MAX_NUMBERED_LINES)
                     Toast.makeText(this, R.string.line_number_limit, Toast.LENGTH_LONG).show()
-                preferences.edit().putBoolean("fileSidebar", sidebar.isChecked).putBoolean("lineNumbers", lineNumbers).putInt("fontSize", fontSize).putBoolean("wrap", wrap).putString("theme", theme).apply()
+                preferences.edit().putBoolean("fileSidebar", sidebar.isChecked).putBoolean("lineNumbers", lineNumbers).putString("theme", theme).apply()
+                rememberReading()
                 if (themeChanged) recreate() else {
                     updateDocumentsButton()
                     if (document != null) render()
@@ -1549,6 +1623,7 @@ class MainActivity : ComponentActivity() {
         outState.putString("format", formatOverride?.name)
         outState.putString("encoding", encodingOverride?.name)
         outState.putInt("grantFlags", pendingGrantFlags)
+        outState.putString("readingProfile", readingProfile?.json()?.toString())
         outState.putString("csvDelimiter", csvOptions.delimiter.toString())
         outState.putBoolean("csvHeader", csvOptions.firstRowHeader)
         outState.putString("pendingBookmark", pendingBookmark?.id)
@@ -1561,7 +1636,7 @@ class MainActivity : ComponentActivity() {
     private fun rememberReading() {
         val view = webView ?: return
         if (document != null && view.tag == true) {
-            val reading = ReadingState(mode, view.scrollY.coerceAtLeast(0), formatOverride, encodingOverride, csvOptions)
+            val reading = ReadingState(mode, view.scrollY.coerceAtLeast(0), formatOverride, encodingOverride, csvOptions, readingProfile)
             currentUri?.let { repository.saveReadingState(it, reading) }
             openDocuments.entries.find { it.key == (currentUri?.toString() ?: "shared-text") }?.let {
                 it.reading = reading

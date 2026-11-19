@@ -12,7 +12,7 @@ import android.system.OsConstants
 import android.system.StructPollfd
 import java.io.FilterInputStream
 
-data class ReadingState(val mode: DisplayMode? = null, val scroll: Int = 0, val format: FileKind? = null, val encoding: TextEncoding? = null, val csv: CsvOptions = CsvOptions())
+data class ReadingState(val mode: DisplayMode? = null, val scroll: Int = 0, val format: FileKind? = null, val encoding: TextEncoding? = null, val csv: CsvOptions = CsvOptions(), val profile: ReadingProfile? = null)
 data class RecentFile(val uri: String, val name: String, val openedAt: Long, val reading: ReadingState = ReadingState(), val pinned: Boolean = false)
 
 class DocumentRepository(private val context: Context) {
@@ -109,7 +109,7 @@ class DocumentRepository(private val context: Context) {
                 DisplayMode.entries.find { it.name == entry.optString("mode") },
                 entry.optInt("scroll", 0).coerceAtLeast(0),
                 FileKind.entries.find { it.name == entry.optString("format") },
-                TextEncoding.entries.find { it.name == entry.optString("encoding") }, csvOptions(entry)), entry.optBoolean("pinned"))
+                TextEncoding.entries.find { it.name == entry.optString("encoding") }, csvOptions(entry), ReadingProfile.fromJson(entry.optJSONObject("profile"))), entry.optBoolean("pinned"))
         }
     } catch (_: org.json.JSONException) { emptyList() }
 
@@ -153,6 +153,7 @@ class DocumentRepository(private val context: Context) {
                     put("encoding", file.reading.encoding?.name)
                     put("delimiter", file.reading.csv.delimiter.toString())
                     put("csvHeader", file.reading.csv.firstRowHeader)
+                    put("profile", file.reading.profile?.json())
                 }
             })
         }

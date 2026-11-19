@@ -1,6 +1,6 @@
 # Feature roadmap and implementation backlog
 
-Updated 19 November 2026 following the request to create epics and issues. All new work is tracked as **planned**; the current application remains an offline, read-only reader with a 5 MiB source limit. The [delivery roadmap](roadmap.md) records the existing candidate, acceptance and distribution work. Editing/export are explicit future scope extensions. Delivery order below has no dates or version commitments.
+Updated 19 November 2026 following the request to create epics and issues. Implementation is underway; reading profiles and typography (#76/#77) are implemented on the roadmap implementation branch and awaiting integration. Other new work remains **planned**; the current application remains an offline, read-only reader with a 5 MiB source limit. The [delivery roadmap](roadmap.md) records the existing candidate, acceptance and distribution work. Editing/export are explicit future scope extensions. Delivery order below has no dates or version commitments.
 
 ## Epics and implementation backlog
 
@@ -8,7 +8,7 @@ Five epics and 19 implementation issues were created on 19 November 2026. They a
 
 | Sequence | Epic | Implementation issues | State |
 | --- | --- | --- | --- |
-| 1 — reader improvements | [#71](https://github.com/utrost/Textr/issues/71) — Reading comfort and structured navigation | [#76](https://github.com/utrost/Textr/issues/76), [#77](https://github.com/utrost/Textr/issues/77), [#78](https://github.com/utrost/Textr/issues/78), [#79](https://github.com/utrost/Textr/issues/79) | Planned |
+| 1 — reader improvements | [#71](https://github.com/utrost/Textr/issues/71) — Reading comfort and structured navigation | [#76](https://github.com/utrost/Textr/issues/76), [#77](https://github.com/utrost/Textr/issues/77), [#78](https://github.com/utrost/Textr/issues/78), [#79](https://github.com/utrost/Textr/issues/79) | In progress — profiles/typography implemented, structured navigation next |
 | 2 — focused format batch | [#72](https://github.com/utrost/Textr/issues/72) — Everyday text and configuration format support | [#80](https://github.com/utrost/Textr/issues/80), [#81](https://github.com/utrost/Textr/issues/81), [#82](https://github.com/utrost/Textr/issues/82), [#83](https://github.com/utrost/Textr/issues/83), [#84](https://github.com/utrost/Textr/issues/84) | Planned |
 | 3a — explicit export | [#73](https://github.com/utrost/Textr/issues/73) — Export HTML reading content as Markdown | [#85](https://github.com/utrost/Textr/issues/85), [#86](https://github.com/utrost/Textr/issues/86) | Planned |
 | 3b — compare documents | [#74](https://github.com/utrost/Textr/issues/74) — Bounded read-only document comparison | [#87](https://github.com/utrost/Textr/issues/87), [#88](https://github.com/utrost/Textr/issues/88), [#89](https://github.com/utrost/Textr/issues/89) | Planned |

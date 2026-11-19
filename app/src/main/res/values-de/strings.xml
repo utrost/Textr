@@ -179,4 +179,13 @@
     <string name="html_reading_view">Markdown-Leseansicht</string>
     <string name="html_limit">Die HTML-Lesevorschau ist auf 256 Ki Zeichen begrenzt. Der vollständige Quelltext ist verfügbar.</string>
     <string name="shared_html_name">Geteilter Text.html</string>
+    <string name="document_reading_setting">Nur für dieses Dokument</string>
+    <string name="reading_font">Leseschrift (Quelltext bleibt in Festbreitenschrift)</string>
+    <string name="font_sans">Serifenlos</string>
+    <string name="font_serif">Serifenschrift</string>
+    <string name="font_monospace">Festbreitenschrift</string>
+    <string name="line_spacing">Zeilenabstand</string>
+    <string name="line_spacing_value">Zeilenabstand: %1$d%%</string>
+    <string name="use_global_reading_defaults">Globale Leseeinstellungen verwenden</string>
+    <string name="reading_preferences_help">Größe, Umbruch, Schrift und Abstand ändern die globalen Vorgaben, sofern Nur für dieses Dokument nicht gewählt ist. Zurücksetzen entfernt die Dokumenteinstellung nach Tippen auf Fertig.</string>
 </resources>

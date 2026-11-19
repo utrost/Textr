@@ -29,7 +29,7 @@ class OpenDocuments(context: Context) {
                 if (entries.none { it.uri == uri }) entries.add(OpenDocument(uri, uri, entry.getString("name"), ReadingState(
                     DisplayMode.entries.find { it.name == entry.optString("mode") }, entry.optInt("scroll").coerceAtLeast(0),
                     FileKind.entries.find { it.name == entry.optString("format") },
-                    TextEncoding.entries.find { it.name == entry.optString("encoding") }, csvOptions(entry))))
+                    TextEncoding.entries.find { it.name == entry.optString("encoding") }, csvOptions(entry), ReadingProfile.fromJson(entry.optJSONObject("profile")))))
             }
         } catch (_: org.json.JSONException) { entries.clear() }
         save()
@@ -52,7 +52,7 @@ class OpenDocuments(context: Context) {
         entries.filter { it.uri != null }.forEach {
             array.put(JSONObject().put("uri", it.uri).put("name", it.name).put("mode", it.reading.mode?.name)
                 .put("scroll", it.reading.scroll).put("format", it.reading.format?.name).put("encoding", it.reading.encoding?.name)
-                .put("delimiter", it.reading.csv.delimiter.toString()).put("csvHeader", it.reading.csv.firstRowHeader))
+                .put("delimiter", it.reading.csv.delimiter.toString()).put("csvHeader", it.reading.csv.firstRowHeader).put("profile", it.reading.profile?.json()))
         }
         preferences.edit().putString("entries", array.toString()).apply()
         repository.setSessionReferences(entries.mapNotNull { it.uri }.toSet())

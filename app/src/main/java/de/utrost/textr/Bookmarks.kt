@@ -20,7 +20,7 @@ class Bookmarks(private val context: Context) {
                 value.getString("fingerprint"), ReadingState(
                     DisplayMode.entries.find { it.name == value.optString("mode") }, 0,
                     FileKind.entries.find { it.name == value.optString("format") },
-                    TextEncoding.entries.find { it.name == value.optString("encoding") }, csvOptions(value)))
+                    TextEncoding.entries.find { it.name == value.optString("encoding") }, csvOptions(value), ReadingProfile.fromJson(value.optJSONObject("profile"))))
         }
     } catch (_: org.json.JSONException) { emptyList() }
 
@@ -46,7 +46,7 @@ class Bookmarks(private val context: Context) {
                 .put("label", bookmark.label).put("fraction", bookmark.fraction).put("fingerprint", bookmark.fingerprint)
                 .put("mode", bookmark.reading.mode?.name).put("format", bookmark.reading.format?.name)
                 .put("encoding", bookmark.reading.encoding?.name).put("delimiter", bookmark.reading.csv.delimiter.toString())
-                .put("csvHeader", bookmark.reading.csv.firstRowHeader))
+                .put("csvHeader", bookmark.reading.csv.firstRowHeader).put("profile", bookmark.reading.profile?.json()))
         }
         preferences.edit().putString("entries", array.toString()).apply()
         DocumentRepository(context).setBookmarkReferences(entries.map { it.uri }.toSet())

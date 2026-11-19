@@ -28,4 +28,8 @@
     <item name="csv_accessible_results" type="id" />
     <item name="csv_accessible_source" type="id" />
     <item name="csv_accessible_source_toggle" type="id" />
+    <item type="id" name="document_reading_setting" />
+    <item type="id" name="reading_font" />
+    <item type="id" name="line_spacing" />
+    <item type="id" name="reset_document_reading" />
 </resources>

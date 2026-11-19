@@ -185,4 +185,13 @@ Document switching follows alphabetical filename order. Shortcuts leave text fie
     <string name="html_reading_view">Markdown reading view</string>
     <string name="html_limit">HTML reading preview is limited to 256 Ki characters. The full source is available.</string>
     <string name="shared_html_name">Shared text.html</string>
+    <string name="document_reading_setting">Only this document</string>
+    <string name="reading_font">Reading font (source stays monospace)</string>
+    <string name="font_sans">Sans serif</string>
+    <string name="font_serif">Serif</string>
+    <string name="font_monospace">Monospace</string>
+    <string name="line_spacing">Line spacing</string>
+    <string name="line_spacing_value">Line spacing: %1$d%%</string>
+    <string name="use_global_reading_defaults">Use global reading defaults</string>
+    <string name="reading_preferences_help">Size, wrapping, font and spacing change the global defaults unless Only this document is selected. Reset removes this document’s override when you tap Done.</string>
 </resources>
