@@ -37,3 +37,7 @@ Settings and remaining app-private data persist until you clear Textr’s storag
 For privacy questions about Textr, contact the maintainer through the [project issue tracker](https://github.com/utrost/Textr/issues). Issues are public: describe the question without attaching private documents, personal data or credentials. See the [security reporting instructions](../SECURITY.md) for vulnerability reports.
 
 Changes to this policy will be published here with an updated effective date. A future store listing must identify its accountable developer and contact details consistently with this policy before submission. No Play Store release is currently available.
+
+## Document comparison
+
+Comparison keeps at most two bounded decoded snapshots in memory. Saved activity state contains only URI/name/encoding references, content fingerprints and navigation positions. URI sources are reread after process loss; shared text is not persisted and must be selected again. Comparison never requests source writes or adds file contents to reading history.

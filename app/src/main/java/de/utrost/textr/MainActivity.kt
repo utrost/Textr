@@ -491,6 +491,7 @@ class MainActivity : ComponentActivity() {
                 item(R.string.reload, ready && currentUri != null) { reloadDocument() }
                 item(R.string.treat_as, ready) { showFormats() }
                 item(R.string.document_info, ready) { showDocumentInfo() }
+                item(R.string.compare_title, ready) { startComparison() }
                 if (document?.source?.kind == FileKind.HTML) {
                     if (document?.convertedMarkdown != null) item(R.string.html_export, ready && !outputs.busy) { exportHtml() }
                     else item(R.string.html_export_unavailable, ready) {
@@ -649,6 +650,20 @@ class MainActivity : ComponentActivity() {
                 closeSearch()
                 load(currentUri) { original }
             }.create().present()
+    }
+
+    private fun startComparison() {
+        val original = session.original ?: return
+        val reference = ComparisonRef(currentUri?.toString(), original.name, encodingOverride, sourceFingerprint(original.text))
+        val token = ComparisonInbox.put(ComparisonSnapshot(reference, original))
+        if (token == null) {
+            AlertDialog.Builder(this).setTitle(R.string.compare_title).setMessage(R.string.compare_limited)
+                .setPositiveButton(R.string.done, null).create().present()
+            return
+        }
+        startActivity(Intent(this, ComparisonActivity::class.java).putExtra("token", token)
+            .putExtra("uri", reference.uri).putExtra("name", reference.name)
+            .putExtra("encoding", reference.encoding?.name).putExtra("fingerprint", reference.fingerprint))
     }
 
     private fun exportHtml() {

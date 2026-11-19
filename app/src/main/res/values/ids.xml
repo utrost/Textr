@@ -33,4 +33,12 @@
     <item type="id" name="line_spacing" />
     <item type="id" name="reset_document_reading" />
     <item type="id" name="structure_tree" />
+    <item type="id" name="compare_left" />
+    <item type="id" name="compare_right" />
+    <item type="id" name="compare_status" />
+    <item type="id" name="compare_layout" />
+    <item type="id" name="compare_previous" />
+    <item type="id" name="compare_next" />
+    <item type="id" name="compare_cancel" />
+    <item type="id" name="compare_rows" />
 </resources>

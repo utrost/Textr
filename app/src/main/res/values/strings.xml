@@ -228,4 +228,33 @@ Document switching follows alphabetical filename order. Shortcuts leave text fie
     <string name="output_interrupted">Saving %1$s was interrupted. Please inspect any output before retrying.</string>
     <string name="output_failed">Could not save %1$s. The source remains unchanged; choose another destination and try again.</string>
     <string name="output_partial">A possibly incomplete document remains at %1$s. Inspect or remove it with your file manager.</string>
+
+    <string name="compare_title">Compare source…</string>
+    <string name="compare_choose_left">Choose left input</string>
+    <string name="compare_choose_right">Choose right input</string>
+    <string name="compare_previous">Previous change</string>
+    <string name="compare_next">Next change</string>
+    <string name="compare_wide">Side by side · linked scrolling</string>
+    <string name="compare_unified">Unified comparison</string>
+    <string name="compare_legend">= unchanged · − removed on left · + added on right</string>
+    <string name="compare_not_selected">No input selected</string>
+    <string name="compare_snapshot">%1$s · captured %2$s</string>
+    <string name="compare_input">%1$s: %2$s</string>
+    <string name="compare_left_name">Left</string>
+    <string name="compare_right_name">Right</string>
+    <string name="compare_choose_file">Choose a file…</string>
+    <string name="compare_open_reader">Open in reader</string>
+    <string name="compare_loading">Reading and comparing snapshots…</string>
+    <string name="compare_limited">Comparison unavailable within its limits: 512 KiB and 256 Ki characters per input, 10,000 lines, 16,384 characters per line, and a bounded change search. Original files remain available in the reader.</string>
+    <string name="compare_cancelled">Comparison cancelled. Choose or reload an input to try again.</string>
+    <string name="compare_read_error">Cannot read this input. Choose another file or restore access, then reload.</string>
+    <string name="compare_shared_lost">The shared snapshot was lost after the process ended. Choose that input again.</string>
+    <string name="compare_identical">Decoded text is identical, including line endings. Encodings or BOMs may differ.</string>
+    <string name="compare_change_count">Change %1$d of %2$d</string>
+    <string name="compare_choose_help">Choose both inputs. Snapshots are read-only; reloading captures a new version. Ctrl+Up/Down moves between changes.</string>
+    <string name="compare_changed">A source changed since its captured version. The comparison was refreshed and its position reset.</string>
+    <string name="compare_no_line">No corresponding line</string>
+    <string name="compare_no_ending">no line ending</string>
+    <string name="compare_line">%1$s · line %2$d · %3$s</string>
+    <string name="compare_copy_line">Copy exact source line</string>
 </resources>

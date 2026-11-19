@@ -14,6 +14,8 @@ Textr is a minimal, read-only text viewer for Android. Open files from other app
 
 [More screenshots and capture details](docs/screenshots.md) · [Feature roadmap](docs/roadmap.md)
 
+Compare two source snapshots with exact line-ending-aware changes, keyboard navigation, copy actions and linked side-by-side views in wide windows. Large-text and compact windows use unified comparison.
+
 ## What it does
 
 - Opens text files up to **5 MiB** through Android’s file picker, **Open with**, or **Share**.

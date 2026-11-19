@@ -222,4 +222,33 @@
     <string name="output_interrupted">Speichern von %1$s wurde unterbrochen. Bitte vorhandene Ausgabedateien vor einem erneuten Versuch prüfen.</string>
     <string name="output_failed">%1$s konnte nicht gespeichert werden. Die Quelle bleibt unverändert; bitte einen anderen Speicherort wählen und erneut versuchen.</string>
     <string name="output_partial">Ein möglicherweise unvollständiges Dokument bleibt unter %1$s zurück. Bitte mit der Dateiverwaltung prüfen oder entfernen.</string>
+
+    <string name="compare_title">Quelltext vergleichen…</string>
+    <string name="compare_choose_left">Linke Datei wählen</string>
+    <string name="compare_choose_right">Rechte Datei wählen</string>
+    <string name="compare_previous">Vorherige Änderung</string>
+    <string name="compare_next">Nächste Änderung</string>
+    <string name="compare_wide">Nebeneinander · gemeinsames Scrollen</string>
+    <string name="compare_unified">Gemeinsame Vergleichsansicht</string>
+    <string name="compare_legend">= unverändert · − links entfernt · + rechts hinzugefügt</string>
+    <string name="compare_not_selected">Keine Datei gewählt</string>
+    <string name="compare_snapshot">%1$s · Stand %2$s</string>
+    <string name="compare_input">%1$s: %2$s</string>
+    <string name="compare_left_name">Links</string>
+    <string name="compare_right_name">Rechts</string>
+    <string name="compare_choose_file">Datei wählen…</string>
+    <string name="compare_open_reader">Im Reader öffnen</string>
+    <string name="compare_loading">Dateistände werden gelesen und verglichen…</string>
+    <string name="compare_limited">Vergleich innerhalb seiner Grenzen nicht verfügbar: je Datei 512 KiB und 256 Ki Zeichen, 10.000 Zeilen, 16.384 Zeichen pro Zeile und begrenzte Änderungssuche. Die Originale bleiben im Reader verfügbar.</string>
+    <string name="compare_cancelled">Vergleich abgebrochen. Eine Datei wählen oder neu laden, um es erneut zu versuchen.</string>
+    <string name="compare_read_error">Diese Datei kann nicht gelesen werden. Eine andere Datei wählen oder den Zugriff wiederherstellen und neu laden.</string>
+    <string name="compare_shared_lost">Der geteilte Dateistand ging nach dem Prozessende verloren. Diese Datei erneut wählen.</string>
+    <string name="compare_identical">Der dekodierte Text einschließlich Zeilenenden ist identisch. Kodierung oder BOM können abweichen.</string>
+    <string name="compare_change_count">Änderung %1$d von %2$d</string>
+    <string name="compare_choose_help">Beide Dateien wählen. Dateistände sind schreibgeschützt; Neuladen erfasst einen neuen Stand. Strg+Auf/Ab wechselt zwischen Änderungen.</string>
+    <string name="compare_changed">Eine Quelle hat sich seit dem erfassten Stand geändert. Der Vergleich wurde aktualisiert und seine Position zurückgesetzt.</string>
+    <string name="compare_no_line">Keine entsprechende Zeile</string>
+    <string name="compare_no_ending">kein Zeilenende</string>
+    <string name="compare_line">%1$s · Zeile %2$d · %3$s</string>
+    <string name="compare_copy_line">Exakte Quelltextzeile kopieren</string>
 </resources>
