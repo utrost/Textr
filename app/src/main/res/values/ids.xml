@@ -41,4 +41,19 @@
     <item type="id" name="compare_next" />
     <item type="id" name="compare_cancel" />
     <item type="id" name="compare_rows" />
+    <item type="id" name="editor_undo" />
+    <item type="id" name="editor_redo" />
+    <item type="id" name="editor_find" />
+    <item type="id" name="editor_save" />
+    <item type="id" name="editor_status" />
+    <item type="id" name="editor_resume" />
+    <item type="id" name="editor_text" />
+    <item type="id" name="editor_back" />
+    <item type="id" name="editor_encoding" />
+    <item type="id" name="editor_bom" />
+    <item type="id" name="editor_query" />
+    <item type="id" name="editor_replacement" />
+    <item type="id" name="editor_match_count" />
+    <item type="id" name="editor_replace_all" />
+    <item type="id" name="editor_discard" />
 </resources>

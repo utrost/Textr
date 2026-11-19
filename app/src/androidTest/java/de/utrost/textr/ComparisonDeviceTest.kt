@@ -92,6 +92,16 @@ class ComparisonDeviceTest {
             instrumentation.runOnMainSync { restored!!.restore(shared) }
             await { !restored!!.busy }; assertEquals(ComparisonFailure.LOST_SHARED, restored!!.failure)
             clear(restored!!)
+            scenario.onActivity { model(it).load(false, ComparisonRef(uri.toString(), "current.txt")) }
+            ready(scenario, true)
+            scenario.onActivity {
+                assertFalse(model(it).result!!.identical)
+                val snapshot = ComparisonSnapshot(ComparisonRef(null, "shared.txt", fingerprint = sourceFingerprint("after\n")), TextDocument("shared.txt", "after\n", FileKind.TEXT, 6))
+                val token = ComparisonInbox.put(snapshot)!!
+                ComparisonActivity::class.java.getDeclaredMethod("onNewIntent", Intent::class.java).apply { isAccessible = true }.invoke(it, Intent(it, ComparisonActivity::class.java).putExtra("token", token))
+            }
+            ready(scenario, true)
+            scenario.onActivity { assertTrue(model(it).result!!.identical); assertEquals("after\n", model(it).left!!.document.text) }
         }
     }
     @Test fun deniedOversizeAndCancellationRemainRecoverable() {
@@ -126,6 +136,13 @@ class ComparisonDeviceTest {
                 ready(scenario, true)
                 scenario.onActivity {
                     assertTrue(it.findViewById<TextView>(R.id.compare_layout).text.contains(it.getString(R.string.compare_wide)))
+                    val row = it.findViewById<ListView>(R.id.compare_rows).getChildAt(0) as android.view.ViewGroup
+                    assertEquals(2, row.childCount)
+                    for (index in 0..1) {
+                        val pane = row.getChildAt(index) as android.view.ViewGroup
+                        assertTrue(pane.width >= 300); assertTrue(pane.height > 0)
+                        assertTrue((pane.getChildAt(1) as TextView).height > 0)
+                    }
                     it.findViewById<Button>(R.id.compare_next).performClick(); assertEquals(1, model(it).selectedChange)
                 }
                 device.executeShellCommand("settings put system font_scale 2.0"); device.executeShellCommand("wm size 720x1280"); device.executeShellCommand("wm density 360")

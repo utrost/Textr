@@ -263,7 +263,14 @@ class ReaderUxTest {
         assertTrue("Format selection should close the picker",
             device.wait(Until.gone(By.text(context.getString(R.string.treat_as))), 5000))
     }
-    private fun menu(label: String) { click(By.desc("More options")); click(label) }
+    private fun menu(label: String) {
+        click(By.desc("More options"))
+        if (!device.wait(Until.hasObject(By.text(label)), 1_000)) {
+            val popup = androidx.test.uiautomator.UiScrollable(androidx.test.uiautomator.UiSelector().className("android.widget.ListView").scrollable(true))
+            assertTrue("Menu action reachable by scrolling: $label", popup.scrollTextIntoView(label))
+        }
+        click(label)
+    }
     private fun click(label: String) = click(By.text(java.util.regex.Pattern.compile(java.util.regex.Pattern.quote(label), 2)))
     private fun click(selector: BySelector) {
         repeat(3) { attempt ->

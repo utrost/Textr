@@ -49,7 +49,7 @@ class ComparisonSession(application: Application) : AndroidViewModel(application
     var selectedChange = 0
     var listener: (() -> Unit)? = null
 
-    fun initial(snapshot: ComparisonSnapshot) { left = snapshot; leftRef = snapshot.reference; listener?.invoke() }
+    fun initial(snapshot: ComparisonSnapshot) { stopWork(); left = snapshot; leftRef = snapshot.reference; selectedChange = 0; compute() }
     fun load(isLeft: Boolean, reference: ComparisonRef) {
         stopWork()
         if (isLeft) { leftRef = reference; left = null } else { rightRef = reference; right = null }

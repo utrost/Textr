@@ -112,6 +112,7 @@ class MainActivity : ComponentActivity() {
     private var activeMenu: PopupMenu? = null
     private var accessibleCsvDialog: AccessibleCsvDialog? = null
     private var pendingAccessibleCsv: Bundle? = null
+    private var resumeDraftButton: Button? = null
     private var structureDialog: StructureDialog? = null
     private var pendingStructure: Bundle? = null
     private val outputs by lazy { ViewModelProvider(this)[OutputSession::class.java] }
@@ -414,6 +415,10 @@ class MainActivity : ComponentActivity() {
         val body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(24), dp(24), dp(24), dp(24)) }
         body.addView(TextView(this).apply { text = getString(R.string.home_description); textSize = 18f; setTextColor(foreground()) })
         body.addView(button(R.string.open_file) { openPicker() }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(24); bottomMargin = dp(32) })
+        resumeDraftButton = button(R.string.editor_resume) { startActivity(Intent(this, EditorActivity::class.java)) }.apply {
+            id = R.id.editor_resume; visibility = if (EditDraftStore(this@MainActivity).exists()) View.VISIBLE else View.GONE
+        }
+        body.addView(resumeDraftButton, LinearLayout.LayoutParams(-1, -2))
         val recentHeader = row()
         recentHeader.addView(TextView(this).apply { text = getString(R.string.recent_files); textSize = 20f; setTextColor(foreground()) }, LinearLayout.LayoutParams(0, -2, 1f))
         val recents = repository.recentFiles().sortedWith(compareByDescending<RecentFile> { it.pinned }.thenByDescending { it.openedAt })
@@ -492,6 +497,7 @@ class MainActivity : ComponentActivity() {
                 item(R.string.treat_as, ready) { showFormats() }
                 item(R.string.document_info, ready) { showDocumentInfo() }
                 item(R.string.compare_title, ready) { startComparison() }
+                if (session.original?.kind in setOf(FileKind.TEXT, FileKind.MARKDOWN)) item(R.string.editor_edit_copy, ready && !outputs.busy) { startEditor() }
                 if (document?.source?.kind == FileKind.HTML) {
                     if (document?.convertedMarkdown != null) item(R.string.html_export, ready && !outputs.busy) { exportHtml() }
                     else item(R.string.html_export_unavailable, ready) {
@@ -530,8 +536,9 @@ class MainActivity : ComponentActivity() {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(24), dp(12), dp(24), dp(12))
             addView(TextView(this@MainActivity).apply {
-                text = getString(R.string.about_details, version, getString(R.string.about_privacy))
-                textSize = 16f
+                text = getString(R.string.about_details, version, "").trimEnd()
+                textSize = 20f
+                isAccessibilityHeading = true
                 setTextIsSelectable(true)
             })
             addView(button(R.string.source_code) { openExternal("https://github.com/utrost/Textr") })
@@ -540,6 +547,10 @@ class MainActivity : ComponentActivity() {
             addView(button(R.string.licenses) { showLicenses() })
             addView(button(R.string.opening_help) { showOpeningHelp() })
             addView(button(R.string.keyboard_shortcuts) { showShortcutHelp() })
+            addView(TextView(this@MainActivity).apply {
+                text = getString(R.string.about_privacy); textSize = 16f
+                setTextIsSelectable(true); setPadding(0, dp(12), 0, 0)
+            })
         }
         AlertDialog.Builder(this).setTitle(R.string.about).setView(ScrollView(this).apply { addView(body) })
             .setPositiveButton(R.string.done, null).create().present()
@@ -649,6 +660,21 @@ class MainActivity : ComponentActivity() {
                 pendingScroll = 0
                 closeSearch()
                 load(currentUri) { original }
+            }.create().present()
+    }
+
+    private fun startEditor() {
+        val original = session.original ?: return
+        if (original.kind !in setOf(FileKind.TEXT, FileKind.MARKDOWN) || !EditBuffer.accepts(original.text)) {
+            AlertDialog.Builder(this).setTitle(R.string.editor_edit_copy).setMessage(R.string.editor_limit)
+                .setPositiveButton(R.string.done, null).create().present()
+            return
+        }
+        val snapshot = EditorSnapshot(original, currentUri?.toString(), original.hasBom)
+        AlertDialog.Builder(this).setTitle(R.string.editor_edit_copy).setMessage(R.string.editor_recovery_notice)
+            .setNegativeButton(R.string.cancel, null).setPositiveButton(R.string.editor_edit_copy) { _, _ ->
+                val token = EditorInbox.put(snapshot) ?: return@setPositiveButton
+                startActivity(Intent(this, EditorActivity::class.java).putExtra("token", token))
             }.create().present()
     }
 
@@ -1749,6 +1775,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
+        if (homeShown) resumeDraftButton?.visibility = if (EditDraftStore(this).exists()) View.VISIBLE else View.GONE
         outputs.listener = ::showOutputStatus
         showOutputStatus(outputs.status)
     }

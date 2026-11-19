@@ -27,7 +27,8 @@
             android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/shared_paths" />
         </provider>
-        <activity android:name=".ComparisonActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".EditorActivity" android:launchMode="singleTask" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".ComparisonActivity" android:launchMode="singleTask" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

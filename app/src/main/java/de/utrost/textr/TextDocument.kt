@@ -39,7 +39,7 @@ data class TextInfo(val lines: Int, val endings: String) {
 
 data class TextDocument(val name: String, val text: String, val kind: FileKind, val bytes: Int,
     val encoding: String = "UTF-8", val info: TextInfo = TextInfo.inspect(text),
-    val defaultCsvDelimiter: Char = TextDocuments.defaultCsvDelimiter(name, null))
+    val defaultCsvDelimiter: Char = TextDocuments.defaultCsvDelimiter(name, null), val hasBom: Boolean = false)
 
 object TextDocuments {
     fun read(input: InputStream, name: String, mimeType: String? = null, encoding: TextEncoding? = null): TextDocument {
@@ -56,7 +56,9 @@ object TextDocuments {
         }
         val bytes = output.toByteArray()
         val (text, charset) = decode(bytes, encoding)
-        return TextDocument(name, text, kind(name, mimeType), bytes.size, charset, defaultCsvDelimiter = defaultCsvDelimiter(name, mimeType))
+        return TextDocument(name, text, kind(name, mimeType), bytes.size, charset, defaultCsvDelimiter = defaultCsvDelimiter(name, mimeType), hasBom =
+            bytes.size >= 3 && bytes[0] == 0xEF.toByte() && bytes[1] == 0xBB.toByte() && bytes[2] == 0xBF.toByte() ||
+            bytes.size >= 2 && (bytes[0] == 0xFF.toByte() && bytes[1] == 0xFE.toByte() || bytes[0] == 0xFE.toByte() && bytes[1] == 0xFF.toByte()))
     }
 
     private fun decode(bytes: ByteArray, encoding: TextEncoding?): Pair<String, String> {

@@ -8,7 +8,7 @@ The first UX iteration added contextual menus and About, outgoing sharing, remem
 
 ## Approved output extension (2026-11-19)
 
-The roadmap implementation adds explicit **Save Markdown as…** for bounded local/shared HTML conversion. This creates a new selected output document; the original stays read-only. No broad storage or persistent write permission is requested. Pending contents remain in memory, with one-operation outcome/reference metadata for interruption recovery. See [Save as behavior and privacy](save-as.md). Optional editing of TXT/Markdown copies is a separately tracked later roadmap extension; in-place editing remains excluded.
+The roadmap implementation adds explicit **Save Markdown as…** for bounded local/shared HTML conversion. This creates a new selected output document; the original stays read-only. No broad storage or persistent write permission is requested. Pending contents remain in memory, with one-operation outcome/reference metadata for interruption recovery. See [Save as behavior and privacy](save-as.md). The separate copy editor below reuses this flow; in-place editing remains excluded.
 
 ## Purpose
 
@@ -56,7 +56,7 @@ Choose the initial display automatically and allow manual switching between appl
 
 ## Privacy and exclusions
 
-Textr has no editing, accounts, ads, analytics, or network permission. Document providers accessed through the system picker may independently use network access.
+Textr has no accounts, ads, analytics, or network permission. Original documents remain read-only; the explicit TXT/Markdown copy editor is the approved extension below. Document providers accessed through the system picker may independently use network access.
 
 The following are outside v1:
 
@@ -108,4 +108,8 @@ Issues [#68](https://github.com/utrost/Textr/issues/68) and [#69](https://github
 
 ## Planned feature development (tracked 2026-11-19)
 
-The [feature roadmap and backlog](feature-proposals.md) tracks future reading profiles/typography/structured navigation, source-format additions, explicit Markdown export, read-only comparison and optional edit-copy workflows. The current application remains read-only. Export and editing design issues define any change to output operations, encoding handling, content-bearing draft retention and privacy/backup behavior before delivery. In-place editing and deferred rich-format/large-log ideas are outside these epics.
+The [feature roadmap and backlog](feature-proposals.md) tracks future reading profiles/typography/structured navigation, source-format additions, explicit Markdown export, read-only comparison and optional edit-copy workflows. The reader preserves original bytes. Explicit export and copy editing add new output files and the documented private recovery draft. In-place editing and deferred rich-format/large-log ideas are outside these epics.
+
+## Approved copy editing extension (2026-11-19)
+
+The owner requested implementation of the roadmap, including #90–#94. **Edit a copy…** is a separate native editor for original TXT/Markdown source up to 256 Ki UTF-16 characters, 10,000 lines and 4,096 characters per line. It supports bounded undo/redo, literal find/replace, explicit encoding/BOM choices and Save as/Discard/Cancel. One content-bearing private recovery checkpoint lives in `noBackupFilesDir`, excluded from backup and independent of metadata-only reader history. There is no automatic eviction of the sole unsaved copy. A successful save clears only its confirmed matching revision; failure or cancellation preserves recovery. Process recovery uses the last completed checkpoint. See [encoding, newline, memory, retention and cleanup contract](editing-copies.md). In-place editing, rendered-preview editing, rich text and IDE workflows remain excluded.

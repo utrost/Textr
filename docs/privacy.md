@@ -2,11 +2,11 @@
 
 Effective: 19 November 2026. Applies to the Textr Android app (`de.utrost.textr`), maintained by [utrost](https://github.com/utrost) in the [Textr project](https://github.com/utrost/Textr).
 
-Textr is a read-only text viewer. It has no accounts, advertising, analytics, developer-operated backend, or Android network permission. Textr does not send your documents or usage information to its maintainer.
+Textr reads original documents without changing them and offers explicit export and editing of separate text/Markdown copies. It has no accounts, advertising, analytics, developer-operated backend, or Android network permission. Textr does not send your documents or usage information to its maintainer.
 
 ## Documents and local data
 
-Files you choose are read and processed on your device. Textr does not edit them. Document contents remain in memory for viewing; recent files, open-document state and bookmarks do not retain those contents on disk.
+Files you choose are read and processed on your device. Original documents remain unchanged. Viewing and comparison keep contents in memory; recent files, open-document state and bookmarks do not retain those contents on disk. Explicit copy editing has the recovery storage described below.
 
 Textr stores settings and references locally in its app-private storage: document URIs, display names, opening times, pinned status, approximate positions, display/format/encoding/CSV choices, global/per-document typography, and granted access references. Bookmark records also contain names you enter and a SHA-256 fingerprint of decoded source to detect changes. Search text is retained in memory for the current session, not saved with document history on disk. Up to 30 recent files, five open documents and 100 bookmarks are supported.
 
@@ -14,7 +14,7 @@ The app excludes its private data from Android cloud backup and device transfer.
 
 ## Explicit output documents
 
-Save Markdown as creates a new user-selected file from the bounded HTML reading conversion. The original is not edited. Pending output content stays in a retained in-memory session. Private output-operation metadata contains the destination reference/name and outcome, with no document contents, so interrupted/confirmed writes can be reported after process death. Acknowledging the outcome clears that record. The app requests no broad storage access and retains no output write grant. Failed/cancelled output cleanup is best effort; an identified partial output may need removal through your file manager. Exported documents remain with the selected provider until you remove them.
+Save Markdown as creates a new user-selected file from the bounded HTML reading conversion; the copy editor uses the same explicit output flow for edited TXT/Markdown. The original is not edited. Pending output content stays in a retained in-memory session. Private output-operation metadata contains the destination reference/name and outcome, with no document contents, so interrupted/confirmed writes can be reported after process death. Acknowledging the outcome clears that record. The app requests no broad storage access and retains no output write grant. Failed/cancelled output cleanup is best effort; an identified partial output may need removal through your file manager. Exported documents remain with the selected provider until you remove them.
 
 ## Sharing, copying, providers and links
 
@@ -41,3 +41,9 @@ Changes to this policy will be published here with an updated effective date. A 
 ## Document comparison
 
 Comparison keeps at most two bounded decoded snapshots in memory. Saved activity state contains only URI/name/encoding references, content fingerprints and navigation positions. URI sources are reread after process loss; shared text is not persisted and must be selected again. Comparison never requests source writes or adds file contents to reading history.
+
+## Private edit recovery
+
+Choosing **Edit a copy…** explains and creates one app-private recovery file containing the text, original reference/name, encoding/BOM/newline choices, baseline fingerprint, revision, caret/selection and checkpoint time. It lives in Android’s no-backup private directory and is excluded from app backup/device transfer. It is separate from metadata-only history and temporary share copies. Clearing history or losing the original provider grant does not remove recovery.
+
+Recovery has no automatic expiry or eviction. Closing an unchanged editor keeps its checkpoint available. An unreadable checkpoint is retained until a separately confirmed discard. Resume it from the home screen; save or explicitly discard it before starting another copy. Textr deletes recovery only after an explicit discard or successful output of the matching revision. Failed, cancelled, interrupted and stale saves keep it. Atomic checkpoints preserve the previous completed copy when a write fails; very recent keystrokes may be lost on process termination. Clearing app storage or uninstalling removes recovery. A saved output file belongs to your chosen provider and is not removed by clearing Textr data. No draft contents enter activity saved state, intents, history, analytics or logs. The editor requests that the keyboard avoid personalized learning; the chosen keyboard is independently governed by Android and its own policy.

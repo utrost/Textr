@@ -1,8 +1,10 @@
 # Textr
 
-Textr is a minimal, read-only text viewer for Android. Open files from other apps or the system file picker, revisit recent files, and switch between plain text, syntax highlighting, and supported formatted previews.
+Textr is an offline text reader and inspector for Android, with explicit editing of separate TXT/Markdown copies. Open files from other apps or the system file picker, revisit recent files, and switch between plain text, syntax highlighting, and supported formatted previews.
 
 **Android 10+ · Offline · English and German · GPL-3.0-only**
+
+**Roadmap implementation:** [PR #96](https://github.com/utrost/Textr/pull/96) adds the features described below in tested batches. These source changes are newer than the existing `0.1-alpha` APK.
 
 **Candidate status:** the public-readiness changes in [PR #60](https://github.com/utrost/Textr/pull/60) are implemented but unmerged. A local follow-up addresses its [WebView accessibility #59](https://github.com/utrost/Textr/issues/59) and [Android 10 reopening #61](https://github.com/utrost/Textr/issues/61) blockers. See the [reader-polish fixes and validation](docs/validation-reader-polish.md), including remaining acceptance limits, and the [original candidate results](docs/validation-public-readiness.md).
 
@@ -14,7 +16,6 @@ Textr is a minimal, read-only text viewer for Android. Open files from other app
 
 [More screenshots and capture details](docs/screenshots.md) · [Feature roadmap](docs/roadmap.md)
 
-Compare two source snapshots with exact line-ending-aware changes, keyboard navigation, copy actions and linked side-by-side views in wide windows. Large-text and compact windows use unified comparison.
 
 ## What it does
 
@@ -23,6 +24,8 @@ Compare two source snapshots with exact line-ending-aware changes, keyboard navi
 - Offers plain text, lightweight syntax highlighting, and supported Markdown, JSON, calendar and optional CSV previews. Plain text remains the baseline.
 - Searches the displayed view or the complete source, with case/whole-word matching, line numbers and snippets. Includes Go to line, a Markdown heading outline, and bounded JSON/XML [structure navigation](docs/structured-navigation.md).
 - Supports selection/copy, original-file sharing, read-only **Open with…**, [global/per-document reading settings](docs/reading-preferences.md) for size, wrapping, fonts and spacing, and system/light/dark themes.
+- Compares bounded source snapshots with exact line-ending-aware changes, keyboard/copy actions and linked side-by-side views; compact/large-text windows use unified comparison.
+- Offers **Edit a copy…** for TXT/Markdown, with bounded undo/redo, literal find/replace, private recovery and explicit Save as. See [editor limits and fidelity](docs/editing-copies.md).
 - Exports converted HTML reading content to a new UTF-8 Markdown file through [Save Markdown as](docs/save-as.md).
 - Remembers recent files and approximate reading positions. Pin recents, keep up to five documents open, and save up to 100 named bookmarks.
 - Offers an optional file sidebar on sufficiently large windows, plus keyboard shortcuts. The sidebar stays off until you enable it.
@@ -43,9 +46,9 @@ The empty home screen links to opening help. On eligible windows, a dismissible 
 
 ## Privacy
 
-No editing, accounts, ads, analytics, or app network permission. Documents are processed locally. External document providers may independently use the network, and links open externally only when tapped.
+No accounts, ads, analytics, or app network permission. Original files remain unchanged. Documents are processed locally. External document providers may independently use the network, and links open externally only when tapped.
 
-History, sessions and bookmarks store local references and reading metadata, not document contents. Explicit sharing creates temporary copies, bounded to 20 and cleaned after 24 hours on the next app start/share. These copies are separate from history. App backup and device-transfer rules exclude private state. JavaScript, remote resources and WebView file/content access are disabled.
+History, sessions and bookmarks store local references and reading metadata, not document contents. Explicit sharing creates temporary copies, bounded to 20 and cleaned after 24 hours on the next app start/share. These copies are separate from history. Explicit copy editing retains one private content-bearing recovery checkpoint until discarded or its matching revision is saved. App backup and device-transfer rules exclude private state. JavaScript, remote resources and WebView file/content access are disabled.
 
 Read the [privacy policy](docs/privacy.md), also linked from **About Textr**. Moving a file or losing its provider permission can make a stored reference unavailable; choose the file again. Clearing history or bookmarks never deletes the original files.
 
@@ -72,7 +75,7 @@ Use `gradlew.bat` on Windows. Debug builds use a development signing key and are
 - Automatic decoding supports UTF-8 and BOM-marked UTF-16. Explicit encoding choices also support Windows-1252, ISO-8859-1 and UTF-16 without a BOM.
 - Previews and highlighting have [bounded complexity and size](docs/formats.md); larger or invalid previews fall back to source. Large text files and long lines may display slowly.
 - Markdown images, raw embedded HTML and relative file links are unsupported. Local HTML conversion is available in the newer candidate; it never loads the original page or remote resources. Calendar recurrence is not expanded; no events or alarms are imported.
-- Search is literal, within one file; source results are capped at 200. No editing, file management, unbounded tabs, or huge-log support.
+- Search is literal, within one file; source results are capped at 200. Copy editing accepts at most 256 Ki characters, 10,000 lines and 4,096 characters per line; comparison has separate [input/work limits](docs/comparison.md). No in-place editing, file management, unbounded tabs, or huge-log support.
 - WebView 133 can omit CSV cells and source nodes. **⋮ → Accessible table… → Show source** provides a native compatibility route for bounded CSV documents. See [behavior and validation](docs/validation-reader-polish.md). Human spoken-feedback and physical foldable checks remain follow-ups.
 - Public APK release, real-device beta and optional Play distribution have separate remaining gates in the [roadmap](docs/roadmap.md).
 

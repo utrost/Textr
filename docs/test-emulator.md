@@ -15,3 +15,5 @@ ANDROID_HOME=/path/to/test-sdk ./gradlew :app:connectedDebugAndroidTest \
 ```
 
 The scripts contain no signing credentials and publish no artifacts.
+
+The emulator executable is pinned to **36.4.10 / build 15004761**, matching the local API 29/36 validation runtime (the Google archive URL was verified available). Hosted build 37.2.13 exited during initial API 36 startup before instrumentation, with the emulator port disappearing; its root cause was not established. Pinning removes that runtime drift while the hosted rerun verifies the same baseline. The bootstrap also resets window size, density and font scale to avoid stale large-text settings after a guest crash.

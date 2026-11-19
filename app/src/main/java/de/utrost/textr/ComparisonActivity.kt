@@ -56,6 +56,13 @@ class ComparisonActivity : ReadingScreen() {
             }
         }
     }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent); setIntent(intent)
+        val snapshot = ComparisonInbox.take(intent.getStringExtra("token"))
+        if (snapshot != null) model.initial(snapshot)
+        else intent.getStringExtra("uri")?.let { model.load(true, ComparisonRef(it, intent.getStringExtra("name").orEmpty(),
+            TextEncoding.entries.find { value -> value.name == intent.getStringExtra("encoding") }, intent.getStringExtra("fingerprint"))) }
+    }
     private fun build() {
         wide = resources.configuration.screenWidthDp >= 900 && resources.configuration.screenHeightDp >= 480 &&
             resources.configuration.fontScale <= 1.3f && appearance.fontSize <= 22
@@ -95,7 +102,7 @@ class ComparisonActivity : ReadingScreen() {
         val snapshot = if (left) model.left else model.right
         val reference = if (left) model.leftRef else model.rightRef
         val name = snapshot?.document?.name ?: reference?.name ?: getString(R.string.compare_not_selected)
-        val version = snapshot?.let { getString(R.string.compare_snapshot, it.document.encoding,
+        val version = snapshot?.let { getString(R.string.compare_snapshot, it.document.encoding + " · " + getString(if (it.document.hasBom) R.string.editor_with_bom else R.string.editor_no_bom),
             java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT).format(java.util.Date(it.capturedAt))) }.orEmpty()
         return getString(R.string.compare_input, getString(if (left) R.string.compare_left_name else R.string.compare_right_name), name) + if (version.isNotEmpty()) "\n$version" else ""
     }

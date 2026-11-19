@@ -1,6 +1,6 @@
 # Textr feature roadmap
 
-Updated 19 November 2026. Textr is an offline, read-only Android reader. The current candidate is **0.1-alpha**, available to repository maintainers as a draft GitHub prerelease. Public APK and store publication remain deferred.
+Updated 19 November 2026. Textr is an offline Android reader that preserves originals, with explicit export and copy editing. The current candidate is **0.1-alpha**, available to repository maintainers as a draft GitHub prerelease. Public APK and store publication remain deferred.
 
 [Live tracker #14](https://github.com/utrost/Textr/issues/14) links the work below. Individual issues hold acceptance criteria; an implementation in a candidate branch is not the same as accepted and merged work. The phases describe delivery order, not dates or promised version numbers.
 
@@ -49,21 +49,21 @@ Use [#56 real-device beta](https://github.com/utrost/Textr/issues/56) to collect
 
 Turn reproducible beta findings into focused issues with fixture, Android/WebView versions and acceptance criteria. Keep private document contents out of reports. Prioritize opening, data integrity and accessibility regressions before convenience features.
 
-## Planned feature development
+## Feature roadmap implementation
 
-The requested feature roadmap now has **five epics and 19 implementation issues**, all in planned state. The [feature roadmap and backlog](feature-proposals.md) contains the detailed scope, tradeoffs and dependency order. Epics are native children of [tracker #14](https://github.com/utrost/Textr/issues/14), with their implementation issues nested underneath.
+The requested feature roadmap now has **five epics and 19 implementation issues**, implemented in tested batches on [PR #96](https://github.com/utrost/Textr/pull/96), awaiting integration and acceptance. The [feature roadmap and backlog](feature-proposals.md) contains the detailed scope, tradeoffs and dependency order. Epics are native children of [tracker #14](https://github.com/utrost/Textr/issues/14), with their implementation issues nested underneath.
 
 | Sequence | Epic | Implementation issues | State |
 | --- | --- | --- | --- |
-| 1 — reader improvements | [#71](https://github.com/utrost/Textr/issues/71) — Reading comfort and structured navigation | [#76](https://github.com/utrost/Textr/issues/76), [#77](https://github.com/utrost/Textr/issues/77), [#78](https://github.com/utrost/Textr/issues/78), [#79](https://github.com/utrost/Textr/issues/79) | Planned |
-| 2 — focused format batch | [#72](https://github.com/utrost/Textr/issues/72) — Everyday text and configuration format support | [#80](https://github.com/utrost/Textr/issues/80), [#81](https://github.com/utrost/Textr/issues/81), [#82](https://github.com/utrost/Textr/issues/82), [#83](https://github.com/utrost/Textr/issues/83), [#84](https://github.com/utrost/Textr/issues/84) | Planned |
-| 3a — explicit export | [#73](https://github.com/utrost/Textr/issues/73) — Export HTML reading content as Markdown | [#85](https://github.com/utrost/Textr/issues/85), [#86](https://github.com/utrost/Textr/issues/86) | Planned |
-| 3b — compare documents | [#74](https://github.com/utrost/Textr/issues/74) — Bounded read-only document comparison | [#87](https://github.com/utrost/Textr/issues/87), [#88](https://github.com/utrost/Textr/issues/88), [#89](https://github.com/utrost/Textr/issues/89) | Planned |
-| 4 — deliberate editing extension | [#75](https://github.com/utrost/Textr/issues/75) — Optional plain-text and Markdown editing of copies | [#90](https://github.com/utrost/Textr/issues/90), [#91](https://github.com/utrost/Textr/issues/91), [#92](https://github.com/utrost/Textr/issues/92), [#93](https://github.com/utrost/Textr/issues/93), [#94](https://github.com/utrost/Textr/issues/94) | Planned |
+| 1 — reader improvements | [#71](https://github.com/utrost/Textr/issues/71) — Reading comfort and structured navigation | [#76](https://github.com/utrost/Textr/issues/76), [#77](https://github.com/utrost/Textr/issues/77), [#78](https://github.com/utrost/Textr/issues/78), [#79](https://github.com/utrost/Textr/issues/79) | Implemented on branch; acceptance pending |
+| 2 — focused format batch | [#72](https://github.com/utrost/Textr/issues/72) — Everyday text and configuration format support | [#80](https://github.com/utrost/Textr/issues/80), [#81](https://github.com/utrost/Textr/issues/81), [#82](https://github.com/utrost/Textr/issues/82), [#83](https://github.com/utrost/Textr/issues/83), [#84](https://github.com/utrost/Textr/issues/84) | Implemented on branch; acceptance pending |
+| 3a — explicit export | [#73](https://github.com/utrost/Textr/issues/73) — Export HTML reading content as Markdown | [#85](https://github.com/utrost/Textr/issues/85), [#86](https://github.com/utrost/Textr/issues/86) | Implemented on branch; acceptance pending |
+| 3b — compare documents | [#74](https://github.com/utrost/Textr/issues/74) — Bounded read-only document comparison | [#87](https://github.com/utrost/Textr/issues/87), [#88](https://github.com/utrost/Textr/issues/88), [#89](https://github.com/utrost/Textr/issues/89) | Implemented on branch; acceptance pending |
+| 4 — deliberate editing extension | [#75](https://github.com/utrost/Textr/issues/75) — Optional plain-text and Markdown editing of copies | [#90](https://github.com/utrost/Textr/issues/90), [#91](https://github.com/utrost/Textr/issues/91), [#92](https://github.com/utrost/Textr/issues/92), [#93](https://github.com/utrost/Textr/issues/93), [#94](https://github.com/utrost/Textr/issues/94) | Implemented on branch; acceptance pending |
 
 Delivery sequence: accept the current reader/HTML candidate → reader improvements and focused formats → Markdown export and read-only comparison → optional TXT/Markdown editing of copies. Save as output is shared by export and editing; edit-copy saving follows the explicit scope/recovery work. Existing beta and distribution issues continue separately.
 
-Current behavior remains read-only. Future export and editing issues define their output/privacy/encoding changes before implementation delivery. In-place editing, more languages, PDF/DOCX/EPUB and large/live logs remain deferred decisions. No dates or future version numbers are committed. These future feature epics are independent of the first public APK gate (#13); completing all of them is not a prerequisite for publishing the accepted baseline.
+Original files remain read-only. Export and copy editing use new output documents; [private recovery](editing-copies.md) explicitly extends storage/privacy behavior. In-place editing, more languages, PDF/DOCX/EPUB and large/live logs remain deferred decisions. No dates or future version numbers are committed. These future feature epics are independent of the first public APK gate (#13); completing all of them is not a prerequisite for publishing the accepted baseline.
 
 ## Distribution work — separate from reader features
 
@@ -84,7 +84,7 @@ Distribution sequence: accept the shared source → integrate and validate each 
 
 ## Product boundaries and upkeep
 
-Keep Android 10+, the 5 MiB source-file limit, read-only operation, bounded rendering/sessions, local metadata and no app network permission. Editing, file management, huge-log support, direct cloud integrations, Markdown images/embedded HTML and unbounded tabs remain outside the agreed scope. See [product scope](scope.md).
+Keep Android 10+, the 5 MiB source-file limit, unchanged originals, bounded rendering/sessions and no app network permission. Explicit export, read-only comparison and TXT/Markdown copy editing are roadmap extensions; copy recovery is the documented content-bearing private-storage exception. In-place editing, file management, huge-log support, direct cloud integrations, Markdown images/embedded HTML and unbounded tabs remain outside the agreed scope. See [product scope](scope.md).
 
 Update this roadmap and #14 when priorities or acceptance change. Close issues with exact-source evidence, distinguish shipped/merged/candidate/proposed work, and verify external channel requirements at submission time. Dates and version names for future phases remain unset.
 

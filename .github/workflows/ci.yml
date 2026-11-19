@@ -79,6 +79,8 @@ jobs:
       - name: Run connected tests
         uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
         with:
+          # Match the locally validated runtime rather than floating SDK emulator updates.
+          emulator-build: 15004761 # 36.4.10
           api-level: ${{ matrix.api }}
           target: google_apis
           arch: x86_64
