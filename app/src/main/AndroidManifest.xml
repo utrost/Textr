@@ -58,6 +58,9 @@
                 <data android:mimeType="application/x-sh" />
                 <data android:mimeType="application/x-shellscript" />
                 <data android:mimeType="application/sql" />
+                <data android:mimeType="application/typescript" />
+                <data android:mimeType="application/x-java-properties" />
+                <data android:mimeType="application/tsv" />
                 <data android:mimeType="application/octet-stream" />
             </intent-filter>
             <intent-filter>
@@ -88,6 +91,9 @@
                 <data android:mimeType="application/x-sh" />
                 <data android:mimeType="application/x-shellscript" />
                 <data android:mimeType="application/sql" />
+                <data android:mimeType="application/typescript" />
+                <data android:mimeType="application/x-java-properties" />
+                <data android:mimeType="application/tsv" />
                 <data android:mimeType="application/octet-stream" />
             </intent-filter>
         </activity>

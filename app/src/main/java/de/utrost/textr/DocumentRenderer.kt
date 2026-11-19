@@ -18,7 +18,7 @@ import java.io.StringWriter
 
 data class OutlineHeading(val id: String, val title: String, val level: Int)
 
-data class PreparedDocument(val source: TextDocument, val preview: String?, val notice: PreviewNotice = PreviewNotice.NONE, val headings: List<OutlineHeading> = emptyList()) {
+data class PreparedDocument(val source: TextDocument, val preview: String?, val notice: PreviewNotice = PreviewNotice.NONE, val headings: List<OutlineHeading> = emptyList(), val structure: StructuredOutline? = null, val convertedMarkdown: String? = null) {
     val modes: List<DisplayMode> get() = buildList {
         add(DisplayMode.PLAIN)
         if (source.kind !in setOf(FileKind.TEXT, FileKind.CSV) && source.text.length <= RenderPolicy.MAX_HIGHLIGHT_CHARS) add(DisplayMode.HIGHLIGHTED)
@@ -40,8 +40,9 @@ object DocumentRenderer {
 
     fun prepare(document: TextDocument, csv: CsvOptions = CsvOptions(), translate: (String) -> String = { it }): PreparedDocument {
         RenderPolicy.checkCancellation()
+        val structure = if (document.kind in setOf(FileKind.JSON, FileKind.XML)) StructureParser.parse(document.text, document.kind) else null
         if (document.kind == FileKind.JSON && document.bytes > RenderPolicy.MAX_JSON_PREVIEW_BYTES) {
-            return PreparedDocument(document, null, PreviewNotice.JSON_LIMIT)
+            return PreparedDocument(document, null, PreviewNotice.JSON_LIMIT, structure = structure)
         }
         if (document.kind == FileKind.MARKDOWN && document.text.length > RenderPolicy.MAX_MARKDOWN_CHARS) {
             return PreparedDocument(document, null, PreviewNotice.MARKDOWN_LIMIT)
@@ -52,12 +53,13 @@ object DocumentRenderer {
         if (document.kind == FileKind.HTML && document.text.length > HtmlMarkdown.MAX_CHARS) {
             return PreparedDocument(document, null, PreviewNotice.HTML_LIMIT)
         }
+        var convertedMarkdown: String? = null
         val headings = mutableListOf<OutlineHeading>()
         val preview = try {
             when (document.kind) {
                 FileKind.JSON -> prettyJson(document.text)?.let { "<pre>${SyntaxHighlighter.escape(it)}</pre>" }
                 FileKind.MARKDOWN -> markdown(document.text, headings, translate)
-                FileKind.HTML -> markdown(HtmlMarkdown.convert(document.text, translate), headings, translate)
+                FileKind.HTML -> markdown(HtmlMarkdown.convert(document.text, translate).also { convertedMarkdown = it }, headings, translate)
                 FileKind.ICALENDAR -> CalendarPreview.render(document.text, translate)
                 FileKind.CSV -> CsvPreview.render(document.text, csv, translate)
                 else -> null
@@ -75,7 +77,7 @@ object DocumentRenderer {
         } else if (preview == null && document.kind in setOf(FileKind.MARKDOWN, FileKind.JSON, FileKind.ICALENDAR, FileKind.HTML)) {
             PreviewNotice.UNAVAILABLE
         } else PreviewNotice.NONE
-        return PreparedDocument(document, preview, notice, if (preview != null) headings else emptyList())
+        return PreparedDocument(document, preview, notice, if (preview != null) headings else emptyList(), structure, convertedMarkdown)
     }
 
     fun prettyJson(text: String): String? = try {

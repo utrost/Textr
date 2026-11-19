@@ -1,6 +1,6 @@
 # Textr privacy policy
 
-Effective: 15 November 2026. Applies to the Textr Android app (`de.utrost.textr`), maintained by [utrost](https://github.com/utrost) in the [Textr project](https://github.com/utrost/Textr).
+Effective: 19 November 2026. Applies to the Textr Android app (`de.utrost.textr`), maintained by [utrost](https://github.com/utrost) in the [Textr project](https://github.com/utrost/Textr).
 
 Textr is a read-only text viewer. It has no accounts, advertising, analytics, developer-operated backend, or Android network permission. Textr does not send your documents or usage information to its maintainer.
 
@@ -8,9 +8,13 @@ Textr is a read-only text viewer. It has no accounts, advertising, analytics, de
 
 Files you choose are read and processed on your device. Textr does not edit them. Document contents remain in memory for viewing; recent files, open-document state and bookmarks do not retain those contents on disk.
 
-Textr stores settings and references locally in its app-private storage: document URIs, display names, opening times, pinned status, approximate positions, display/format/encoding/CSV choices, and granted access references. Bookmark records also contain names you enter and a SHA-256 fingerprint of decoded source to detect changes. Search text is retained in memory for the current session, not saved with document history on disk. Up to 30 recent files, five open documents and 100 bookmarks are supported.
+Textr stores settings and references locally in its app-private storage: document URIs, display names, opening times, pinned status, approximate positions, display/format/encoding/CSV choices, global/per-document typography, and granted access references. Bookmark records also contain names you enter and a SHA-256 fingerprint of decoded source to detect changes. Search text is retained in memory for the current session, not saved with document history on disk. Up to 30 recent files, five open documents and 100 bookmarks are supported.
 
 The app excludes its private data from Android cloud backup and device transfer. Its WebView disables JavaScript, DOM storage, network loading, remote images and file/content access; it does not intentionally cache documents for later reading. WebView's own app-private runtime files may be managed by Android.
+
+## Explicit output documents
+
+Save Markdown as creates a new user-selected file from the bounded HTML reading conversion. The original is not edited. Pending output content stays in a retained in-memory session. Private output-operation metadata contains the destination reference/name and outcome, with no document contents, so interrupted/confirmed writes can be reported after process death. Acknowledging the outcome clears that record. The app requests no broad storage access and retains no output write grant. Failed/cancelled output cleanup is best effort; an identified partial output may need removal through your file manager. Exported documents remain with the selected provider until you remove them.
 
 ## Sharing, copying, providers and links
 

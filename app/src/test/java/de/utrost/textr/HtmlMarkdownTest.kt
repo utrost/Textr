@@ -5,6 +5,26 @@ import org.junit.Test
 import java.util.concurrent.CancellationException
 
 class HtmlMarkdownTest {
+    @org.junit.Test fun exportRetainsTheActualConversionAndReopensAsMarkdownWithoutTouchingHtml() {
+        val html = "<h1>Grüße 🚀</h1><ul><li>One</li></ul><pre><code>a &lt; b</code></pre><table><tr><th>A</th><th>B</th></tr><tr><td>1</td><td>2</td></tr></table><p><a href='https://example.invalid/'>Link</a><img src='https://example.invalid/a.png' alt='Figure'></p><script>never</script>"
+        val source = TextDocuments.read(html.byteInputStream(), "saved.html")
+        val prepared = DocumentRenderer.prepare(source)
+        val converted = prepared.convertedMarkdown!!
+        org.junit.Assert.assertEquals(HtmlMarkdown.convert(html), converted)
+        val output = java.io.ByteArrayOutputStream()
+        EncodedOutput.write(converted, TextEncoding.UTF8, false, output)
+        val reopened = TextDocuments.read(output.toByteArray().inputStream(), "saved.md", "text/markdown")
+        org.junit.Assert.assertEquals(converted, reopened.text)
+        org.junit.Assert.assertEquals(FileKind.MARKDOWN, reopened.kind)
+        val rendered = DocumentRenderer.prepare(reopened)
+        org.junit.Assert.assertNotNull(rendered.preview)
+        org.junit.Assert.assertEquals(listOf("Grüße 🚀"), rendered.headings.map { it.title })
+        org.junit.Assert.assertTrue(rendered.preview!!.contains("<table>"))
+        org.junit.Assert.assertFalse(converted.contains("<script>"))
+        org.junit.Assert.assertEquals(html, source.text)
+        org.junit.Assert.assertNull(DocumentRenderer.prepare(source.copy(text = "x".repeat(HtmlMarkdown.MAX_CHARS + 1))).convertedMarkdown)
+    }
+
     private fun prepare(html: String) = DocumentRenderer.prepare(TextDocument("saved.html", html, FileKind.HTML, html.toByteArray().size))
     private fun preview(html: String) = prepare(html).preview!!
 

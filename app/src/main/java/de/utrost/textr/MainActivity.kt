@@ -112,6 +112,15 @@ class MainActivity : ComponentActivity() {
     private var activeMenu: PopupMenu? = null
     private var accessibleCsvDialog: AccessibleCsvDialog? = null
     private var pendingAccessibleCsv: Bundle? = null
+    private var structureDialog: StructureDialog? = null
+    private var pendingStructure: Bundle? = null
+    private val outputs by lazy { ViewModelProvider(this)[OutputSession::class.java] }
+    private var outputDialog: AlertDialog? = null
+    private var outputDialogStatus: OutputStatus? = null
+    private val outputPicker = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK && result.data?.data == null) outputs.pickerUnavailable()
+        else outputs.pickerResult(if (result.resultCode == RESULT_OK) result.data?.data else null)
+    }
     private fun canInteract() = !isDestroyed && !isFinishing && !worker.isShutdown
 
     private fun <T : android.app.Dialog> T.present(dismissed: () -> Unit = {}): T {
@@ -154,16 +163,21 @@ class MainActivity : ComponentActivity() {
         repository.undoAvailable()
         ShareFiles(this).prune()
         buildLayout()
+        if (savedInstanceState?.getBoolean("outputPending") == true)
+            outputs.restorePending(savedInstanceState.getString("outputName").orEmpty(), savedInstanceState.getString("outputSource"))
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() { navigateBack() }
         })
         if (savedInstanceState != null) {
             readingProfile = ReadingProfile.fromJson(savedInstanceState.getString("readingProfile")?.let { org.json.JSONObject(it) })
             applyReadingProfile()
+            pendingStructure = savedInstanceState.getBundle("structure")
             pendingAccessibleCsv = savedInstanceState.getBundle("accessibleCsv")
             formatOverride = FileKind.entries.find { it.name == savedInstanceState.getString("format") }
             encodingOverride = TextEncoding.entries.find { it.name == savedInstanceState.getString("encoding") }
-            csvOptions = CsvOptions(savedInstanceState.getString("csvDelimiter")?.firstOrNull()?.takeIf { it in CsvOptions.DELIMITERS } ?: ',', savedInstanceState.getBoolean("csvHeader"))
+            val savedCsv = CsvOptions(savedInstanceState.getString("csvDelimiter")?.firstOrNull()?.takeIf { it in CsvOptions.DELIMITERS } ?: ',', savedInstanceState.getBoolean("csvHeader"))
+            csvOptions = if (savedInstanceState.containsKey("csvConfigured")) savedCsv.copy(configured = savedInstanceState.getBoolean("csvConfigured"))
+                else savedCsv.copy(configured = savedCsv.configured || formatOverride == FileKind.CSV)
             pendingBookmark = bookmarks.entries().find { it.id == savedInstanceState.getString("pendingBookmark") }
             pickerBookmark = bookmarks.entries().find { it.id == savedInstanceState.getString("pickerBookmark") }
             pendingGrantFlags = savedInstanceState.getInt("grantFlags")
@@ -373,6 +387,8 @@ class MainActivity : ComponentActivity() {
     private fun showHome() {
         if (!canInteract()) return
         accessibleCsvDialog?.dismiss()
+        structureDialog?.dismiss()
+        pendingStructure = null
         pendingAccessibleCsv = null
         rememberReading()
         cancelWork()
@@ -475,6 +491,14 @@ class MainActivity : ComponentActivity() {
                 item(R.string.reload, ready && currentUri != null) { reloadDocument() }
                 item(R.string.treat_as, ready) { showFormats() }
                 item(R.string.document_info, ready) { showDocumentInfo() }
+                if (document?.source?.kind == FileKind.HTML) {
+                    if (document?.convertedMarkdown != null) item(R.string.html_export, ready && !outputs.busy) { exportHtml() }
+                    else item(R.string.html_export_unavailable, ready) {
+                        AlertDialog.Builder(this@MainActivity).setTitle(R.string.html_export).setMessage(R.string.html_export_unavailable_help)
+                            .setPositiveButton(R.string.done, null).create().present()
+                    }
+                }
+                if (document?.structure != null) item(R.string.structure_outline, ready) { showStructure() }
                 if (document?.source?.kind == FileKind.CSV) {
                     item(R.string.csv_accessible, ready && document?.preview != null) { showAccessibleCsv() }
                     item(R.string.csv_options, ready) { showCsvOptions() }
@@ -538,6 +562,11 @@ class MainActivity : ComponentActivity() {
         FileKind.SHELL -> "Shell"
         FileKind.DIFF -> "Diff / patch"
         FileKind.ICALENDAR -> "iCalendar"
+        FileKind.ENV -> ".env"
+        FileKind.PROPERTIES -> ".properties"
+        FileKind.DOCKERFILE -> "Dockerfile"
+        FileKind.TYPESCRIPT -> "TypeScript"
+        FileKind.TSX -> "TypeScript / TSX"
         else -> kind.name
     }
 
@@ -620,6 +649,30 @@ class MainActivity : ComponentActivity() {
                 closeSearch()
                 load(currentUri) { original }
             }.create().present()
+    }
+
+    private fun exportHtml() {
+        val prepared = document ?: return
+        val markdown = prepared.convertedMarkdown ?: return
+        if (outputs.busy || webView?.tag != true) return
+        val sourceUri = currentUri?.toString()
+        val leaf = prepared.source.name.substringAfterLast('/').substringAfterLast('\\')
+        val name = leaf.substringBeforeLast('.', leaf).replace(Regex("[\\p{Cntrl}/\\\\]"), "_").take(120).ifBlank { "document" } + ".md"
+        AlertDialog.Builder(this).setTitle(R.string.html_export).setMessage(R.string.html_export_help)
+            .setNegativeButton(R.string.cancel, null).setPositiveButton(R.string.choose_destination) { _, _ ->
+                if (!canInteract() || outputs.busy) return@setPositiveButton
+                val intent = outputs.begin(OutputRequest(name, "text/markdown", markdown, sourceUri))
+                try { outputPicker.launch(intent) }
+                catch (_: ActivityNotFoundException) { outputs.pickerUnavailable() }
+                catch (_: SecurityException) { outputs.pickerUnavailable() }
+            }.create().present()
+    }
+
+    private fun showOutputStatus(status: OutputStatus) {
+        if (!canInteract() || outputDialogStatus == status && outputDialog?.isShowing == true) return
+        outputDialog?.dismiss()
+        outputDialogStatus = status
+        outputDialog = OutputDialogs.create(this, status, outputs::cancel, outputs::acknowledge)?.also { it.present() }
     }
 
     private fun shareDocument(openWith: Boolean = false) {
@@ -747,6 +800,7 @@ class MainActivity : ComponentActivity() {
     private fun load(uri: Uri?, restoredMode: DisplayMode? = null, grantFlags: Int = 0, reader: (CancellationSignal) -> TextDocument) {
         if (!canInteract()) return
         accessibleCsvDialog?.dismiss()
+        structureDialog?.dismiss()
         cancelWork()
         requestedMode = restoredMode
         document = null
@@ -767,9 +821,11 @@ class MainActivity : ComponentActivity() {
                 val original = reader(signal)
                 signal.throwIfCanceled()
                 runOnUiThread { if (request == generation && !isDestroyed) showProgress(R.string.rendering) }
-                val prepared = DocumentRenderer.prepare(original.copy(kind = selectedFormat ?: original.kind), selectedCsv) { translations[it] ?: it }.also { it.fingerprint }
+                val resolvedCsv = if (selectedCsv.configured) selectedCsv else selectedCsv.copy(delimiter = original.defaultCsvDelimiter)
+                val prepared = DocumentRenderer.prepare(original.copy(kind = selectedFormat ?: original.kind), resolvedCsv) { translations[it] ?: it }.also { it.fingerprint }
                 runOnUiThread {
                     if (request != generation || isDestroyed) return@runOnUiThread
+                    csvOptions = resolvedCsv
                     session.original = original
                     session.previewLanguage = language
                     val key = uri?.toString() ?: "shared-text"
@@ -1088,6 +1144,10 @@ class MainActivity : ComponentActivity() {
                                         findButton.isEnabled = true
                                         updateDocumentsButton()
                                         rememberReading()
+                                        pendingStructure?.let { saved ->
+                                            pendingStructure = null
+                                            if (saved.getString("fingerprint") == document?.fingerprint) showStructure(saved)
+                                        }
                                         pendingAccessibleCsv?.let { saved ->
                                             pendingAccessibleCsv = null
                                             if (saved.getString("uri") == currentUri?.toString()) showAccessibleCsv(saved)
@@ -1274,7 +1334,7 @@ class MainActivity : ComponentActivity() {
                 if (!canInteract()) return@setPositiveButton
                 val original = session.original ?: return@setPositiveButton
                 rememberReading(); closeSearch()
-                csvOptions = CsvOptions(CsvOptions.DELIMITERS[delimiter.selectedItemPosition], header.isChecked)
+                csvOptions = CsvOptions(CsvOptions.DELIMITERS[delimiter.selectedItemPosition], header.isChecked, configured = true)
                 pendingScroll = 0
                 load(currentUri, DisplayMode.PREVIEW) { original }
             }.create().present()
@@ -1422,6 +1482,24 @@ class MainActivity : ComponentActivity() {
                 dialog.dismiss(); closeSearch(); sourceMatch = null; targetLine = line; anchor = "line-$line"; render()
             }
         }
+    }
+
+    private fun showStructure(restored: Bundle? = null) {
+        val prepared = document ?: return
+        if (prepared.structure == null || webView?.tag != true) return
+        val dialog = StructureDialog(this, prepared, restored, dark) { node ->
+            if (canInteract() && document === prepared) {
+                closeSearch()
+                mode = DisplayMode.PLAIN
+                // Jump to the original line; huge container values are never duplicated into a highlight.
+                sourceMatch = null
+                targetLine = node.line
+                anchor = "line-${node.line}"
+                render()
+            }
+        }
+        structureDialog = dialog
+        dialog.present { if (structureDialog === dialog) structureDialog = null }
     }
 
     private fun showOutline() {
@@ -1614,6 +1692,11 @@ class MainActivity : ComponentActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         rememberReading()
         super.onSaveInstanceState(outState)
+        outState.putBoolean("outputPending", outputs.status.phase == OutputPhase.PICKING)
+        if (outputs.status.phase == OutputPhase.PICKING) {
+            outState.putString("outputName", outputs.status.name)
+            outState.putString("outputSource", outputs.pendingSource())
+        }
         outState.putString("uri", currentUri?.toString())
         // While loading, remember only a mode explicitly requested for this URI,
         // never the previous document's mode. Format changes request automatic mode.
@@ -1626,11 +1709,13 @@ class MainActivity : ComponentActivity() {
         outState.putString("readingProfile", readingProfile?.json()?.toString())
         outState.putString("csvDelimiter", csvOptions.delimiter.toString())
         outState.putBoolean("csvHeader", csvOptions.firstRowHeader)
+        outState.putBoolean("csvConfigured", csvOptions.configured)
         outState.putString("pendingBookmark", pendingBookmark?.id)
         outState.putString("pickerBookmark", pickerBookmark?.id)
         outState.putBoolean("search", searchRow.visibility == View.VISIBLE)
         val accessible = accessibleCsvDialog?.readingState()?.apply { putString("uri", currentUri?.toString()) } ?: pendingAccessibleCsv
         outState.putBundle("accessibleCsv", accessible)
+        outState.putBundle("structure", structureDialog?.takeIf { it.isShowing }?.readingState() ?: pendingStructure)
     }
 
     private fun rememberReading() {
@@ -1647,7 +1732,14 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        outputs.listener = ::showOutputStatus
+        showOutputStatus(outputs.status)
+    }
+
     override fun onStop() {
+        outputs.listener = null
         rememberReading()
         super.onStop()
     }

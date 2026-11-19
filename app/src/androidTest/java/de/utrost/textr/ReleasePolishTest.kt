@@ -407,6 +407,20 @@ class ReleasePolishTest {
             var menuLabel = ""; var tableLabel = ""
             instrumentation.runOnMainSync { menuLabel = activity.getString(R.string.more_options); tableLabel = activity.getString(R.string.csv_accessible) }
             click(By.desc(menuLabel))
+            // UiAutomator click completion can precede the popup's UI callback.
+            await {
+                var attached = false
+                instrumentation.runOnMainSync {
+                    fun containsMenu(view: View): Boolean {
+                        if (view is android.widget.ListView && (0 until view.adapter.count).any { index ->
+                                (view.adapter.getItem(index) as? android.view.MenuItem)?.title?.toString() == tableLabel
+                            }) return true
+                        return view is android.view.ViewGroup && (0 until view.childCount).any { containsMenu(view.getChildAt(it)) }
+                    }
+                    attached = android.view.inspector.WindowInspector.getGlobalWindowViews().any(::containsMenu)
+                }
+                attached
+            }
             // Activate the actual popup item on the UI thread. Waiting for an
             // accessibility IPC/idle round trip can let a fast device finish the
             // entire table before this cancellation assertion begins.

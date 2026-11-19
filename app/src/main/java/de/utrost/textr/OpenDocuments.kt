@@ -52,7 +52,7 @@ class OpenDocuments(context: Context) {
         entries.filter { it.uri != null }.forEach {
             array.put(JSONObject().put("uri", it.uri).put("name", it.name).put("mode", it.reading.mode?.name)
                 .put("scroll", it.reading.scroll).put("format", it.reading.format?.name).put("encoding", it.reading.encoding?.name)
-                .put("delimiter", it.reading.csv.delimiter.toString()).put("csvHeader", it.reading.csv.firstRowHeader).put("profile", it.reading.profile?.json()))
+                .put("delimiter", it.reading.csv.delimiter.toString()).put("csvHeader", it.reading.csv.firstRowHeader).put("csvConfigured", it.reading.csv.configured).put("profile", it.reading.profile?.json()))
         }
         preferences.edit().putString("entries", array.toString()).apply()
         repository.setSessionReferences(entries.mapNotNull { it.uri }.toSet())

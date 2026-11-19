@@ -1,6 +1,6 @@
 package de.utrost.textr
 
-data class CsvOptions(val delimiter: Char = ',', val firstRowHeader: Boolean = false) {
+data class CsvOptions(val delimiter: Char = ',', val firstRowHeader: Boolean = false, val configured: Boolean = delimiter != ',' || firstRowHeader) {
     init { require(delimiter in DELIMITERS) }
     companion object { val DELIMITERS = listOf(',', ';', '\t', '|') }
 }

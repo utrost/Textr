@@ -46,7 +46,7 @@ class Bookmarks(private val context: Context) {
                 .put("label", bookmark.label).put("fraction", bookmark.fraction).put("fingerprint", bookmark.fingerprint)
                 .put("mode", bookmark.reading.mode?.name).put("format", bookmark.reading.format?.name)
                 .put("encoding", bookmark.reading.encoding?.name).put("delimiter", bookmark.reading.csv.delimiter.toString())
-                .put("csvHeader", bookmark.reading.csv.firstRowHeader).put("profile", bookmark.reading.profile?.json()))
+                .put("csvHeader", bookmark.reading.csv.firstRowHeader).put("csvConfigured", bookmark.reading.csv.configured).put("profile", bookmark.reading.profile?.json()))
         }
         preferences.edit().putString("entries", array.toString()).apply()
         DocumentRepository(context).setBookmarkReferences(entries.map { it.uri }.toSet())

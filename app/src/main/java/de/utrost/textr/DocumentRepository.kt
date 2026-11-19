@@ -153,6 +153,7 @@ class DocumentRepository(private val context: Context) {
                     put("encoding", file.reading.encoding?.name)
                     put("delimiter", file.reading.csv.delimiter.toString())
                     put("csvHeader", file.reading.csv.firstRowHeader)
+                    put("csvConfigured", file.reading.csv.configured)
                     put("profile", file.reading.profile?.json())
                 }
             })
@@ -240,4 +241,6 @@ class DocumentRepository(private val context: Context) {
 }
 
 internal fun csvOptions(value: JSONObject): CsvOptions = CsvOptions(
-    value.optString("delimiter", ",").firstOrNull()?.takeIf { it in CsvOptions.DELIMITERS } ?: ',', value.optBoolean("csvHeader"))
+    value.optString("delimiter", ",").firstOrNull()?.takeIf { it in CsvOptions.DELIMITERS } ?: ',', value.optBoolean("csvHeader"),
+    if (value.has("csvConfigured")) value.optBoolean("csvConfigured") else
+        value.optString("delimiter", ",") != "," || value.optBoolean("csvHeader") || value.optString("format") == FileKind.CSV.name)

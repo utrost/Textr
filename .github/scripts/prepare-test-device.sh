@@ -34,6 +34,9 @@ for attempt in $(seq 1 120); do
   sleep 1
 done
 [[ "$boot_ready" == true ]]
+"$adb_command" -s "$device_serial" shell wm size reset
+"$adb_command" -s "$device_serial" shell wm density reset
+"$adb_command" -s "$device_serial" shell settings put system font_scale 1.0
 for animation_setting in window_animation_scale transition_animation_scale animator_duration_scale; do
   "$adb_command" -s "$device_serial" shell settings put global "$animation_setting" 0
 done

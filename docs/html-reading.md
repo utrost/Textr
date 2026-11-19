@@ -29,3 +29,7 @@ Simple tables accept up to **100 rows**, **32 columns** and **1,000 cells**. A h
 Parser: pinned [jsoup 1.24.1](https://jsoup.org/download), used only with an in-memory reader and no network API. Its [MIT license](../app/src/main/assets/licenses/Jsoup-MIT.txt) and attribution are bundled in About → Open-source licenses.
 
 See [HTML validation evidence](validation-html-reading.md) for test coverage, exact source/APK identities and remaining device/CI limits.
+
+## Export the reading content
+
+The roadmap implementation offers **Save Markdown as…** for successful conversions, including HTML shared as content. It exports the exact converted representation as UTF-8 `.md` through the Android document picker. Review its deliberate omissions before reuse. Over-budget/failed conversion explains unavailable export; it never exports partial conversion. Cancellation and provider failures preserve the original. See [output scope, lifecycle and cleanup](save-as.md).

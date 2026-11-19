@@ -50,6 +50,14 @@ public class FixtureProvider extends ContentProvider {
             replacements.put(arg, new String(android.util.Base64.decode(extras.getString("text"), android.util.Base64.DEFAULT), StandardCharsets.UTF_8));
             revoked.remove(arg); missing.remove(arg); return Bundle.EMPTY;
         }
+        if ("output-fixture".equals(method)) {
+            long identity = android.os.Binder.clearCallingIdentity();
+            try {
+                Uri output = android.provider.DocumentsContract.buildDocumentUri("de.utrost.textr.test.outputs", arg);
+                getContext().grantUriPermission("de.utrost.textr", output, Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                return getContext().getContentResolver().call(output, extras.getString("operation"), arg, extras);
+            } finally { android.os.Binder.restoreCallingIdentity(identity); }
+        }
         if ("replace".equals(method)) { replacements.put(arg, extras.getString("text")); revoked.remove(arg); missing.remove(arg); return Bundle.EMPTY; }
         if ("missing".equals(method)) { missing.add(arg); return Bundle.EMPTY; }
         Uri target = Uri.parse(arg);

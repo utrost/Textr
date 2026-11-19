@@ -6,6 +6,10 @@
 
 The first UX iteration added contextual menus and About, outgoing sharing, remembered reading state, and format overrides. The owner subsequently authorized #28–#33: manual reload, source line navigation, pinned recents with Undo, a Markdown outline, a five-document switcher, and Open with. See [behavior and limits](open-documents.md). The original source and rendering limits remain in force.
 
+## Approved output extension (2026-11-19)
+
+The roadmap implementation adds explicit **Save Markdown as…** for bounded local/shared HTML conversion. This creates a new selected output document; the original stays read-only. No broad storage or persistent write permission is requested. Pending contents remain in memory, with one-operation outcome/reference metadata for interruption recovery. See [Save as behavior and privacy](save-as.md). Optional editing of TXT/Markdown copies is a separately tracked later roadmap extension; in-place editing remains excluded.
+
 ## Purpose
 
 Provide a minimal, read-only Android app for opening and reading everyday text files. Users can select Textr from other apps, choose it as a default handler where Android allows, open files through the system picker, and revisit recent files.
