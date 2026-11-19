@@ -1,6 +1,6 @@
 # Textr feature roadmap
 
-Updated 18 November 2026. Textr is an offline, read-only Android reader. The current candidate is **0.1-alpha**, available to repository maintainers as a draft GitHub prerelease. Public APK and store publication remain deferred.
+Updated 19 November 2026. Textr is an offline, read-only Android reader. The current candidate is **0.1-alpha**, available to repository maintainers as a draft GitHub prerelease. Public APK and store publication remain deferred.
 
 [Live tracker #14](https://github.com/utrost/Textr/issues/14) links the work below. Individual issues hold acceptance criteria; an implementation in a candidate branch is not the same as accepted and merged work. The phases describe delivery order, not dates or promised version numbers.
 
@@ -34,7 +34,7 @@ The last recorded PR #60 candidate CI evidence has failures (see [validation](va
 
 ## Approved feature extension — HTML Markdown reading view
 
-Requested after the alpha roadmap review: [#68 conversion](https://github.com/utrost/Textr/issues/68) and [#69 reader integration](https://github.com/utrost/Textr/issues/69). The candidate on `feat/html-markdown` adds bounded local/shared HTML conversion, an explicit English/German reading mode, safe links, headings/outline and source fallback. See [behavior and limits](html-reading.md). This is newer than `v0.1-alpha`; the existing APK is unchanged. Local acceptance passes build/lint, 59 JVM tests and the HTML/format/large-text confirmation cases on API 29/36; [validation](validation-html-reading.md) retains the initial full-suite result and test-synchronization correction. Hosted CI and merge acceptance remain pending. Live URL fetching remains outside scope.
+Requested after the alpha roadmap review: [#68 conversion](https://github.com/utrost/Textr/issues/68) and [#69 reader integration](https://github.com/utrost/Textr/issues/69). The candidate on `feat/html-markdown` adds bounded local/shared HTML conversion, an explicit English/German reading mode, safe links, headings/outline and source fallback. See [behavior and limits](html-reading.md). This is newer than `v0.1-alpha`; the existing APK is unchanged. Local acceptance passes build/lint, 59 JVM tests and the HTML/format/large-text confirmation cases on API 29/36; [validation](validation-html-reading.md) retains the initial full-suite result and test-synchronization correction. Hosted build/unit/lint and API 36 checks pass; API 29 CI is failing at the 19 November review and remains a merge blocker. Live URL fetching remains outside scope.
 
 ## Next — private beta feedback and reading reliability
 
@@ -49,19 +49,21 @@ Use [#56 real-device beta](https://github.com/utrost/Textr/issues/56) to collect
 
 Turn reproducible beta findings into focused issues with fixture, Android/WebView versions and acceptance criteria. Keep private document contents out of reports. Prioritize opening, data integrity and accessibility regressions before convenience features.
 
-## Later — feature proposals to select after feedback
+## Planned feature development
 
-The [proposed feature roadmap](feature-proposals.md), drafted 19 November, evaluates editing, more formats, structured navigation, HTML-to-Markdown export and document comparison. It recommends a sequence for discussion; these additions are not approved implementation commitments.
+The requested feature roadmap now has **five epics and 19 implementation issues**, all in planned state. The [feature roadmap and backlog](feature-proposals.md) contains the detailed scope, tradeoffs and dependency order. Epics are native children of [tracker #14](https://github.com/utrost/Textr/issues/14), with their implementation issues nested underneath.
 
-These are proposals, not approved implementation commitments. Select a small batch after the private beta; create feature issues with limits and verification criteria before starting work.
+| Sequence | Epic | Implementation issues | State |
+| --- | --- | --- | --- |
+| 1 — reader improvements | [#71](https://github.com/utrost/Textr/issues/71) — Reading comfort and structured navigation | [#76](https://github.com/utrost/Textr/issues/76), [#77](https://github.com/utrost/Textr/issues/77), [#78](https://github.com/utrost/Textr/issues/78), [#79](https://github.com/utrost/Textr/issues/79) | Planned |
+| 2 — focused format batch | [#72](https://github.com/utrost/Textr/issues/72) — Everyday text and configuration format support | [#80](https://github.com/utrost/Textr/issues/80), [#81](https://github.com/utrost/Textr/issues/81), [#82](https://github.com/utrost/Textr/issues/82), [#83](https://github.com/utrost/Textr/issues/83), [#84](https://github.com/utrost/Textr/issues/84) | Planned |
+| 3a — explicit export | [#73](https://github.com/utrost/Textr/issues/73) — Export HTML reading content as Markdown | [#85](https://github.com/utrost/Textr/issues/85), [#86](https://github.com/utrost/Textr/issues/86) | Planned |
+| 3b — compare documents | [#74](https://github.com/utrost/Textr/issues/74) — Bounded read-only document comparison | [#87](https://github.com/utrost/Textr/issues/87), [#88](https://github.com/utrost/Textr/issues/88), [#89](https://github.com/utrost/Textr/issues/89) | Planned |
+| 4 — deliberate editing extension | [#75](https://github.com/utrost/Textr/issues/75) — Optional plain-text and Markdown editing of copies | [#90](https://github.com/utrost/Textr/issues/90), [#91](https://github.com/utrost/Textr/issues/91), [#92](https://github.com/utrost/Textr/issues/92), [#93](https://github.com/utrost/Textr/issues/93), [#94](https://github.com/utrost/Textr/issues/94) | Planned |
 
-| Proposal | Benefit | Proposed boundary |
-| --- | --- | --- |
-| Per-document reading preferences | Reopen prose and code with their own preferred text size and wrapping | Metadata only; clear precedence over global defaults, reset action and lifecycle coverage |
-| Navigation within structured previews | Reach sections of large JSON/XML documents more quickly | Bounded read-only navigation; source remains complete and accessible; no scripts, editing or remote resources |
-| Reading appearance controls | Improve comfort for long prose and source reading | Evaluate font choices and line spacing with contrast, large-text, selection and position-restoration checks |
+Delivery sequence: accept the current reader/HTML candidate → reader improvements and focused formats → Markdown export and read-only comparison → optional TXT/Markdown editing of copies. Save as output is shared by export and editing; edit-copy saving follows the explicit scope/recovery work. Existing beta and distribution issues continue separately.
 
-Requests for larger files, editing, direct cloud access or new rendering behavior require a separate scope decision rather than silently widening these proposals.
+Current behavior remains read-only. Future export and editing issues define their output/privacy/encoding changes before implementation delivery. In-place editing, more languages, PDF/DOCX/EPUB and large/live logs remain deferred decisions. No dates or future version numbers are committed. These future feature epics are independent of the first public APK gate (#13); completing all of them is not a prerequisite for publishing the accepted baseline.
 
 ## Distribution work — separate from reader features
 

@@ -1,6 +1,29 @@
-# Proposed feature roadmap
+# Feature roadmap and implementation backlog
 
-Drafted 19 November 2026 for discussion. This is a product recommendation, not implementation authorization or a dated release commitment. The [delivery roadmap](roadmap.md) tracks accepted work and integration. Textr currently remains read-only, offline and limited to 5 MiB source files; editing, exports, additional formats and comparison below are proposed scope extensions where applicable.
+Updated 19 November 2026 following the request to create epics and issues. All new work is tracked as **planned**; the current application remains an offline, read-only reader with a 5 MiB source limit. The [delivery roadmap](roadmap.md) records the existing candidate, acceptance and distribution work. Editing/export are explicit future scope extensions. Delivery order below has no dates or version commitments.
+
+## Epics and implementation backlog
+
+Five epics and 19 implementation issues were created on 19 November 2026. They are native GitHub sub-issues: [roadmap #14](https://github.com/utrost/Textr/issues/14) → epic → implementation issue. Epics also include completion checklists. Existing alpha/reader-polish, HTML (#68/#69), beta (#56) and distribution issues remain in use.
+
+| Sequence | Epic | Implementation issues | State |
+| --- | --- | --- | --- |
+| 1 — reader improvements | [#71](https://github.com/utrost/Textr/issues/71) — Reading comfort and structured navigation | [#76](https://github.com/utrost/Textr/issues/76), [#77](https://github.com/utrost/Textr/issues/77), [#78](https://github.com/utrost/Textr/issues/78), [#79](https://github.com/utrost/Textr/issues/79) | Planned |
+| 2 — focused format batch | [#72](https://github.com/utrost/Textr/issues/72) — Everyday text and configuration format support | [#80](https://github.com/utrost/Textr/issues/80), [#81](https://github.com/utrost/Textr/issues/81), [#82](https://github.com/utrost/Textr/issues/82), [#83](https://github.com/utrost/Textr/issues/83), [#84](https://github.com/utrost/Textr/issues/84) | Planned |
+| 3a — explicit export | [#73](https://github.com/utrost/Textr/issues/73) — Export HTML reading content as Markdown | [#85](https://github.com/utrost/Textr/issues/85), [#86](https://github.com/utrost/Textr/issues/86) | Planned |
+| 3b — compare documents | [#74](https://github.com/utrost/Textr/issues/74) — Bounded read-only document comparison | [#87](https://github.com/utrost/Textr/issues/87), [#88](https://github.com/utrost/Textr/issues/88), [#89](https://github.com/utrost/Textr/issues/89) | Planned |
+| 4 — deliberate editing extension | [#75](https://github.com/utrost/Textr/issues/75) — Optional plain-text and Markdown editing of copies | [#90](https://github.com/utrost/Textr/issues/90), [#91](https://github.com/utrost/Textr/issues/91), [#92](https://github.com/utrost/Textr/issues/92), [#93](https://github.com/utrost/Textr/issues/93), [#94](https://github.com/utrost/Textr/issues/94) | Planned |
+
+No dates or future version numbers are committed. These future feature epics are independent of the first public APK gate (#13); completing all of them is not a prerequisite for publishing the accepted baseline. Finish acceptance/integration of the existing candidate first; reader and format work can then progress in small batches. Export and comparison are independent tracks. Editing is a later extension beginning with scope/encoding/recovery design; in-place editing remains deferred.
+
+## Dependencies and completion
+
+- Reading typography follows per-document preference precedence: [#76](https://github.com/utrost/Textr/issues/76) → [#77](https://github.com/utrost/Textr/issues/77). JSON and XML navigation can be developed independently with their own parser/security/budget limits.
+- HTML export follows the existing converter/reading view (#68/#69) and the new output flow: [#85](https://github.com/utrost/Textr/issues/85) → [#86](https://github.com/utrost/Textr/issues/86). The same output flow is reused by edit-copy saving.
+- Comparison: [#87](https://github.com/utrost/Textr/issues/87) → [#88](https://github.com/utrost/Textr/issues/88) → [#89](https://github.com/utrost/Textr/issues/89). Wide comparison retains unified/large-text fallback.
+- Editing: [#90](https://github.com/utrost/Textr/issues/90) → [#91](https://github.com/utrost/Textr/issues/91) → [#92](https://github.com/utrost/Textr/issues/92) → [#93](https://github.com/utrost/Textr/issues/93); saving also depends on [#85](https://github.com/utrost/Textr/issues/85). Draft find/replace ([#94](https://github.com/utrost/Textr/issues/94)) follows the edit session.
+
+Each implementation issue specifies outcome, acceptance criteria, dependencies and verification. Close children with exact-source evidence and user-facing documentation; close an epic only when its children are accepted. Preserve offline operation, Android 10+, existing source limits and source integrity. Scope/privacy changes for output files and recovery drafts are resolved in their design issues before delivery.
 
 ## Recommended direction
 
@@ -12,9 +35,9 @@ Make Textr a convenient reader and inspector for notes, saved web documents, sou
 | --- | --- | --- | --- |
 | Finish the current candidate | Accept reader-polish fixes, resolve hosted validation and integrate HTML reading (#68/#69) | A dependable base and a testing APK that includes the approved work | Existing work; acceptance pending |
 | Reader improvements | Per-document font/wrapping preferences; line-spacing/font choices; navigation within JSON/XML | More comfortable prose/code reading and faster inspection of structured files | Medium |
-| Focused format batch | Explicit `.env`, `.properties`, Dockerfile and TypeScript recognition/highlighting; TSV recognition using existing tab-delimited CSV support | Better everyday configuration/source handling without new document engines | Small–medium; select a subset |
+| Focused format batch | Explicit `.env`, `.properties`, Dockerfile and TypeScript recognition/highlighting; TSV recognition using existing tab-delimited CSV support | Better everyday configuration/source handling without new document engines | Small–medium; deliver issues individually |
 | Export and compare | Save converted HTML as a new Markdown file; bounded comparison of two text documents | Reuse saved articles and inspect configuration/text changes | Export: small–medium; compare: medium–large |
-| Optional light editing | Explicit edit mode for plain text and Markdown, starting with Save as copy | Make small corrections without leaving Textr | Large; requires a product/scope decision |
+| Optional light editing | Explicit edit mode for plain text and Markdown, starting with Save as copy | Make small corrections without leaving Textr | Large; begin with scope/recovery design issue [#90](https://github.com/utrost/Textr/issues/90) |
 | Later decisions | In-place editing, additional languages, rich document formats or large/live logs | Broader workflows if actual use warrants them | Evaluate separately |
 
 These phases need not become separate app versions. Feedback can change the order; no deadline or next version number is assigned.
@@ -44,7 +67,7 @@ Some candidate files can already open as plain text. A format issue should say e
 
 The HTML reading candidate already converts local/shared HTML into Markdown internally. Add an explicit **Save Markdown as…** action that creates a new user-selected file. Keep original-file sharing distinct from exporting generated content. Explain deliberate omissions and retain the converter's limits, cancellation and safe-link policy.
 
-Choose the destination through Android's document picker, handle failed/cancelled/partial writes, and verify the generated file can be reopened. Do not replace or rename the source document. This introduces an explicit output-file operation and needs an approved scope/permission/UI extension, even though the input remains unchanged.
+Choose the destination through Android's document picker, handle failed/cancelled/partial writes, and verify the generated file can be reopened. Do not replace or rename the source document. This explicit output-file operation is planned under [#73](https://github.com/utrost/Textr/issues/73); [#85](https://github.com/utrost/Textr/issues/85) defines its scope, permission and UI behavior while preserving the input.
 
 ## 4. Compare two documents
 
@@ -54,7 +77,7 @@ Define byte/line/diff-work limits and cancellation before choosing an algorithm.
 
 ## 5. Editing: useful, but a distinct mode
 
-Recommend light editing after reader reliability. It would change Textr's read-only promise, storage behavior, privacy documentation and validation requirements; discussion of this proposal does not authorize implementation.
+Light editing follows reader reliability under [#75](https://github.com/utrost/Textr/issues/75). It changes the current read-only promise, storage behavior, privacy documentation and validation requirements. Resolve the source/encoding/draft policy in [#90](https://github.com/utrost/Textr/issues/90) before the edit/save/recovery implementation tasks.
 
 Start with **Edit a copy** for plain text and Markdown:
 
@@ -72,4 +95,4 @@ Android's Storage Access Framework supports creating and editing user-selected d
 
 Finish acceptance of the approved candidate, then choose **reading profiles + structured navigation + a small configuration-format batch**. Follow with **HTML-to-Markdown export** and **bounded comparison**. Treat editing as the next deliberate product decision, starting with copies and Markdown/plain text. This sequence adds practical capabilities while preserving a dependable reading workflow.
 
-After selecting a batch, create focused issues with supported input/output, limits, acceptance tests and migration/privacy changes. Keep proposals separate from accepted work in #14 and the delivery roadmap.
+The linked implementation issues now define the work breakdown and acceptance criteria. Select and deliver small batches in the order above, recording tested source and updating #14. Additional languages, rich formats, in-place editing and large/live logs remain deferred ideas rather than part of the five epics.
