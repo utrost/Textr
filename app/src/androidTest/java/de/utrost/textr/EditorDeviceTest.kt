@@ -187,7 +187,21 @@ class EditorDeviceTest {
                 assertTrue(root.findViewById<TextView>(R.id.editor_match_count).text.contains("3"))
             }
             click(R.string.done)
-            scenario.onActivity { it.findViewById<Button>(R.id.editor_undo).performClick(); assertEquals(source, model(it).buffer!!.text) }
+            scenario.onActivity { it.findViewById<Button>(R.id.editor_undo).performClick(); assertEquals(source, model(it).buffer!!.text); it.findViewById<Button>(R.id.editor_find).performClick() }
+            val first = source.indexOf("cat")
+            val changed = source.replaceRange(first, first + 3, "catcat")
+            scenario.onActivity {
+                val root = roots().first { root -> root.findViewById<View>(R.id.editor_query) != null }
+                root.findViewById<EditText>(R.id.editor_replacement).setText("catcat")
+                nativeButton(root, R.string.next_match).performClick(); nativeButton(root, R.string.editor_replace).performClick()
+                assertEquals(changed, model(it).buffer!!.text)
+                assertEquals(source.indexOf("cat_") + 3, model(it).buffer!!.selection.start)
+            }
+            click(R.string.done)
+            scenario.onActivity {
+                it.findViewById<Button>(R.id.editor_undo).performClick(); assertEquals(source, model(it).buffer!!.text)
+                it.findViewById<Button>(R.id.editor_redo).performClick(); assertEquals(changed, model(it).buffer!!.text)
+            }
             val german = context.createConfigurationContext(android.content.res.Configuration(context.resources.configuration).apply { setLocale(java.util.Locale.GERMAN) })
             assertEquals("Kopie bearbeiten…", german.getString(R.string.editor_edit_copy))
         }
@@ -244,6 +258,8 @@ class EditorDeviceTest {
             scenario.onActivity {
                 val root = roots().first { it.findViewById<View>(R.id.editor_query) != null }
                 assertEquals("x", root.findViewById<EditText>(R.id.editor_query).text.toString()); assertEquals("y", root.findViewById<EditText>(R.id.editor_replacement).text.toString())
+                nativeButton(root, R.string.previous_match).performClick(); assertEquals(58, model(it).buffer!!.selection.start)
+                nativeButton(root, R.string.next_match).performClick(); assertEquals(0, model(it).buffer!!.selection.start)
                 root.findViewById<Button>(R.id.editor_replace_all).performClick(); assertEquals(original, model(it).buffer!!.text)
             }
             click(R.string.cancel)
@@ -325,6 +341,14 @@ class EditorDeviceTest {
                 scenario.recreate(); ready(scenario); editor(scenario) { assertEquals(source, it.text.toString()) }
             }
         } finally { device.executeShellCommand("wm size reset"); device.executeShellCommand("wm density reset"); device.executeShellCommand("settings put system font_scale $scale") }
+    }
+    private fun nativeButton(root: View, label: Int): Button {
+        fun find(view: View): Button? {
+            if (view is Button && view.text.toString() == context.getString(label)) return view
+            if (view is android.view.ViewGroup) for (index in 0 until view.childCount) find(view.getChildAt(index))?.let { return it }
+            return null
+        }
+        return find(root) ?: throw AssertionError("Missing native action: ${context.getString(label)}")
     }
     private fun roots() = WindowInspector.getGlobalWindowViews()
     private fun monitor(uri: Uri?): Instrumentation.ActivityMonitor = instrumentation.addMonitor(IntentFilter(Intent.ACTION_CREATE_DOCUMENT).apply { addCategory(Intent.CATEGORY_OPENABLE); addDataType("text/markdown") },

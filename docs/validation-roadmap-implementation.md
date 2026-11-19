@@ -66,3 +66,21 @@ Review added preservation when cancelling a blocked new-copy request, explicit d
 A new 200% software-keyboard test exposed an Android text-layout timeout for a 256 Ki-character single paragraph. Editor eligibility and every mutation now additionally enforce **4,096 characters per physical line and 10,000 lines**. The source reader keeps its 5 MiB limit. The unchanged maximum-character stress check passes on both APIs using 64-character physical lines, including visible Back while the software keyboard is open and atomic overflow rejection. Replacement entry is separately capped at 4 Ki characters to bound its native text control. No timeout was extended.
 
 **86 JVM tests** and lint pass for this implementation. The expanded targeted matrix contains 13 editor checks, four comparison checks, two reader-entry/handoff checks and the existing About/menu check (20 per API). Editor fixture cleanup waits for intentionally finishing checkpoint workers; dialog assertions wait for posted click callbacks. A final complete matrix contains **123 tests per API**. Completion evidence follows below.
+
+## Completed full validation and final navigation follow-up
+
+| Check | Android 10 / API 29 | Android 16 / API 36 |
+| --- | --- | --- |
+| Complete local regression, source `f1cad07` | **123/123 passed** | **123/123 passed** |
+| Complete [hosted run 44573677985](https://github.com/utrost/Textr/actions/runs/44573677985), source `f1cad07` | **123/123 passed** | **123/123 passed** |
+| Subsequent find-navigation corrections, focused native checks | **2/2 passed** | **2/2 passed** |
+| Actual forced process loss, task reopening, exact recovered text and explicit discard | **Passed** | **Passed** |
+| Unfinished checkpoint-file recovery | **Legacy `.bak` restored** | **Incomplete `.new` ignored/removed** |
+
+The full local Gradle command completed successfully in 15m47s, with debug build, **86 JVM tests**, lint and both connected suites. The hosted run also passed its build/unit/lint job using the pinned emulator. Reports are retained in the GitHub run artifacts. The final PR checks verify the pushed head after the small navigation follow-up.
+
+Final native checks correct Previous from an unselected search to select the last match, and make single Replace advance past inserted replacement text when that text itself contains the query. Both operations retain undo/redo and UTF-16 selection positions. The focused tests cover single/all replacement, first Previous/Next wrapping, confirmation and rotation; no assertion or deadline was relaxed.
+
+The process-loss probes use synthetic shared text and a completed private checkpoint, move the app to the background, forcibly kill its PID, simulate the platform’s unfinished checkpoint layout with app ownership preserved, then reopen the task/resume action. A new process restores exact text without the original in-memory shared source. Explicit Discard then removes the checkpoint. These probes run on both APIs; screenshots also confirm the recovered editor and native aligned wide comparison.
+
+All 19 roadmap implementation issues (#76–#94) have candidate implementations on PR #96. Epics/children remain open for integration and acceptance. Physical foldable and human speech-quality review under #56, production signing and release/publication gates remain separate. The existing `v0.1-alpha` artifact is unchanged.

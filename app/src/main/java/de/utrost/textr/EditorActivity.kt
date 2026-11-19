@@ -264,7 +264,7 @@ class EditorActivity : ReadingScreen() {
         case.setOnCheckedChangeListener { _, _ -> selected = -1; update() }; word.setOnCheckedChangeListener { _, _ -> selected = -1; update() }
         fun choose(delta: Int) {
             update(); if (ranges.isEmpty()) return
-            selected = Math.floorMod(selected + delta, ranges.size); state.selected = selected
+            selected = if (selected < 0) { if (delta < 0) ranges.lastIndex else 0 } else Math.floorMod(selected + delta, ranges.size); state.selected = selected
             val range = ranges[selected]; editor.setSelection(range.first, range.last + 1); buffer.select(EditSelection(range.first, range.last + 1))
             count.text = getString(R.string.editor_match_position, selected + 1, ranges.size)
         }
@@ -273,8 +273,12 @@ class EditorActivity : ReadingScreen() {
         body.addView(button(R.string.editor_replace) {
             update(); if (selected !in ranges.indices) { choose(1); return@button }
             val range = ranges[selected]
-            if (buffer.replace(range.first, range.last + 1, editorInsertion(replacement.text, model.draft?.endings.orEmpty()))) { renderBuffer(); model.changed(); selected--; choose(1) }
-            else Toast.makeText(this, R.string.editor_limit, Toast.LENGTH_LONG).show()
+            if (buffer.replace(range.first, range.last + 1, editorInsertion(replacement.text, model.draft?.endings.orEmpty()))) {
+                val after = buffer.selection.end
+                renderBuffer(); model.changed(); update()
+                val following = ranges.indexOfFirst { it.first >= after }.takeIf { it >= 0 } ?: 0
+                selected = following - 1; choose(1)
+            } else Toast.makeText(this, R.string.editor_limit, Toast.LENGTH_LONG).show()
         })
         body.addView(button(R.string.editor_replace_all) {
             val queryText = query.text.toString()
