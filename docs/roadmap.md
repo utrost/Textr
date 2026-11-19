@@ -51,6 +51,8 @@ Turn reproducible beta findings into focused issues with fixture, Android/WebVie
 
 ## Later — feature proposals to select after feedback
 
+The [proposed feature roadmap](feature-proposals.md), drafted 19 November, evaluates editing, more formats, structured navigation, HTML-to-Markdown export and document comparison. It recommends a sequence for discussion; these additions are not approved implementation commitments.
+
 These are proposals, not approved implementation commitments. Select a small batch after the private beta; create feature issues with limits and verification criteria before starting work.
 
 | Proposal | Benefit | Proposed boundary |
