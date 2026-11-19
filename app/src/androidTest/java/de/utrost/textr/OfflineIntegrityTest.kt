@@ -3,19 +3,19 @@ package de.utrost.textr
 import android.app.Instrumentation
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.net.Uri
 import android.os.CancellationSignal
+import android.view.KeyEvent
+import java.util.concurrent.CopyOnWriteArrayList
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
-import androidx.test.uiautomator.Until
 import org.junit.Assert.*
 import org.junit.Test
+import org.junit.Before
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
@@ -25,15 +25,28 @@ class OfflineIntegrityTest {
     private val device get() = UiDevice.getInstance(instrumentation)
     private val uri = Uri.parse("content://de.utrost.textr.test.documents/hostile.md")
 
+    @Before fun resetReaderMetadata() {
+        for (name in listOf("reading", "recent_files", "open_documents", "bookmarks"))
+            context.getSharedPreferences(name, Context.MODE_PRIVATE).edit().clear().commit()
+    }
+
     @Test fun hostileDocumentCannotLoadResourcesOrLaunchUntappedLinks() {
         val intent = Intent(Intent.ACTION_VIEW, uri, context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         val repository = DocumentRepository(context)
         val before = repository.read(uri, null, CancellationSignal()).text
-        ActivityScenario.launch<MainActivity>(intent).use { scenario ->
-            awaitReader(scenario)
-            val filter = IntentFilter(Intent.ACTION_VIEW).apply { addDataScheme("https"); addCategory(Intent.CATEGORY_BROWSABLE) }
-            val monitor = instrumentation.addMonitor(filter, Instrumentation.ActivityResult(0, null), true)
-            try {
+        val launches = CopyOnWriteArrayList<Intent>()
+        val monitor = object : Instrumentation.ActivityMonitor() {
+            override fun onStartActivity(intent: Intent): Instrumentation.ActivityResult? {
+                if (intent.action != Intent.ACTION_VIEW || !intent.hasCategory(Intent.CATEGORY_BROWSABLE)) return null
+                launches.add(Intent(intent))
+                return Instrumentation.ActivityResult(0, null)
+            }
+        }
+        // Monitor the complete launch/render lifecycle, not only the loaded page.
+        instrumentation.addMonitor(monitor)
+        try {
+            ActivityScenario.launch<MainActivity>(intent).use { scenario ->
+                awaitReader(scenario)
                 scenario.onActivity { activity ->
                     val web = activity.findViewById<WebView>(R.id.reader)
                     assertFalse(web.settings.javaScriptEnabled)
@@ -50,20 +63,32 @@ class OfflineIntegrityTest {
                     }
                 }
                 Thread.sleep(300)
-                assertEquals("No automatic external launch", 0, monitor.hits)
-                val link = device.wait(Until.findObject(By.text("Open external")), 5000)
-                if (link == null) {
-                    val hierarchy = java.io.ByteArrayOutputStream()
-                    device.dumpWindowHierarchy(hierarchy)
-                    android.util.Log.e("TextrOfflineTest", hierarchy.toString("UTF-8"))
+                assertEquals("No automatic external launch", 0, launches.size)
+                // This is a gesture/security test, independent of WebView 133's
+                // intermittently empty Android accessibility subtree (#59).
+                // Tab and Enter exercise a real browser user activation without JS.
+                var x = 0; var y = 0
+                scenario.onActivity { activity ->
+                    assertEquals("Preview", activity.findViewById<android.widget.Button>(R.id.display_mode).text.toString())
+                    val web = activity.findViewById<WebView>(R.id.reader)
+                    web.pageUp(true)
+                    val location = IntArray(2); web.getLocationOnScreen(location)
+                    x = location[0] + web.width / 2
+                    y = location[1] + web.height - (24 * activity.resources.displayMetrics.density).toInt()
                 }
-                assertNotNull("Rendered link is reachable", link)
-                link!!.click()
+                // A blank-area touch clears prior DOM focus and establishes touch
+                // mode before Tab enters the document's first link.
+                device.click(x, y)
+                assertEquals("A blank-area tap cannot launch a link", 0, launches.size)
+                device.pressKeyCode(KeyEvent.KEYCODE_TAB)
+                assertEquals("Focus navigation alone cannot launch a link", 0, launches.size)
+                device.pressKeyCode(KeyEvent.KEYCODE_ENTER)
                 val deadline = System.nanoTime() + 5_000_000_000L
-                while (monitor.hits == 0 && System.nanoTime() < deadline) Thread.sleep(50)
-                assertTrue("A deliberate tap opens the external handler", instrumentation.checkMonitorHit(monitor, 1))
-            } finally { instrumentation.removeMonitor(monitor) }
-        }
+                while (launches.isEmpty() && System.nanoTime() < deadline) Thread.sleep(50)
+                assertEquals("One deliberate keyboard activation opens the external handler", 1, launches.size)
+                assertEquals("https://example.com/textr-validation", launches.single().data.toString())
+            }
+        } finally { instrumentation.removeMonitor(monitor) }
         repository.remove(uri.toString())
         repository.clear()
         assertEquals("Viewing and history operations must preserve source bytes", before, repository.read(uri, null, CancellationSignal()).text)
