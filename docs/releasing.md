@@ -12,7 +12,7 @@ The draft includes the APK, SHA-256 checksum, public signing certificate fingerp
 
 ## Private 0.2-alpha update
 
-The owner requested a new release on 20 November 2026. Version `0.2-alpha` (code 2) includes the roadmap implementation from PR #96 and retains the 0.1-alpha development signing identity for in-place updates. It remains a draft prerelease for private testing; production signing is deferred. See [release notes](release-notes-0.2-alpha.md).
+The owner requested a new release on 20 November 2026. Version `0.2-alpha` (code 2) includes the roadmap implementation from PR #96 and retains the 0.1-alpha development signing identity for in-place updates. It remains a draft prerelease for private testing; production signing is deferred. See [release notes](release-notes-0.2-alpha.md) and the [private draft release](https://github.com/utrost/Textr/releases/tag/untagged-91b226e699ea4047e362).
 
 ## Prepare the signing identity
 
@@ -55,7 +55,7 @@ sha256sum app/build/outputs/apk/release/app-release.apk
 
 Record the public certificate SHA-256 fingerprint with the release. Confirm `de.utrost.textr`, the intended version, minimum API 29, target API 36, no network/broad-storage permission, and packaged licenses. Confirm the release is not debuggable. Test clean installation and replacement of a previous version signed with this identity using `adb install -r`; settings and recent references must survive.
 
-Version defaults are in `app/build.gradle.kts`. For a disposable upgrade rehearsal only, `-PtextrVersionCode=2 -PtextrVersionName=0.1.1-test` produces a higher-version test APK. Public upgrades must increment the committed version code and use the retained release key.
+Version defaults are in `app/build.gradle.kts`. For a disposable upgrade rehearsal only, `-PtextrVersionCode=3 -PtextrVersionName=0.2.1-test` produces a higher-version test APK. Public upgrades must increment the committed version code and use the retained release key.
 
 ## Publish
 

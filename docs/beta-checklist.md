@@ -11,6 +11,9 @@ For each session record commit/APK checksum, device model, Android version, WebV
 - [ ] Test English/German and 200% system font in compact, landscape and split-screen windows.
 - [ ] On Magic V6, opt into the sidebar; fold/unfold, rotate and resize while reading/searching. Check position, mode, focus and content continuity. Check the central crease with actual hardware.
 - [ ] Test keyboard navigation where available, including fields/dialogs retaining shortcuts.
+- [ ] Exercise per-document typography, JSON/XML navigation and HTML-to-Markdown reading/export with synthetic files.
+- [ ] Compare two files in compact/wide layouts. Edit a TXT/Markdown copy, recover after process loss, Save as and verify original bytes stay unchanged.
+- [ ] Upgrade 0.1-alpha to 0.2-alpha with the same signing identity; verify history, bookmarks and settings on the physical device.
 - [ ] Record failures and fixes, and retest the exact final candidate.
 
 Any Play testing track or tester invitations require the owner’s account and distribution decision. Do not count emulator sessions as the account’s required tester cohort.

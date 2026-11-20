@@ -1,6 +1,6 @@
 # HTML Markdown reading view
 
-The candidate implementation for [#68](https://github.com/utrost/Textr/issues/68) and [#69](https://github.com/utrost/Textr/issues/69) adds an offline reading view for saved HTML. It is newer than the immutable `v0.1-alpha` testing release and is not included in that APK.
+The implementation for [#68](https://github.com/utrost/Textr/issues/68) and [#69](https://github.com/utrost/Textr/issues/69) adds an offline reading view for saved HTML. It is included in 0.2-alpha; the immutable 0.1-alpha APK predates this feature.
 
 ## Open and read
 
@@ -18,7 +18,7 @@ Original HTML is never loaded as a WebView page. Scripts, styles, embedded frame
 
 Only absolute `http`, `https` and `mailto` links are retained. Relative URLs, original-document fragments, unsafe schemes and malformed links become their visible label. No base URL is inferred, and `<base>` is ignored. Retained links use the existing external-handler action after a user tap. The app still has no network permission, and WebView JavaScript, network/resource loading, file/content access and DOM storage stay disabled.
 
-Conversion never changes the original bytes or replaces the shared file with generated Markdown. Sharing URI-backed documents continues to copy original bytes with read-only grants, including their original encoding/BOM/line endings. Sharing short, session-only HTML text sends its original decoded text with the HTML MIME type. There is no generated-Markdown export in this change.
+Conversion never changes the original bytes or replaces the shared file with generated Markdown. Sharing URI-backed documents continues to copy original bytes with read-only grants, including their original encoding/BOM/line endings. Sharing short, session-only HTML text sends its original decoded text with the HTML MIME type. **Save Markdown as…** separately exports the converted reading content; sharing continues to preserve the original.
 
 ## Limits and fallback
 
@@ -28,7 +28,7 @@ Simple tables accept up to **100 rows**, **32 columns** and **1,000 cells**. A h
 
 Parser: pinned [jsoup 1.24.1](https://jsoup.org/download), used only with an in-memory reader and no network API. Its [MIT license](../app/src/main/assets/licenses/Jsoup-MIT.txt) and attribution are bundled in About → Open-source licenses.
 
-See [HTML validation evidence](validation-html-reading.md) for test coverage, exact source/APK identities and remaining device/CI limits.
+See the [original HTML validation record](validation-html-reading.md) for implementation history and [final roadmap validation](validation-roadmap-implementation.md) for the complete green API 29/36 matrix and 0.2-alpha release evidence.
 
 ## Export the reading content
 

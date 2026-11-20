@@ -1,5 +1,7 @@
 # Backlog implementation validation
 
+Historical validation record for the batch below. For the current 0.2-alpha test matrix and release evidence, see [roadmap implementation validation](validation-roadmap-implementation.md). Earlier failures and test counts are retained as recorded.
+
 Issues #28–#33 implement the owner-authorized reader navigation and document-session extension. [Behavior and limits](open-documents.md) record the session cap, memory policy, Back behavior, restoration, permission ownership, pinning, Undo, and navigation budgets. Public release remains deferred.
 
 ## Automated coverage

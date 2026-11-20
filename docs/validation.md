@@ -1,4 +1,8 @@
-# Textr 0.1.0 validation
+# Validation records
+
+Current testing release: **0.2-alpha**. See [roadmap implementation validation](validation-roadmap-implementation.md) for 86 JVM tests, 123 device tests per API 29/36, final hosted evidence and signed-release/upgrade verification. [Release notes](release-notes-0.2-alpha.md) and the [roadmap](roadmap.md) distinguish available features from review and physical-device acceptance.
+
+## Historical 0.1.0 baseline
 
 This record describes development-build validation on 2026-11-12. Public release and selection of a production signing identity are deferred at the owner's request. No physical device was available; the owner selected emulator validation.
 

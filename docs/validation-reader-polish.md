@@ -1,5 +1,7 @@
 # Reader polish and validation fixes
 
+Historical validation record for the batch below. For the current 0.2-alpha test matrix and release evidence, see [roadmap implementation validation](validation-roadmap-implementation.md). Earlier failures and test counts are retained as recorded.
+
 Date: 18 November 2026. This local follow-up builds on draft PR #60 for #49, #54 and #55 and implements the #59 compatibility fallback and #61 test-activation fix. Public release remains deferred.
 
 ## Resulting behavior

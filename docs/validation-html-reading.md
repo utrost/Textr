@@ -1,5 +1,7 @@
 # HTML reading-view validation
 
+Historical validation record for the batch below. For the current 0.2-alpha test matrix and release evidence, see [roadmap implementation validation](validation-roadmap-implementation.md). Earlier failures and test counts are retained as recorded.
+
 Date: 18 November 2026. Candidate branch: `feat/html-markdown`. Implements [#68](https://github.com/utrost/Textr/issues/68) and [#69](https://github.com/utrost/Textr/issues/69), based on the private alpha/reader-validation candidate. The published draft `v0.1-alpha` APK is unchanged.
 
 ## Behavior checked

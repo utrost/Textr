@@ -1,5 +1,7 @@
 # Additional-format validation
 
+Historical validation record for the batch below. For the current 0.2-alpha test matrix and release evidence, see [roadmap implementation validation](validation-roadmap-implementation.md). Earlier failures and test counts are retained as recorded.
+
 Issues [#36](https://github.com/utrost/Textr/issues/36), [#37](https://github.com/utrost/Textr/issues/37), [#38](https://github.com/utrost/Textr/issues/38), and [#39](https://github.com/utrost/Textr/issues/39) add source highlighting and bounded iCalendar event summaries. [Format behavior and limits](formats.md) define the supported subset. Public release remains deferred.
 
 ## Automated coverage

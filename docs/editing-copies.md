@@ -1,6 +1,6 @@
 # Editing text and Markdown copies
 
-Design for #90–#94, recorded before editor implementation. The original reader remains read-only. Editing is an explicit **Edit a copy…** action for original TXT/Markdown source, with a separate native editor. HTML reading conversions must first be exported and reopened as Markdown. The editor never writes to its input URI; every save uses the existing create-document flow and original-URI guard.
+Implemented for #90–#94 and included in 0.2-alpha. The scope and recovery design was recorded before implementation. The original reader remains read-only. Editing is an explicit **Edit a copy…** action for original TXT/Markdown source, with a separate native editor. HTML reading conversions must first be exported and reopened as Markdown. The editor never writes to its input URI; every save uses the existing create-document flow and original-URI guard.
 
 ## Bounded state and recovery
 

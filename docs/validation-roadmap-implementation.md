@@ -1,6 +1,6 @@
 # Roadmap implementation validation
 
-Implementation started 19 November 2026, with an eight-hour work window. Features are delivered in tested batches; the original private alpha release is unchanged.
+Implementation started 19 November 2026, with an eight-hour work window. Features were delivered in tested batches and are included in 0.2-alpha. The original 0.1-alpha artifact remains unchanged.
 
 ## Reading profiles and typography (#76, #77)
 
@@ -92,3 +92,9 @@ Final application source `9a84ef4` passed all 123 hosted API 29 checks. Its firs
 The security test now monitors the complete activity launch/render lifecycle, verifies zero external BROWSABLE launches while loading, while tapping blank document space and while focusing a link, then uses real Tab/Enter browser activation and requires exactly one launch to the fixture’s precise HTTPS URL. It does not enable JavaScript, query the DOM through a bridge, fake a trusted navigation callback or extend deadlines. Existing network/image/file/content/storage restrictions, blocked-request checks, shared-content disk scans and original-source integrity assertions remain. Reader fixture metadata is reset and a blank-area touch establishes consistent DOM/input focus before keyboard navigation. This tests user-gesture security independently of the known virtual-tree omission; it does not claim that #59 or human spoken-feedback acceptance is resolved. No application code changed for this follow-up.
 
 The revised two-check offline suite passed three consecutive runs on **each API** (6/6 checks per API), and the final editor → HTML reading → HTML export → offline sequence passed **21/21 on API 29 and 21/21 on API 36**. Instrumentation compilation and lint pass. The full hosted matrix retains all 123 checks per API for the final revision.
+
+## Final hosted acceptance and private release
+
+[Hosted run 44590125674](https://github.com/utrost/Textr/actions/runs/44590125674) at `352d178254749316fd71972148629d785297d4f2` passed build/lint, **86 JVM tests**, and **123/123 device tests on each API 29 and API 36**. This supersedes the intermediate failures recorded above; reports remain attached to the run. The WebView investigation and physical/human acceptance remain open.
+
+On 20 November 2026, release commit `e4d3ce7182978d235f6035f439e4f169adff5b60` changed only version defaults and release documentation. Its clean release build/lint passed. The `v0.2-alpha` APK was verified for signature, ZIP alignment, package/version, non-debuggable status, absent network/broad-storage permissions and packaged notices. On API 36, upgrading the original signed 0.1-alpha preserved its dismissed hint setting; fresh installation and cold launch also passed. All downloaded draft assets passed their uploaded SHA-256 checksums and the APK signature was verified again. See the [draft release](https://github.com/utrost/Textr/releases/tag/untagged-91b226e699ea4047e362) for artifact-specific hashes and verification output. These release smoke checks do not substitute for physical-device review.

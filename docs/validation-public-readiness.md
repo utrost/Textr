@@ -1,5 +1,7 @@
 # Public-readiness validation
 
+Historical validation record for the batch below. For the current 0.2-alpha test matrix and release evidence, see [roadmap implementation validation](validation-roadmap-implementation.md). Earlier failures and test counts are retained as recorded.
+
 Date: 15 November 2026. Covers #49, #54 and #55, repository documentation/screenshots, and preparatory portions of #53/#57/#59. Public binary release and production signing remain deferred.
 
 This record describes the original candidate. The [18 November reader-polish follow-up](validation-reader-polish.md) records subsequent #59/#61 fixes and verification without changing the historical failures below.

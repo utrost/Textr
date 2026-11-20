@@ -1,5 +1,7 @@
 # Everyday reading validation
 
+Historical validation record for the batch below. For the current 0.2-alpha test matrix and release evidence, see [roadmap implementation validation](validation-roadmap-implementation.md). Earlier failures and test counts are retained as recorded.
+
 Scope: issues #41, #42, #43, #47 and #48. Public release and production signing remain deferred. See [behavior and limits](everyday-reading.md).
 
 ## Automated coverage

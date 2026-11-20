@@ -1,6 +1,6 @@
 # Feature roadmap and implementation backlog
 
-Updated 19 November 2026 following the request to create epics and issues. Implementation is underway; reader improvements (#76–#79) and everyday formats (#80–#84) are implemented on the roadmap implementation branch and awaiting integration. HTML Markdown export (#85/#86) and the bounded diff engine (#87) are also implemented on the branch. The comparison interface (#88/#89) is implemented on the branch; TXT/Markdown copy editing (#90–#94) is implemented on the branch with completed local regression; integration and acceptance remain pending. The reader remains offline with a 5 MiB source limit and unchanged original bytes. The [delivery roadmap](roadmap.md) records the existing candidate, acceptance and distribution work. Export is an explicit output scope extension; editing is an explicit separate mode with one private recovery draft. Delivery order below has no dates or version commitments.
+Updated 20 November 2026. All five epics and 19 implementation issues below are implemented in [PR #96](https://github.com/utrost/Textr/pull/96) and available in the **0.2-alpha private testing release**. Integration and acceptance remain pending. Build/lint, 86 JVM tests and 123 device tests per API 29/36 passed; see [validation](validation-roadmap-implementation.md). The [delivery roadmap](roadmap.md) records current testing, integration and distribution work. The remaining sections retain the design rationale and implementation dependency order, rather than an unimplemented feature queue. The reader remains offline with a 5 MiB source limit and unchanged originals; export creates separate outputs and copy editing retains one private recovery draft.
 
 ## Epics and implementation backlog
 
@@ -8,13 +8,13 @@ Five epics and 19 implementation issues were created on 19 November 2026. They a
 
 | Sequence | Epic | Implementation issues | State |
 | --- | --- | --- | --- |
-| 1 — reader improvements | [#71](https://github.com/utrost/Textr/issues/71) — Reading comfort and structured navigation | [#76](https://github.com/utrost/Textr/issues/76), [#77](https://github.com/utrost/Textr/issues/77), [#78](https://github.com/utrost/Textr/issues/78), [#79](https://github.com/utrost/Textr/issues/79) | Implemented on branch; integration/acceptance pending |
-| 2 — focused format batch | [#72](https://github.com/utrost/Textr/issues/72) — Everyday text and configuration format support | [#80](https://github.com/utrost/Textr/issues/80), [#81](https://github.com/utrost/Textr/issues/81), [#82](https://github.com/utrost/Textr/issues/82), [#83](https://github.com/utrost/Textr/issues/83), [#84](https://github.com/utrost/Textr/issues/84) | Implemented on branch; integration/acceptance pending |
-| 3a — explicit export | [#73](https://github.com/utrost/Textr/issues/73) — Export HTML reading content as Markdown | [#85](https://github.com/utrost/Textr/issues/85), [#86](https://github.com/utrost/Textr/issues/86) | Implemented on branch; integration/acceptance pending |
-| 3b — compare documents | [#74](https://github.com/utrost/Textr/issues/74) — Bounded read-only document comparison | [#87](https://github.com/utrost/Textr/issues/87), [#88](https://github.com/utrost/Textr/issues/88), [#89](https://github.com/utrost/Textr/issues/89) | Implemented on branch; integration/acceptance pending |
-| 4 — deliberate editing extension | [#75](https://github.com/utrost/Textr/issues/75) — Optional plain-text and Markdown editing of copies | [#90](https://github.com/utrost/Textr/issues/90), [#91](https://github.com/utrost/Textr/issues/91), [#92](https://github.com/utrost/Textr/issues/92), [#93](https://github.com/utrost/Textr/issues/93), [#94](https://github.com/utrost/Textr/issues/94) | Implemented on branch; integration/acceptance pending |
+| 1 — reader improvements | [#71](https://github.com/utrost/Textr/issues/71) — Reading comfort and structured navigation | [#76](https://github.com/utrost/Textr/issues/76), [#77](https://github.com/utrost/Textr/issues/77), [#78](https://github.com/utrost/Textr/issues/78), [#79](https://github.com/utrost/Textr/issues/79) | In 0.2-alpha; integration/acceptance pending |
+| 2 — focused format batch | [#72](https://github.com/utrost/Textr/issues/72) — Everyday text and configuration format support | [#80](https://github.com/utrost/Textr/issues/80), [#81](https://github.com/utrost/Textr/issues/81), [#82](https://github.com/utrost/Textr/issues/82), [#83](https://github.com/utrost/Textr/issues/83), [#84](https://github.com/utrost/Textr/issues/84) | In 0.2-alpha; integration/acceptance pending |
+| 3a — explicit export | [#73](https://github.com/utrost/Textr/issues/73) — Export HTML reading content as Markdown | [#85](https://github.com/utrost/Textr/issues/85), [#86](https://github.com/utrost/Textr/issues/86) | In 0.2-alpha; integration/acceptance pending |
+| 3b — compare documents | [#74](https://github.com/utrost/Textr/issues/74) — Bounded read-only document comparison | [#87](https://github.com/utrost/Textr/issues/87), [#88](https://github.com/utrost/Textr/issues/88), [#89](https://github.com/utrost/Textr/issues/89) | In 0.2-alpha; integration/acceptance pending |
+| 4 — deliberate editing extension | [#75](https://github.com/utrost/Textr/issues/75) — Optional plain-text and Markdown editing of copies | [#90](https://github.com/utrost/Textr/issues/90), [#91](https://github.com/utrost/Textr/issues/91), [#92](https://github.com/utrost/Textr/issues/92), [#93](https://github.com/utrost/Textr/issues/93), [#94](https://github.com/utrost/Textr/issues/94) | In 0.2-alpha; integration/acceptance pending |
 
-No dates or future version numbers are committed. These future feature epics are independent of the first public APK gate (#13); completing all of them is not a prerequisite for publishing the accepted baseline. Finish acceptance/integration of the existing candidate first; reader and format work can then progress in small batches. Export and comparison are independent tracks. Editing is a later extension beginning with scope/encoding/recovery design; in-place editing remains deferred.
+The implementation sequence below is complete in the testing release. Next: review/integrate the stacked candidate and collect private beta feedback. Physical-device/human accessibility acceptance and distribution gates remain separate. Later product extensions require their own scope decisions; no future dates or versions are committed.
 
 ## Dependencies and completion
 
@@ -33,14 +33,14 @@ Make Textr a convenient reader and inspector for notes, saved web documents, sou
 
 | Phase | Recommended work | User benefit | Relative effort |
 | --- | --- | --- | --- |
-| Finish the current candidate | Accept reader-polish fixes, resolve hosted validation and integrate HTML reading (#68/#69) | A dependable base and a testing APK that includes the approved work | Existing work; acceptance pending |
+| Integrate the current candidate | Review the tested reader/HTML/roadmap stack and collect 0.2-alpha feedback | An accepted base for the next distribution decision | Implementation/testing release complete; review pending |
 | Reader improvements | Per-document font/wrapping preferences; line-spacing/font choices; navigation within JSON/XML | More comfortable prose/code reading and faster inspection of structured files | Medium |
 | Focused format batch | Explicit `.env`, `.properties`, Dockerfile and TypeScript recognition/highlighting; TSV recognition using existing tab-delimited CSV support | Better everyday configuration/source handling without new document engines | Small–medium; deliver issues individually |
 | Export and compare | Save converted HTML as a new Markdown file; bounded comparison of two text documents | Reuse saved articles and inspect configuration/text changes | Export: small–medium; compare: medium–large |
 | Optional light editing | Explicit edit mode for plain text and Markdown, starting with Save as copy | Make small corrections without leaving Textr | Large; begin with scope/recovery design issue [#90](https://github.com/utrost/Textr/issues/90) |
 | Later decisions | In-place editing, additional languages, rich document formats or large/live logs | Broader workflows if actual use warrants them | Evaluate separately |
 
-These phases need not become separate app versions. Feedback can change the order; no deadline or next version number is assigned.
+The reader, formats, export/comparison and editing phases are all included in 0.2-alpha. Relative effort records the original planning assessment. Later decisions remain uncommitted.
 
 ## 1. Improve the reader
 

@@ -40,7 +40,7 @@ def nodes():
 
 def click(value):
     for node in nodes():
-        if value in (node.get('text'), node.get('content-desc')):
+        if value in (node.get('text'), node.get('content-desc'), node.get('resource-id')):
             import re
             x1,y1,x2,y2=map(int,re.findall(r'\d+',node.get('bounds')))
             shell('input','tap',(x1+x2)//2,(y1+y2)//2); time.sleep(.5); return
@@ -101,6 +101,38 @@ try:
     prefs(theme='dark', sidebarHintDismissed=True)
     shell('cmd','locale','set-app-locales',pkg,'--locales','en')
     launch('Weekend.md',markdown); capture('reading-dark.png')
+    shell('pm', 'clear', pkg)
+    prefs(theme='light', openingHintDismissed=True)
+    launch('Saved-article.html', '<html><body><article><h1>A quieter reading space</h1><p>Saved HTML, read offline as Markdown.</p><h2>Keep what matters</h2><ul><li>Headings and readable text</li><li>Lists, links and code</li><li>No scripts or remote images</li></ul><p>Export a separate Markdown copy from the menu.</p></article></body></html>')
+    click('Highlighted'); click('Markdown reading view')
+    shell('input', 'swipe', '540', '650', '540', '1600', '300')
+    capture('reading-html.png')
+    shell('pm', 'clear', pkg)
+    prefs(theme='light', openingHintDismissed=True)
+    launch('Reader-settings.json', '{\n  "reader": {\n    "theme": "light",\n    "offline": true,\n    "font": "sans-serif"\n  },\n  "formats": ["Markdown", "JSON", "HTML"],\n  "maxOpenDocuments": 5\n}\n')
+    click('More options'); click('Structure'); capture('reading-structure.png')
+    shell('input', 'keyevent', '4')
+    shell('pm', 'clear', pkg)
+    prefs(theme='light', openingHintDismissed=True)
+    launch('Copy-notes.md', '# Weekend notes\n\n- Walk by the river\n- Bring a notebook\n- Leave room for a detour\n\nOriginal files stay unchanged.\nSave your edits as a separate file.\n')
+    click('More options'); click('Edit a copy…'); click('android:id/button1')
+    for _ in range(20):
+        if any(n.get('resource-id') == pkg+':id/editor_text' for n in nodes()): break
+        time.sleep(.5)
+    else: raise RuntimeError('Editor did not finish loading')
+    capture('reading-editor.png')
+    shell('input', 'keyevent', '4')
+    shell('pm', 'clear', pkg)
+    prefs(theme='light', openingHintDismissed=True)
+    launch('Notes-revised.txt', 'Weekend plans\nWalk by the river\nBring a camera\nMeet at ten\n')
+    launch('Notes-original.txt', 'Weekend plans\nWalk by the river\nBring a notebook\nMeet at nine\n')
+    shell('wm','size','1600x1200'); shell('wm','density','240')
+    click('More options'); click('Compare source…'); click(pkg+':id/compare_right'); click('Notes-revised.txt')
+    for _ in range(20):
+        if any(n.get('resource-id') == pkg+':id/compare_status' and 'Change ' in n.get('text','') for n in nodes()): break
+        time.sleep(.5)
+    else: raise RuntimeError('Comparison did not finish')
+    capture('reading-comparison.png')
 finally:
     shell('am','force-stop',pkg)
     shell('cmd','locale','set-app-locales',pkg)

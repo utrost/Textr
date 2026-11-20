@@ -6,7 +6,7 @@ Draft for owner review, based on current source behavior. Not a submitted declar
 | --- | --- |
 | App collection | No developer collection or transmission; documents and reading state are processed on device. No app network permission or analytics SDK. |
 | Sharing | Explicit user actions can share original-file copies or selected text with chosen apps. Review the user-initiated sharing exception when answering the form; do not describe the app as incapable of sharing. |
-| Local data | URI/name/timestamp/settings, reading state, bookmark names and source fingerprints; source contents are held in memory. Temporary share copies are bounded and cleaned as described in the policy. |
+| Local data | URI/name/timestamp/settings, reading state, bookmark names and source fingerprints; reading/comparison contents are held in memory. Explicit copy editing retains one content-bearing private recovery checkpoint, excluded from backup, until explicit discard or successful saving of its matching revision. Temporary share copies are bounded and cleaned as described in the policy. Explicit Save as creates a separate document with the selected provider. |
 | Accounts | No accounts or account creation; no server-side account-deletion mechanism. Clearing app storage/uninstalling removes local app data. |
 | Security claims | Do not claim encryption in transit for an app that does not transmit data. Android storage and provider behavior are separate from app features. |
 | External components | Document providers and user-opened browsers/apps have their own behavior. WebView metrics are opted out; Android/WebView crash settings remain platform-controlled. |

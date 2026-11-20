@@ -4,15 +4,21 @@ Textr is an offline text reader and inspector for Android, with explicit editing
 
 **Android 10+ · Offline · English and German · GPL-3.0-only**
 
-**Roadmap implementation:** [PR #96](https://github.com/utrost/Textr/pull/96) adds the features described below in tested batches. These source changes are newer than the existing `0.1-alpha` APK.
+**Current testing release:** [0.2-alpha](https://github.com/utrost/Textr/releases/tag/untagged-91b226e699ea4047e362) (version code 2), a private draft prerelease for repository maintainers. It includes HTML-to-Markdown reading/export, reading profiles, structured navigation, more text formats, comparison and TXT/Markdown copy editing. It updates 0.1-alpha in place with the same development signing identity. See [release notes](docs/release-notes-0.2-alpha.md).
 
-**Candidate status:** the public-readiness changes in [PR #60](https://github.com/utrost/Textr/pull/60) are implemented but unmerged. A local follow-up addresses its [WebView accessibility #59](https://github.com/utrost/Textr/issues/59) and [Android 10 reopening #61](https://github.com/utrost/Textr/issues/61) blockers. See the [reader-polish fixes and validation](docs/validation-reader-polish.md), including remaining acceptance limits, and the [original candidate results](docs/validation-public-readiness.md).
+**Integration status:** the implementation is available in the testing APK and [PR #96](https://github.com/utrost/Textr/pull/96); the stacked PRs remain open. Build/lint, 86 JVM tests and 123 device tests on each of API 29/36 passed for the implementation. [Validation](docs/validation-roadmap-implementation.md) distinguishes those checks from outstanding physical-device and human TalkBack review. The WebView accessibility investigation [#59](https://github.com/utrost/Textr/issues/59) remains open.
 
-**Status:** private-testing alpha, version 0.1-alpha. The source is public. There is no public APK or Play Store release yet; production signing and app publication remain deferred. You can [build and install it locally](#build-and-install).
+The source is public. Public APK distribution, production signing and store publication remain deferred. Draft release assets require repository write access; everyone can [build locally](#build-and-install).
 
 | Markdown preview | JavaScript source | Optional wide-screen sidebar |
 | --- | --- | --- |
 | ![Markdown preview in Textr](docs/images/reading-markdown.png) | ![JavaScript source with syntax highlighting](docs/images/reading-javascript.png) | ![Textr with its optional file sidebar on a wide emulator window](docs/images/reading-wide.png) |
+
+| HTML as Markdown | JSON structure | Edit a Markdown copy |
+| --- | --- | --- |
+| ![Saved HTML in the offline Markdown reading view](docs/images/reading-html.png) | ![Native JSON structure navigation](docs/images/reading-structure.png) | ![Native copy editor with Save as and undo controls](docs/images/reading-editor.png) |
+
+![Read-only comparison with linked side-by-side source views](docs/images/reading-comparison.png)
 
 [More screenshots and capture details](docs/screenshots.md) · [Feature roadmap](docs/roadmap.md)
 
@@ -32,7 +38,7 @@ Textr is an offline text reader and inspector for Android, with explicit editing
 - Provides English and German controls, errors, preview labels and offline help, following the device/app language. Document contents are never translated.
 - Shows reading, preparation and layout stages, with cancellation and explanations when loading takes longer.
 
-Opening a format does not guarantee highlighting. Generic configuration files use plain text unless their syntax is recognized. HTML opens as source; the candidate adds an optional offline [Markdown reading view](docs/html-reading.md) for saved/shared HTML. CSV starts as text; table preview requires explicit delimiter/header choices. See [formats and limits](docs/formats.md) and [everyday format rules](docs/everyday-formats.md).
+Opening a format does not guarantee highlighting. Generic configuration files use plain text unless their syntax is recognized. HTML opens as source and offers an optional offline [Markdown reading view](docs/html-reading.md) for saved/shared HTML. CSV starts as text; table preview requires explicit delimiter/header choices. See [formats and limits](docs/formats.md) and [everyday format rules](docs/everyday-formats.md).
 
 ## Open a file
 
@@ -74,7 +80,7 @@ Use `gradlew.bat` on Windows. Debug builds use a development signing key and are
 
 - Automatic decoding supports UTF-8 and BOM-marked UTF-16. Explicit encoding choices also support Windows-1252, ISO-8859-1 and UTF-16 without a BOM.
 - Previews and highlighting have [bounded complexity and size](docs/formats.md); larger or invalid previews fall back to source. Large text files and long lines may display slowly.
-- Markdown images, raw embedded HTML and relative file links are unsupported. Local HTML conversion is available in the newer candidate; it never loads the original page or remote resources. Calendar recurrence is not expanded; no events or alarms are imported.
+- Markdown images, raw embedded HTML and relative file links are unsupported. Local HTML conversion is available in 0.2-alpha; it never loads the original page or remote resources. Calendar recurrence is not expanded; no events or alarms are imported.
 - Search is literal, within one file; source results are capped at 200. Copy editing accepts at most 256 Ki characters, 10,000 lines and 4,096 characters per line; comparison has separate [input/work limits](docs/comparison.md). No in-place editing, file management, unbounded tabs, or huge-log support.
 - WebView 133 can omit CSV cells and source nodes. **⋮ → Accessible table… → Show source** provides a native compatibility route for bounded CSV documents. See [behavior and validation](docs/validation-reader-polish.md). Human spoken-feedback and physical foldable checks remain follow-ups.
 - Public APK release, real-device beta and optional Play distribution have separate remaining gates in the [roadmap](docs/roadmap.md).

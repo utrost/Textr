@@ -23,7 +23,9 @@ Install `app/build/outputs/apk/debug/app-debug.apk` with `adb install -r`. This 
 - `DocumentRenderer` and `SyntaxHighlighter` are plain Kotlin/JVM components. Previews never alter source. JSON formatting preserves duplicate keys and numeric spelling; malformed or overly nested JSON falls back to source. Highlighting accepts up to 512 Ki characters and stops adding spans after 10,000 tokens to bound the WebView node count.
 - The WebView receives generated HTML through an intercepted in-memory HTTPS response, avoiding oversized data URLs. Source is escaped as a stream to avoid allocating its full HTML expansion; soft-break elements at safe ASCII boundaries bound old WebView layout work without adding source characters. Cross-boundary search and full copying have regression coverage. Controls become available after a visual-state callback confirms layout, and renderer termination offers a plain-text retry. JavaScript, network loading, images, file access, content access, and DOM storage are disabled. A restrictive content security policy and request interception provide additional isolation. External web/email links require a user tap.
 
-Reading preferences and recent metadata stay on the device and are excluded from backup/transfer rules. Source text is not written to saved-instance bundles or preferences. URI-based documents can be reloaded after process recreation when access remains valid; unreferenced shared text is session-only.
+`StructuredNavigation` provides bounded native JSON/XML navigation. `ReadingProfile` resolves per-document typography against global defaults. `ComparisonActivity`/its session retain bounded read-only source snapshots and use the deterministic diff engine. `OutputSession` owns explicit create-document output and interruption metadata. `EditorActivity`/`EditorSession` provide bounded TXT/Markdown copy editing; `EditDraftStore` retains one content-bearing AtomicFile checkpoint in no-backup private storage. See [editor recovery](editing-copies.md), [comparison](comparison.md) and [Save as](save-as.md).
+
+Reading preferences and recent metadata stay on the device and are excluded from backup/transfer rules. Source text is not written to saved-instance bundles or preferences. Explicit copy editing is the documented private content-storage exception: its recovery checkpoint is retained until discard or saving the matching revision. URI-based documents can be reloaded after process recreation when access remains valid; unreferenced shared text is session-only.
 
 ## Automated checks
 
@@ -41,7 +43,7 @@ Reports are generated under `app/build/reports/tests/`, `app/build/reports/andro
 
 Validation uses clean Android 10, 15, and 16 emulators (API 29, 35, and 36). The owner explicitly selected emulator validation because no physical device is available. That satisfies the original compatibility work; the later physical-device beta in #56 remains open before claiming provider, TalkBack or Magic V6 validation. CI runs build, unit tests, lint, and API 29/36 instrumentation for pull requests and the default branch.
 
-Completed configurations and evidence are recorded in [baseline validation](validation.md) and [reader UX validation](validation-reader-ux.md).
+Current 0.2-alpha evidence is in [roadmap implementation validation](validation-roadmap-implementation.md): 86 JVM tests and 123 device tests per API 29/36 passed. Earlier [baseline](validation.md) and [reader UX](validation-reader-ux.md) records retain historical configurations and counts.
 
 ## Manual acceptance checklist
 
