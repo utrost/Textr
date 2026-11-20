@@ -25,7 +25,7 @@ The implementation passed build/lint, **86 JVM tests and 123 device tests on eac
 ## Now — reliability and private beta
 
 - **Integration complete:** PR #96 merged the reader-polish, HTML and roadmap stack into `main` at `07a1f7c`. PR #60 is merged; #70/#95 were closed as included. All 19 feature implementation issues and five epics are complete, along with HTML conversion/reading (#68/#69) and recent-file activation correction (#61).
-- **Current CI follow-up [#97](https://github.com/utrost/Textr/issues/97):** [main run 44716759569](https://github.com/utrost/Textr/actions/runs/44716759569) passed build/unit/lint and API 36. API 29 completed 123 cases, passing 122; `FoldableLayoutTest.windowTransitionsPreserveDocumentModePositionAndFind` expected scroll 600 but observed 0. Reproduce and distinguish synchronization from application restoration failure; retain the assertions and rerun the matrix after fixing the cause. This is an assertion failure, separate from earlier dependency-download failures.
+- **Position-loss follow-up [#97](https://github.com/utrost/Textr/issues/97):** main run 44716759569 recorded API 29 scroll 0 instead of 600. [PR #117](https://github.com/utrost/Textr/pull/117) fixes a reproduced application state-loss path during unfinished WebView layout. Full local and final hosted API 29/36 matrices pass; original assertions remain, with three further repeated transition/regression pairs per API. The candidate awaits integration; see [validation](validation-reliability.md).
 - **Private beta [#56](https://github.com/utrost/Textr/issues/56):** real providers, human TalkBack speech quality and physical foldable transitions remain unverified.
 - **WebView investigation [#59](https://github.com/utrost/Textr/issues/59):** the native CSV/source compatibility views are included, while the underlying accessibility omission remains unresolved.
 
@@ -44,11 +44,11 @@ Turn reproducible beta findings into focused issues with fixture, Android/WebVie
 
 ## Next roadmap — reliable daily use
 
-The next roadmap adds **six epics and 13 implementation issues**. These are follow-ups, separate from the five completed 0.2-alpha epics; the reliability implementation is in progress and the other tracks remain planned. No date or version is promised. Existing reliability, private-beta and distribution issues remain open and are linked from the new epics rather than duplicated.
+The next roadmap adds **six epics and 13 implementation issues**. These are follow-ups, separate from the five completed 0.2-alpha epics; the reliability implementation is tested in PR #117 awaiting integration and the other tracks remain planned. No date or version is promised. Existing reliability, private-beta and distribution issues remain open and are linked from the new epics rather than duplicated.
 
 | Order | Epic | New implementation issues | State |
 | --- | --- | --- | --- |
-| 1 | [#98](https://github.com/utrost/Textr/issues/98) — Reliable daily use: recovery and acceptance | [#99](https://github.com/utrost/Textr/issues/99) | Implementation in progress; #56/#59 acceptance remains open |
+| 1 | [#98](https://github.com/utrost/Textr/issues/98) — Reliable daily use: recovery and acceptance | [#99](https://github.com/utrost/Textr/issues/99) | Software implemented in [PR #117](https://github.com/utrost/Textr/pull/117); review pending; #56/#59 remain open |
 | 2 | [#100](https://github.com/utrost/Textr/issues/100) — Copy editor polish: preview, navigation and saved copies | [#101](https://github.com/utrost/Textr/issues/101), [#102](https://github.com/utrost/Textr/issues/102), [#103](https://github.com/utrost/Textr/issues/103) | Planned |
 | 3 | [#104](https://github.com/utrost/Textr/issues/104) — Comparison improvements: draft review and portable diffs | [#105](https://github.com/utrost/Textr/issues/105), [#106](https://github.com/utrost/Textr/issues/106), [#107](https://github.com/utrost/Textr/issues/107) | Planned |
 | 4 | [#108](https://github.com/utrost/Textr/issues/108) — Reading organization: recents search and reference collections | [#109](https://github.com/utrost/Textr/issues/109), [#110](https://github.com/utrost/Textr/issues/110) | Planned |
@@ -112,4 +112,4 @@ After merging #96, ten fully merged remote branches and four local branches were
 
 ## Reliability implementation follow-up
 
-The first implementation batch addresses #97 and #99: pending-position preservation during recreation, actionable opening/output errors, cancellation returning to the previous reader snapshot, explicit bookmark reconnection and private-recovery retry. See [behavior](recovery.md) and [validation](validation-reliability.md). Full validation and integration are pending; #98 remains open for #56 physical acceptance and #59 WebView investigation.
+The first implementation batch addresses #97 and #99: pending-position preservation during recreation, actionable opening/output errors, cancellation returning to the previous reader snapshot, explicit bookmark reconnection and private-recovery retry. See [behavior](recovery.md) and [validation](validation-reliability.md). Validation passes on `35ecbc4`: 86 JVM tests, lint and hosted 129/129 device tests per API 29/36; unchanged application source also passes full local suites and repeated position-restoration checks. [PR #117](https://github.com/utrost/Textr/pull/117) awaits integration; #98 remains open for #56 physical acceptance and #59 WebView investigation.

@@ -20,7 +20,7 @@ The source is public. Public APK distribution, production signing and store publ
 
 ![Read-only comparison with linked side-by-side source views](docs/images/reading-comparison.png)
 
-The reliability follow-up implements clearer [opening/save recovery](docs/recovery.md) and preserves pending reading position during recreation. It is undergoing validation separately from the 0.2-alpha APK; see [evidence and remaining acceptance](docs/validation-reliability.md).
+The reliability follow-up implements clearer [opening/save recovery](docs/recovery.md) and preserves pending reading position during recreation. It is tested in [PR #117](https://github.com/utrost/Textr/pull/117), awaiting integration, and is separate from the 0.2-alpha APK. Build/lint, 86 JVM tests and 129 device tests per API 29/36 pass; see [evidence and remaining acceptance](docs/validation-reliability.md).
 
 [More screenshots and capture details](docs/screenshots.md) · [Feature roadmap](docs/roadmap.md)
 
