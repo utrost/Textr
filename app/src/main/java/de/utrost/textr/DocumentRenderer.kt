@@ -18,13 +18,17 @@ import java.io.StringWriter
 
 data class OutlineHeading(val id: String, val title: String, val level: Int)
 
-data class PreparedDocument(val source: TextDocument, val preview: String?, val notice: PreviewNotice = PreviewNotice.NONE, val headings: List<OutlineHeading> = emptyList()) {
+data class PreparedDocument(val source: TextDocument, val preview: String?, val notice: PreviewNotice = PreviewNotice.NONE, val headings: List<OutlineHeading> = emptyList(), val structure: StructuredOutline? = null, val convertedMarkdown: String? = null) {
     val modes: List<DisplayMode> get() = buildList {
         add(DisplayMode.PLAIN)
         if (source.kind !in setOf(FileKind.TEXT, FileKind.CSV) && source.text.length <= RenderPolicy.MAX_HIGHLIGHT_CHARS) add(DisplayMode.HIGHLIGHTED)
         if (preview != null) add(DisplayMode.PREVIEW)
     }
-    val defaultMode: DisplayMode get() = if (source.kind == FileKind.CSV) DisplayMode.PLAIN else modes.last()
+    val defaultMode: DisplayMode get() = when (source.kind) {
+        FileKind.CSV -> DisplayMode.PLAIN
+        FileKind.HTML -> if (DisplayMode.HIGHLIGHTED in modes) DisplayMode.HIGHLIGHTED else DisplayMode.PLAIN
+        else -> modes.last()
+    }
     val fingerprint: String by lazy { java.security.MessageDigest.getInstance("SHA-256").digest(source.text.toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) } }
 }
 
@@ -34,10 +38,11 @@ object DocumentRenderer {
             .maxStringLength(MAX_FILE_BYTES).maxNumberLength(MAX_FILE_BYTES).build()
     ).build()
 
-    fun prepare(document: TextDocument, csv: CsvOptions = CsvOptions()): PreparedDocument {
+    fun prepare(document: TextDocument, csv: CsvOptions = CsvOptions(), translate: (String) -> String = { it }): PreparedDocument {
         RenderPolicy.checkCancellation()
+        val structure = if (document.kind in setOf(FileKind.JSON, FileKind.XML)) StructureParser.parse(document.text, document.kind) else null
         if (document.kind == FileKind.JSON && document.bytes > RenderPolicy.MAX_JSON_PREVIEW_BYTES) {
-            return PreparedDocument(document, null, PreviewNotice.JSON_LIMIT)
+            return PreparedDocument(document, null, PreviewNotice.JSON_LIMIT, structure = structure)
         }
         if (document.kind == FileKind.MARKDOWN && document.text.length > RenderPolicy.MAX_MARKDOWN_CHARS) {
             return PreparedDocument(document, null, PreviewNotice.MARKDOWN_LIMIT)
@@ -45,13 +50,18 @@ object DocumentRenderer {
         if (document.kind == FileKind.ICALENDAR && document.text.length > CalendarPreview.MAX_CHARS) {
             return PreparedDocument(document, null, PreviewNotice.CALENDAR_LIMIT)
         }
+        if (document.kind == FileKind.HTML && document.text.length > HtmlMarkdown.MAX_CHARS) {
+            return PreparedDocument(document, null, PreviewNotice.HTML_LIMIT)
+        }
+        var convertedMarkdown: String? = null
         val headings = mutableListOf<OutlineHeading>()
         val preview = try {
             when (document.kind) {
                 FileKind.JSON -> prettyJson(document.text)?.let { "<pre>${SyntaxHighlighter.escape(it)}</pre>" }
-                FileKind.MARKDOWN -> markdown(document.text, headings)
-                FileKind.ICALENDAR -> CalendarPreview.render(document.text)
-                FileKind.CSV -> CsvPreview.render(document.text, csv)
+                FileKind.MARKDOWN -> markdown(document.text, headings, translate)
+                FileKind.HTML -> markdown(HtmlMarkdown.convert(document.text, translate).also { convertedMarkdown = it }, headings, translate)
+                FileKind.ICALENDAR -> CalendarPreview.render(document.text, translate)
+                FileKind.CSV -> CsvPreview.render(document.text, csv, translate)
                 else -> null
             }
         } catch (_: StackOverflowError) {
@@ -64,10 +74,10 @@ object DocumentRenderer {
         RenderPolicy.checkCancellation()
         val notice = if (preview == null && document.kind == FileKind.CSV) PreviewNotice.CSV_UNAVAILABLE else if (preview == null && document.kind != FileKind.TEXT && document.text.length > RenderPolicy.MAX_HIGHLIGHT_CHARS) {
             PreviewNotice.HIGHLIGHT_LIMIT
-        } else if (preview == null && document.kind in setOf(FileKind.MARKDOWN, FileKind.JSON, FileKind.ICALENDAR)) {
+        } else if (preview == null && document.kind in setOf(FileKind.MARKDOWN, FileKind.JSON, FileKind.ICALENDAR, FileKind.HTML)) {
             PreviewNotice.UNAVAILABLE
         } else PreviewNotice.NONE
-        return PreparedDocument(document, preview, notice, if (preview != null) headings else emptyList())
+        return PreparedDocument(document, preview, notice, if (preview != null) headings else emptyList(), structure, convertedMarkdown)
     }
 
     fun prettyJson(text: String): String? = try {
@@ -113,7 +123,7 @@ object DocumentRenderer {
     } catch (_: java.io.IOException) { null }
       catch (_: IllegalArgumentException) { null }
 
-    fun markdown(source: String, headings: MutableList<OutlineHeading> = mutableListOf()): String {
+    fun markdown(source: String, headings: MutableList<OutlineHeading> = mutableListOf(), translate: (String) -> String = { it }): String {
         require(source.length <= RenderPolicy.MAX_MARKDOWN_CHARS)
         RenderPolicy.checkCancellation()
         val extensions = listOf(TablesExtension.create())
@@ -143,10 +153,10 @@ object DocumentRenderer {
                 }
                 val id = "heading-${headings.size + 1}"
                 headingIds[current] = id
-                headings.add(OutlineHeading(id, label.toString().take(160).ifBlank { "Untitled heading" }, current.level))
+                headings.add(OutlineHeading(id, label.toString().take(160).ifBlank { translate("Untitled heading") }, current.level))
             }
             when (current) {
-                is Image -> { current.insertBefore(Text("[image omitted]")); current.unlink() }
+                is Image -> { current.insertBefore(Text(translate("[image omitted]"))); current.unlink() }
                 is HtmlBlock, is HtmlInline -> current.unlink()
                 else -> {
                     var child = current.lastChild
@@ -164,7 +174,7 @@ object DocumentRenderer {
     }
 
     /** Each request gets a fresh stream; plain text is escaped in small chunks. */
-    fun page(document: PreparedDocument, mode: DisplayMode, dark: Boolean, wrap: Boolean, lineNumbers: Boolean = false, targetLine: Int = 0, match: SourceMatch? = null): HtmlPage {
+    fun page(document: PreparedDocument, mode: DisplayMode, dark: Boolean, wrap: Boolean, lineNumbers: Boolean = false, targetLine: Int = 0, match: SourceMatch? = null, font: ReadingFont = ReadingFont.SANS, lineSpacing: Int = 160): HtmlPage {
         val plain = mode == DisplayMode.PLAIN || (mode == DisplayMode.PREVIEW && document.preview == null)
         val content = if (plain) document.source.text else when (mode) {
             DisplayMode.PREVIEW -> document.preview!!
@@ -173,7 +183,7 @@ object DocumentRenderer {
         }
         val source = mode != DisplayMode.PREVIEW || plain
         val numbered = source && lineNumbers && logicalLines(document.source.text) <= MAX_NUMBERED_LINES
-        return HtmlPage(header(dark, wrap) + if (source) (if (numbered) "<pre class=\"numbered\">" else "<pre>") else "", content,
+        return HtmlPage(header(dark, wrap, font, lineSpacing) + if (source) (if (numbered) "<pre class=\"numbered\">" else "<pre>") else "", content,
             (if (source) "</pre>" else "") + "</body></html>", plain, plain && wrap, numbered, if (source) targetLine else 0, match.takeIf { plain })
     }
 
@@ -183,7 +193,7 @@ object DocumentRenderer {
     const val MAX_NUMBERED_LINES = 10_000
     fun logicalLines(text: String): Int = 1 + text.indices.count { text[it] == '\n' || (text[it] == '\r' && text.getOrNull(it + 1) != '\n') }
 
-    private fun header(dark: Boolean, wrap: Boolean): String {
+    private fun header(dark: Boolean, wrap: Boolean, font: ReadingFont, lineSpacing: Int): String {
         val background = if (dark) "#171c1a" else "#fafaf7"
         val foreground = if (dark) "#e3e9e5" else "#202923"
         return """<!doctype html><html><head><meta charset="utf-8">
@@ -191,9 +201,9 @@ object DocumentRenderer {
             <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'none'; script-src 'none'; base-uri 'none'; form-action 'none'">
             <style>
             :root { color-scheme: ${if (dark) "dark" else "light"}; }
-            body { margin: 0; padding: 20px; background: $background; color: $foreground; font-family: sans-serif; line-height: 1.6; overflow-wrap: break-word; overflow-wrap: anywhere; }
+            body { margin: 0; padding: 20px; background: $background; color: $foreground; font-family: ${font.css}; line-height: ${lineSpacing.coerceIn(120, 220) / 100.0}; overflow-wrap: break-word; overflow-wrap: anywhere; }
             pre, code { font-family: monospace; }
-            pre { margin: 0; white-space: ${if (wrap) "pre-wrap" else "pre"}; word-break: ${if (wrap) "break-all" else "normal"}; overflow-wrap: ${if (wrap) "anywhere" else "normal"}; tab-size: 4; line-height: 1.6; }
+            pre { margin: 0; white-space: ${if (wrap) "pre-wrap" else "pre"}; word-break: ${if (wrap) "break-all" else "normal"}; overflow-wrap: ${if (wrap) "anywhere" else "normal"}; tab-size: 4; line-height: ${lineSpacing.coerceIn(120, 220) / 100.0}; }
             pre.numbered { padding-left: 4.5em; }
             .line-marker { position: relative; }
             .line-marker::before { content: attr(data-line); position: absolute; right: 1em; width: 3.5em; text-align: right; color: ${if (dark) "#a6b3ab" else "#63766a"}; user-select: none; -webkit-user-select: none; }

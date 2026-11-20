@@ -18,5 +18,10 @@
             android:authorities="de.utrost.textr.test.documents"
             android:exported="true"
             android:grantUriPermissions="true" />
+        <provider android:name="de.utrost.textr.OutputFixtureProvider"
+            android:authorities="de.utrost.textr.test.outputs" android:exported="true"
+            android:permission="android.permission.MANAGE_DOCUMENTS" android:grantUriPermissions="true">
+            <intent-filter><action android:name="android.content.action.DOCUMENTS_PROVIDER" /></intent-filter>
+        </provider>
     </application>
 </manifest>

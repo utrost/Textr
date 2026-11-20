@@ -5,10 +5,10 @@ import java.util.Locale
 /** Lightweight source decoration, deliberately not a compiler or an interpreter. */
 object SourceHighlighter {
     val kinds = setOf(FileKind.JAVA, FileKind.JAVASCRIPT, FileKind.CSS, FileKind.KOTLIN,
-        FileKind.PYTHON, FileKind.SHELL, FileKind.SQL, FileKind.DIFF, FileKind.ICALENDAR)
-    private val slashComments = setOf(FileKind.JAVA, FileKind.JAVASCRIPT, FileKind.KOTLIN, FileKind.CSS)
+        FileKind.PYTHON, FileKind.SHELL, FileKind.SQL, FileKind.DIFF, FileKind.ICALENDAR, FileKind.TYPESCRIPT, FileKind.TSX) + ConfigurationHighlighter.kinds
+    private val slashComments = setOf(FileKind.JAVA, FileKind.JAVASCRIPT, FileKind.KOTLIN, FileKind.CSS, FileKind.TYPESCRIPT, FileKind.TSX)
     private val hashComments = setOf(FileKind.PYTHON, FileKind.SHELL)
-    private val backticks = setOf(FileKind.JAVASCRIPT, FileKind.SHELL)
+    private val backticks = setOf(FileKind.JAVASCRIPT, FileKind.SHELL, FileKind.TYPESCRIPT, FileKind.TSX)
     private val tripleStrings = setOf(FileKind.JAVA, FileKind.KOTLIN, FileKind.PYTHON)
     private val keywords = mapOf(
         FileKind.JAVA to "abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for if implements import instanceof int interface long native new package private protected public record return sealed short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null",
@@ -19,7 +19,12 @@ object SourceHighlighter {
         FileKind.SQL to "select from where insert into values update set delete create alter drop table index view join inner outer left right full cross on as and or not null true false is in exists between like distinct order by group having limit offset union all with recursive case when then else end primary foreign key references constraint default begin commit rollback grant revoke"
     ).mapValues { (_, value) -> value.split(' ').toSet() }
 
-    fun highlight(text: String, kind: FileKind): String = buildString(text.length) {
+    private val typeKeywords = "abstract any as asserts bigint boolean constructor declare enum implements infer interface is keyof module namespace never number object private protected public readonly require satisfies string symbol type unique unknown override".split(' ').toSet()
+
+    fun highlight(text: String, kind: FileKind): String =
+        if (kind in ConfigurationHighlighter.kinds) ConfigurationHighlighter.highlight(text, kind) else decorate(text, kind)
+
+    private fun decorate(text: String, kind: FileKind): String = buildString(text.length) {
         var index = 0
         var tokens = 0
         var braces = 0
@@ -38,6 +43,13 @@ object SourceHighlighter {
                 return end
             }
             when {
+                kind == FileKind.TSX && c == '<' && (text.getOrNull(index + 1)?.isLetter() == true || text.getOrNull(index + 1) in listOf('/', '>')) -> {
+                    index++
+                    if (text.getOrNull(index) == '/') index++
+                    while (index < text.length && (text[index].isLetterOrDigit() || text[index] in "._:-")) index++
+                    if (text.getOrNull(index) == '>') index++
+                    style = "key"
+                }
                 kind == FileKind.DIFF -> {
                     index = lineEnd(index)
                     if (index == start) index++
@@ -106,7 +118,8 @@ object SourceHighlighter {
                     var after = index
                     while (after < text.length && text[after] in " \t") after++
                     style = when {
-                        (if (kind == FileKind.SQL) word.lowercase(Locale.ROOT) else word) in keywords[kind].orEmpty() -> "literal"
+                        (if (kind == FileKind.SQL) word.lowercase(Locale.ROOT) else word) in keywords[if (kind in setOf(FileKind.TYPESCRIPT, FileKind.TSX)) FileKind.JAVASCRIPT else kind].orEmpty() ||
+                            (kind in setOf(FileKind.TYPESCRIPT, FileKind.TSX) && word in typeKeywords) -> "literal"
                         c.isDigit() -> "number"
                         kind == FileKind.CSS && (braces == 0 || text.getOrNull(after) == ':' || c == '@') -> "key"
                         kind == FileKind.CSS && c == '#' -> "number"

@@ -1,89 +1,96 @@
 # Textr
 
-Textr is a minimal, read-only text viewer for Android. Open files from other apps or the system file picker, revisit recent files, and switch between plain text, syntax highlighting, and supported formatted previews.
+Textr is an offline text reader and inspector for Android, with explicit editing of separate TXT/Markdown copies. Open files from other apps or the system file picker, revisit recent files, and switch between plain text, syntax highlighting, and supported formatted previews.
 
-**Status: early development build (0.1.0).** The Android app is implemented and can be built locally. Public release and production signing are deferred; no public APK is available.
+**Android 10+ · Offline · English and German · GPL-3.0-only**
 
-## Current features
+**Current testing release:** [0.2-alpha](https://github.com/utrost/Textr/releases/tag/untagged-91b226e699ea4047e362) (version code 2), a private draft prerelease for repository maintainers. It includes HTML-to-Markdown reading/export, reading profiles, structured navigation, more text formats, comparison and TXT/Markdown copy editing. It updates 0.1-alpha in place with the same development signing identity. See [release notes](docs/release-notes-0.2-alpha.md).
 
-- Android 10 and newer.
-- Everyday text files up to 5 MiB (5,242,880 bytes).
-- TXT, LOG, CONF/CFG, INI, JSON, Markdown, YAML, TOML, XML, CSV, Java, JavaScript, CSS, HTML, Kotlin, Python, shell, SQL, diff/patch, and iCalendar, with other text files available through the system file picker.
-- Automatic display selection: rendered Markdown, formatted JSON, supported iCalendar event summaries, syntax-highlighted source for recognized syntax, and plain text otherwise.
-- Manual switching between applicable display modes, with plain-text source always available for supported text files.
-- Search the displayed view, or search source with case/whole-word options, snippets and line-number results.
-- Text selection, copying and sharing, adjustable font size, line wrapping, and light/dark themes.
-- Share original files through Android; reopen recent files at their last position and display mode.
-- Document information and a remembered **Treat as…** format override for misidentified or generic files.
-- Manual reload, source line numbers and Go to line, and a Markdown heading outline.
-- A five-document switcher with active-document labels and a tab strip on wide screens, pinned recents with Undo, and read-only **Open with…** handoff.
-- An optional [file sidebar for foldable and tablet screens](docs/foldable-layout.md), with automatic compact-window fallback.
-- Per-file encoding overrides, encoding/line information, and offline help for opening files and Android defaults.
-- Optional CSV tables, approximate reading progress, up to 100 named bookmarks, and hardware keyboard shortcuts. See [reading extras](docs/reading-extras.md).
-- A minimal home screen with an **Open file** action and recent files. Remove individual entries or clear the history.
+**Integration status:** the implementation is available in the testing APK and [PR #96](https://github.com/utrost/Textr/pull/96); the stacked PRs remain open. Build/lint, 86 JVM tests and 123 device tests on each of API 29/36 passed for the implementation. [Validation](docs/validation-roadmap-implementation.md) distinguishes those checks from outstanding physical-device and human TalkBack review. The WebView accessibility investigation [#59](https://github.com/utrost/Textr/issues/59) remains open.
 
-Opening a format does not guarantee syntax highlighting. Basic highlighting covers JSON, Markdown source, INI, YAML, TOML, XML, and the [additional source formats](docs/formats.md). Generic configuration files use plain text unless the provider identifies a supported syntax. CSV opens as text, with an optional bounded table preview and explicit delimiter/header choices.
+The source is public. Public APK distribution, production signing and store publication remain deferred. Draft release assets require repository write access; everyone can [build locally](#build-and-install).
 
-Markdown previews support headings, lists, links, quotes, code blocks, and tables. Images are replaced with an omission marker; embedded HTML is removed. Web and email links open in an external app only when tapped. JSON previews add indentation without modifying the file; invalid JSON remains readable as source.
+| Markdown preview | JavaScript source | Optional wide-screen sidebar |
+| --- | --- | --- |
+| ![Markdown preview in Textr](docs/images/reading-markdown.png) | ![JavaScript source with syntax highlighting](docs/images/reading-javascript.png) | ![Textr with its optional file sidebar on a wide emulator window](docs/images/reading-wide.png) |
 
-iCalendar previews summarize events with explicit date/time-zone labels and unexpanded recurrence metadata. Unsupported calendars remain readable as source. HTML stays an escaped source view. See [format behavior and limits](docs/formats.md).
+| HTML as Markdown | JSON structure | Edit a Markdown copy |
+| --- | --- | --- |
+| ![Saved HTML in the offline Markdown reading view](docs/images/reading-html.png) | ![Native JSON structure navigation](docs/images/reading-structure.png) | ![Native copy editor with Save as and undo controls](docs/images/reading-editor.png) |
 
-## Opening files and choosing a default
+![Read-only comparison with linked side-by-side source views](docs/images/reading-comparison.png)
 
-See the [installation and default-app guide](docs/installing.md) for screenshots and step-by-step instructions.
+[More screenshots and capture details](docs/screenshots.md) · [Feature roadmap](docs/roadmap.md)
 
-Use **Open file** to select a document through Android's system picker, or choose Textr in another app's **Open with** or **Share** menu. Shared text can also be read; text without a file reference is not added to recent history. Long-press document text to select, copy, or share it. The **⋮** menu offers file sharing, document information, reading settings, and About. Choose **Treat as…** in the reader menu or Document info to override syntax detection; **Automatic** restores normal detection. **Find** searches the currently displayed view. Its **⋯** button opens **Search source…**, with case/whole-word options and results that jump to plain text. **Document info → Reopen with encoding…** handles older encodings. [Search, encoding and navigation details](docs/everyday-reading.md).
 
-Android's default-app behavior depends on the sending app and the reported file type, including its MIME type. Where Android offers the choice, you can select Textr as the default handler. Textr cannot guarantee a default association for every filename extension in every app. The file picker provides another way to select text files.
+## What it does
 
-The last 30 recent files store references and metadata locally, including the last display mode, scroll position, and optional format override, without retaining document contents. Positions are approximate when the file or text layout changes. Removing an entry offers ten seconds of Undo and then removes its history preferences. Open-document state is separate; clearing history leaves open documents and bookmarks available. Reopening depends on continued access: moved, deleted, or temporarily shared files may become unavailable. Textr prompts you to reopen unavailable files through the picker. Removing a recent entry or clearing history does not delete the underlying files.
+- Opens text files up to **5 MiB** through Android’s file picker, **Open with**, or **Share**.
+- Reads TXT, LOG, CONF/CFG, INI, JSON, Markdown, YAML, TOML, XML, CSV/TSV, .env, .properties, Dockerfile, Java, JavaScript, TypeScript/TSX, CSS, HTML, Kotlin, Python, shell, SQL, diff/patch, and iCalendar. Other text files can be opened through the picker.
+- Offers plain text, lightweight syntax highlighting, and supported Markdown, JSON, calendar and optional CSV previews. Plain text remains the baseline.
+- Searches the displayed view or the complete source, with case/whole-word matching, line numbers and snippets. Includes Go to line, a Markdown heading outline, and bounded JSON/XML [structure navigation](docs/structured-navigation.md).
+- Supports selection/copy, original-file sharing, read-only **Open with…**, [global/per-document reading settings](docs/reading-preferences.md) for size, wrapping, fonts and spacing, and system/light/dark themes.
+- Compares bounded source snapshots with exact line-ending-aware changes, keyboard/copy actions and linked side-by-side views; compact/large-text windows use unified comparison.
+- Offers **Edit a copy…** for TXT/Markdown, with bounded undo/redo, literal find/replace, private recovery and explicit Save as. See [editor limits and fidelity](docs/editing-copies.md).
+- Exports converted HTML reading content to a new UTF-8 Markdown file through [Save Markdown as](docs/save-as.md).
+- Remembers recent files and approximate reading positions. Pin recents, keep up to five documents open, and save up to 100 named bookmarks.
+- Offers an optional file sidebar on sufficiently large windows, plus keyboard shortcuts. The sidebar stays off until you enable it.
+- Provides English and German controls, errors, preview labels and offline help, following the device/app language. Document contents are never translated.
+- Shows reading, preparation and layout stages, with cancellation and explanations when loading takes longer.
 
-Textr also handles generic `application/octet-stream` requests because some apps report configuration files that way. This can make it appear for binary files too; unsupported binary, oversized, and unreadable files produce an explanatory message.
+Opening a format does not guarantee highlighting. Generic configuration files use plain text unless their syntax is recognized. HTML opens as source and offers an optional offline [Markdown reading view](docs/html-reading.md) for saved/shared HTML. CSV starts as text; table preview requires explicit delimiter/header choices. See [formats and limits](docs/formats.md) and [everyday format rules](docs/everyday-formats.md).
 
-See Android's documentation on [intents and file-type matching](https://developer.android.com/guide/components/intents-filters) and [document access permissions](https://developer.android.com/training/data-storage/shared/documents-files) for platform details.
+## Open a file
 
-## Privacy and boundaries
+Use **Open file** on the home screen, or choose Textr from another app’s **Open with** or **Share** action. Tap the display-mode button to change views; **⋮** contains file actions, reading settings, bookmarks and About.
 
-Textr is read-only, with no editing, accounts, ads, analytics, or network permission. External document providers used through the system picker may independently use network access. Document rendering disables JavaScript, network loads, images, and WebView file/content access. History, open-document references, bookmarks, and settings are excluded from app backups. Explicit **Share file…** or **Open with…** creates a temporary copy of the original bytes with read-only access for the receiving app. Copies are separate from history, limited to the latest 20, and cleaned on the next app start or share after 24 hours. Short incoming shared text is sent as text; larger shared text is offered as a UTF-8 file. Merely viewing a document creates no sharing copy. Textr opts out of WebView usage metrics. Android/WebView crash diagnostics remain governed by the device and provider settings; see [Android’s WebView privacy documentation](https://developer.android.com/develop/ui/views/layout/webapps/webview-privacy).
+**Android controls default-app associations.** Where Android offers **Always**, you can choose Textr. The available choices depend on the sending app and reported MIME type, not just the filename extension. Textr cannot force an association for every extension. The system file picker remains a fallback.
 
-File management, unbounded tab sessions, huge-log support, direct cloud integrations, and store publication are outside the first version. See the [v1 scope](docs/scope.md) for the agreed requirements and acceptance criteria, and the [roadmap](docs/roadmap.md) for milestones and individual GitHub issues leading to the first public APK.
+The empty home screen links to opening help. On eligible windows, a dismissible hint points to **Reading settings → File sidebar on wide screens**. Both hints stay dismissed; help and settings remain available from the menu.
 
-See [open documents and navigation](docs/open-documents.md) for session limits, grant cleanup, pinning, Undo, line-number limits, and external handoff behavior.
+[Installation and opening guide](docs/installing.md) · [Search and encodings](docs/everyday-reading.md) · [Documents and history](docs/open-documents.md) · [CSV, bookmarks and shortcuts](docs/reading-extras.md) · [Foldables](docs/foldable-layout.md)
 
-## Installation and development
+## Privacy
 
-Requirements: JDK 17, Android SDK Platform 36, and SDK Build Tools 36.0.0. Set `ANDROID_HOME` to your SDK directory, or set `sdk.dir` in an untracked `local.properties`. Android Studio can import the project and configure the SDK path. The included Gradle 9.3.1 wrapper downloads dependencies on the first build.
+No accounts, ads, analytics, or app network permission. Original files remain unchanged. Documents are processed locally. External document providers may independently use the network, and links open externally only when tapped.
+
+History, sessions and bookmarks store local references and reading metadata, not document contents. Explicit sharing creates temporary copies, bounded to 20 and cleaned after 24 hours on the next app start/share. These copies are separate from history. Explicit copy editing retains one private content-bearing recovery checkpoint until discarded or its matching revision is saved. App backup and device-transfer rules exclude private state. JavaScript, remote resources and WebView file/content access are disabled.
+
+Read the [privacy policy](docs/privacy.md), also linked from **About Textr**. Moving a file or losing its provider permission can make a stored reference unavailable; choose the file again. Clearing history or bookmarks never deletes the original files.
+
+## Build and install
+
+Requirements: **JDK 17**, Android SDK **Platform 36** and **Build Tools 36.0.0**. Set `ANDROID_HOME`, or put `sdk.dir` in an untracked `local.properties`. Android Studio can import the project. The included Gradle wrapper downloads dependencies on the first build.
 
 ```sh
 ./gradlew :app:assembleDebug
 ./gradlew :app:testDebugUnitTest :app:lintDebug
 ```
 
-The debug APK is generated at `app/build/outputs/apk/debug/app-debug.apk`. With a device or emulator connected through ADB:
+The APK is `app/build/outputs/apk/debug/app-debug.apk`. With an emulator or device connected:
 
 ```sh
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ./gradlew :app:connectedDebugAndroidTest
 ```
 
-On Windows, use `gradlew.bat`. Debug APKs use a local development key; public release is deferred; [release signing support](docs/releasing.md) is available. No signing keys are committed.
+Use `gradlew.bat` on Windows. Debug builds use a development signing key and are not public release artifacts. CI builds debug APKs and runs tests on Android 10/API 29 and Android 16/API 36. See [development](docs/development.md), [validation](docs/validation.md), and [release signing](docs/releasing.md).
 
-The app uses Kotlin, AndroidX Activity, native Android controls, and an offline WebView. CommonMark handles Markdown and tables; Jackson Core formats JSON while preserving number spelling and duplicate keys. See [development and testing](docs/development.md) for architecture and checks, and the [validation record](docs/validation.md) for tested configurations and limitations.
+## Limits and release readiness
 
-## Current limits
+- Automatic decoding supports UTF-8 and BOM-marked UTF-16. Explicit encoding choices also support Windows-1252, ISO-8859-1 and UTF-16 without a BOM.
+- Previews and highlighting have [bounded complexity and size](docs/formats.md); larger or invalid previews fall back to source. Large text files and long lines may display slowly.
+- Markdown images, raw embedded HTML and relative file links are unsupported. Local HTML conversion is available in 0.2-alpha; it never loads the original page or remote resources. Calendar recurrence is not expanded; no events or alarms are imported.
+- Search is literal, within one file; source results are capped at 200. Copy editing accepts at most 256 Ki characters, 10,000 lines and 4,096 characters per line; comparison has separate [input/work limits](docs/comparison.md). No in-place editing, file management, unbounded tabs, or huge-log support.
+- WebView 133 can omit CSV cells and source nodes. **⋮ → Accessible table… → Show source** provides a native compatibility route for bounded CSV documents. See [behavior and validation](docs/validation-reader-polish.md). Human spoken-feedback and physical foldable checks remain follow-ups.
+- Public APK release, real-device beta and optional Play distribution have separate remaining gates in the [roadmap](docs/roadmap.md).
 
-Files near the size limit, especially long unbroken lines, can render slowly on older WebViews. **Back to files** and **Open file** remain available during loading. See the [measured emulator results](docs/validation.md).
+## Contribute and get help
 
-- Automatic decoding supports UTF-8, UTF-8 with a BOM, and UTF-16 LE/BE with a BOM. Explicit per-file choices add Windows-1252, ISO-8859-1 and UTF-16 LE/BE without a BOM. Malformed text and conflicting BOMs are rejected.
-- Highlighting is lightweight rather than a complete language parser. It is available for sources up to 512 Ki characters and decorates up to 10,000 tokens; remaining source stays readable without colors.
-- JSON preview accepts files up to 1 MiB and has a nesting limit of 128 and a formatted-output limit of 5 Mi characters. Documents exceeding preview limits remain available as source.
-- iCalendar event previews accept up to 512 Ki characters and 200 events, with bounded lines, nesting, and output. No recurrence expansion, time-zone conversion, calendar import, or alarms.
-- Markdown preview accepts up to 512 Ki characters, 20,000 nodes, and nesting depth 64; larger or more complex documents remain readable as source.
-- Markdown images, embedded HTML, and relative file links are not supported. Web links and email links require an external handler.
-- Find searches visible text, so preview and source results can differ. Source search shows up to 200 literal matches for queries up to 1,000 UTF-16 code units; no regex or cross-file search. Shared text without a URI survives rotation but is not restored after process termination.
+[Report a reproducible problem or suggest a feature](https://github.com/utrost/Textr/issues). Include Android/WebView versions and a small synthetic sample when relevant; avoid private documents and credentials. Read [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
+
+Textr uses Kotlin, native Android controls, AndroidX Activity and an offline WebView. CommonMark handles Markdown; Jackson Core formats JSON while preserving numeric spelling and duplicate keys. The [scope](docs/scope.md) records product boundaries.
 
 ## License
 
-Textr is licensed under the GNU General Public License, version 3 only (`GPL-3.0-only`). See [LICENSE](LICENSE) for the full text.
-
-Dependency notices are bundled under [licenses](app/src/main/assets/licenses/Attributions.txt) and available in the app through **About Textr → Open-source licenses**.
+GNU General Public License, version 3 only (`GPL-3.0-only`). See [LICENSE](LICENSE). Dependency notices are bundled in [Attributions.txt](app/src/main/assets/licenses/Attributions.txt) and **About Textr → Open-source licenses**.

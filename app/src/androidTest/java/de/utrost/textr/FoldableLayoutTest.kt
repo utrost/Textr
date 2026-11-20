@@ -193,10 +193,19 @@ class FoldableLayoutTest {
         ready
     }
     private fun click(selector: BySelector) {
-        var node = device.wait(Until.findObject(selector), 3000)
-        if (node == null) node = device.findObject(By.scrollable(true))?.scrollUntil(Direction.DOWN, Until.findObject(selector))
-        assertNotNull("Missing $selector", node)
-        node!!.click(); device.waitForIdle()
+        repeat(3) { attempt ->
+            device.waitForIdle()
+            var node = device.wait(Until.findObject(selector), 3000)
+            if (node == null) node = device.findObject(By.scrollable(true))?.scrollUntil(Direction.DOWN, Until.findObject(selector))
+            assertNotNull("Missing $selector", node)
+            try {
+                node!!.click(); device.waitForIdle(); return
+            } catch (error: StaleObjectException) {
+                // Layout/discovery updates can invalidate a UiAutomator snapshot
+                // between lookup and input. Reacquire it; do not retry assertions.
+                if (attempt == 2) throw error
+            }
+        }
     }
     private fun await(condition: () -> Boolean) {
         val until = System.nanoTime() + 30_000_000_000L

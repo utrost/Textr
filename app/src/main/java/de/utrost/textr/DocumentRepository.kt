@@ -12,7 +12,7 @@ import android.system.OsConstants
 import android.system.StructPollfd
 import java.io.FilterInputStream
 
-data class ReadingState(val mode: DisplayMode? = null, val scroll: Int = 0, val format: FileKind? = null, val encoding: TextEncoding? = null, val csv: CsvOptions = CsvOptions())
+data class ReadingState(val mode: DisplayMode? = null, val scroll: Int = 0, val format: FileKind? = null, val encoding: TextEncoding? = null, val csv: CsvOptions = CsvOptions(), val profile: ReadingProfile? = null)
 data class RecentFile(val uri: String, val name: String, val openedAt: Long, val reading: ReadingState = ReadingState(), val pinned: Boolean = false)
 
 class DocumentRepository(private val context: Context) {
@@ -22,7 +22,7 @@ class DocumentRepository(private val context: Context) {
     fun read(uri: Uri, mime: String?, cancellation: CancellationSignal, encoding: TextEncoding? = null): TextDocument {
         if (uri.scheme !in setOf("content", "file")) throw DocumentException(ReadFailure.SOURCE)
         cancellation.throwIfCanceled()
-        var name = uri.lastPathSegment?.substringAfterLast('/') ?: "Text file"
+        var name = uri.lastPathSegment?.substringAfterLast('/') ?: context.getString(R.string.unnamed_file)
         if (uri.scheme == "content") {
             optionalMetadata {
                 resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null, cancellation)?.use { cursor ->
@@ -33,7 +33,7 @@ class DocumentRepository(private val context: Context) {
                 }
             }
         }
-        name = name.replace(Regex("[\\p{Cntrl}]"), " ").take(256).ifBlank { "Text file" }
+        name = name.replace(Regex("[\\p{Cntrl}]"), " ").take(256).ifBlank { context.getString(R.string.unnamed_file) }
         val declaredType = mime?.substringBefore(';')?.trim()?.lowercase(java.util.Locale.ROOT)?.takeIf { it.isNotBlank() }
         val type = if (declaredType == null || declaredType in setOf("*/*", "application/octet-stream", "text/plain")) {
             optionalMetadata { resolver.getType(uri) } ?: declaredType
@@ -109,7 +109,7 @@ class DocumentRepository(private val context: Context) {
                 DisplayMode.entries.find { it.name == entry.optString("mode") },
                 entry.optInt("scroll", 0).coerceAtLeast(0),
                 FileKind.entries.find { it.name == entry.optString("format") },
-                TextEncoding.entries.find { it.name == entry.optString("encoding") }, csvOptions(entry)), entry.optBoolean("pinned"))
+                TextEncoding.entries.find { it.name == entry.optString("encoding") }, csvOptions(entry), ReadingProfile.fromJson(entry.optJSONObject("profile"))), entry.optBoolean("pinned"))
         }
     } catch (_: org.json.JSONException) { emptyList() }
 
@@ -153,6 +153,8 @@ class DocumentRepository(private val context: Context) {
                     put("encoding", file.reading.encoding?.name)
                     put("delimiter", file.reading.csv.delimiter.toString())
                     put("csvHeader", file.reading.csv.firstRowHeader)
+                    put("csvConfigured", file.reading.csv.configured)
+                    put("profile", file.reading.profile?.json())
                 }
             })
         }
@@ -239,4 +241,6 @@ class DocumentRepository(private val context: Context) {
 }
 
 internal fun csvOptions(value: JSONObject): CsvOptions = CsvOptions(
-    value.optString("delimiter", ",").firstOrNull()?.takeIf { it in CsvOptions.DELIMITERS } ?: ',', value.optBoolean("csvHeader"))
+    value.optString("delimiter", ",").firstOrNull()?.takeIf { it in CsvOptions.DELIMITERS } ?: ',', value.optBoolean("csvHeader"),
+    if (value.has("csvConfigured")) value.optBoolean("csvConfigured") else
+        value.optString("delimiter", ",") != "," || value.optBoolean("csvHeader") || value.optString("format") == FileKind.CSV.name)

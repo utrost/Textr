@@ -1,0 +1,298 @@
+<resources>
+    <string name="app_name">Textr</string>
+    <string name="open_file">Datei öffnen</string>
+    <string name="recent_files">Zuletzt geöffnet</string>
+    <string name="clear_history">Verlauf leeren</string>
+    <string name="remove_recent">%1$s aus dem Verlauf entfernen</string>
+    <string name="empty_history">Öffne eine Textdatei. Deine zuletzt geöffneten Dateien erscheinen hier.</string>
+    <string name="home_description">Notizen, Konfigurationen und Textdateien bis 5 MiB lesen.</string>
+    <string name="settings">Leseoptionen</string>
+    <string name="find">Suchen</string>
+    <string name="find_hint">In dieser Ansicht suchen</string>
+    <string name="previous_match">Vorheriger Treffer</string>
+    <string name="next_match">Nächster Treffer</string>
+    <string name="close_search">Suche schließen</string>
+    <string name="matches">%1$d / %2$d</string>
+    <string name="matches_spoken">Treffer %1$d von %2$d</string>
+    <string name="mode_description">Ansicht: %1$s</string>
+    <string name="no_matches">Keine Treffer</string>
+    <string name="plain_text">Klartext</string>
+    <string name="highlighted">Hervorgehoben</string>
+    <string name="preview">Vorschau</string>
+    <string name="loading">Datei wird gelesen…</string>
+    <string name="rendering">Ansicht wird vorbereitet…</string>
+    <string name="cannot_open">Datei kann nicht geöffnet werden</string>
+    <string name="open_again">Datei erneut öffnen</string>
+    <string name="access_error">Diese Datei ist nicht verfügbar oder die Zugriffsberechtigung ist abgelaufen. Wähle sie über Datei öffnen erneut aus.</string>
+    <string name="too_large">Diese Datei ist größer als 5 MiB. Textr unterstützt Dateien bis 5 MiB.</string>
+    <string name="binary_file">Dies scheint eine Binärdatei zu sein. Textr kann nur Textdateien anzeigen.</string>
+    <string name="unsupported_encoding">Die Datei konnte mit dieser Zeichenkodierung nicht gelesen werden. Versuche Mit Zeichenkodierung öffnen oder wähle Automatisch für UTF-8 und UTF-16 mit Byte-Reihenfolgemarkierung.</string>
+    <string name="unsupported_uri">Diese Quelle kann nicht geöffnet werden. Wähle eine Datei über die Systemauswahl.</string>
+    <string name="shared_text_name">Geteilter Text.txt</string>
+    <string name="invalid_json">JSON-Vorschau nicht verfügbar. Der Quelltext bleibt lesbar.</string>
+    <string name="preview_unavailable">Für dieses Dokument ist keine Vorschau verfügbar. Klartext ist verfügbar.</string>
+    <string name="markdown_limit">Die Markdown-Vorschau ist auf 512 Ki Zeichen begrenzt. Der vollständige Quelltext ist verfügbar.</string>
+    <string name="json_limit">Die JSON-Vorschau ist auf Dateien bis 1 MiB begrenzt. Der vollständige Quelltext ist verfügbar.</string>
+    <string name="highlight_limit">Hervorhebung ist auf 512 Ki Zeichen begrenzt. Der vollständige Klartext ist verfügbar.</string>
+    <string name="render_failed">Die Dokumentansicht funktioniert nicht mehr. Du kannst es als Klartext erneut versuchen oder eine andere Datei öffnen.</string>
+    <string name="retry_plain">Als Klartext erneut versuchen</string>
+    <string name="no_link_handler">Keine App zum Öffnen dieses Links verfügbar.</string>
+    <string name="unsupported_link">Nur Web- und E-Mail-Links können geöffnet werden.</string>
+    <string name="font_size">Textgröße</string>
+    <string name="font_size_value">Textgröße: %1$d</string>
+    <string name="wrap_lines">Lange Zeilen umbrechen</string>
+    <string name="theme">Darstellung</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Hell</string>
+    <string name="theme_dark">Dunkel</string>
+    <string name="done">Fertig</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="clear_history_message">Alle Einträge im Verlauf entfernen? Offene Dokumente und Lesezeichen bleiben verfügbar. Die Dateien selbst bleiben unverändert.</string>
+    <string name="about">Über Textr</string>
+    <string name="licenses">Open-Source-Lizenzen</string>
+    <string name="more_options">Weitere Optionen</string>
+    <string name="back_to_files">Zurück zu den Dateien</string>
+    <string name="share_file">Datei teilen…</string>
+    <string name="share_text">Text teilen…</string>
+    <string name="preparing_share">Datei zum Teilen wird vorbereitet…</string>
+    <string name="share_error">Diese Datei konnte nicht geteilt werden. Sie wurde möglicherweise verschoben oder die Zugriffsberechtigung ist abgelaufen.</string>
+    <string name="document_info">Dokumentinformationen</string>
+    <string name="document_details">%1$s\n\nGröße: %2$s\nErkanntes Format: %3$s\nBehandeln als: %4$s\nZeichenkodierung: %5$s\nZeilen: %6$d\nZeilenenden: %7$s</string>
+    <string name="treat_as">Behandeln als…</string>
+    <string name="automatic">Automatisch</string>
+    <string name="source_code">Quellcode</string>
+    <string name="report_issue">Problem melden</string>
+    <string name="about_privacy">Offline Text lesen, vergleichen und separate Kopien bearbeiten. Keine Konten, Werbung, Analysefunktionen oder Netzwerkberechtigung.\n\nVerlauf, offene Dokumente und Lesezeichen speichern Verweise und Lesedaten, keine Dokumentinhalte. Lesezeichen speichern außerdem eingegebene Namen und einen Fingerabdruck des Quelltexts, um Änderungen zu erkennen. Lesezeichen werden getrennt vom Verlauf gelöscht. Beim Teilen oder Öffnen mit einer anderen App wird eine temporäre Kopie erstellt. Kopien, die älter als 24 Stunden sind, werden beim nächsten App-Start oder Teilen entfernt; nur die letzten 20 bleiben erhalten.\n\nKopie bearbeiten speichert ausdrücklich eine private Wiederherstellungskopie mit dem Text, von Backups ausgeschlossen. Sie kann auf der Startseite geöffnet werden. Verwerfen oder erfolgreiches Speichern desselben Stands entfernt sie; fehlgeschlagenes oder abgebrochenes Speichern erhält sie. Letzte Eingaben können bei Prozessende fehlen. Originaldateien bleiben unverändert.\n\nLizenziert unter GPL-3.0-only.</string>
+    <string name="about_details">Textr %1$s\n\n%2$s</string>
+    <string name="reload">Neu laden</string>
+    <string name="open_documents">Offene Dokumente</string>
+    <string name="documents_count">Offene Dokumente (%1$d)</string>
+    <string name="session_evicted">%1$s wurde geschlossen, damit höchstens fünf Dokumente geöffnet bleiben.</string>
+    <string name="close_document">Dokument schließen</string>
+    <string name="close_named">%1$s schließen</string>
+    <string name="pin">Anheften</string>
+    <string name="unpin">Loslösen</string>
+    <string name="pin_named">%1$s anheften</string>
+    <string name="unpin_named">%1$s loslösen</string>
+    <string name="pin_limit">Du kannst bis zu 10 Dateien im Verlauf anheften.</string>
+    <string name="undo_remove">Entfernen rückgängig machen</string>
+    <string name="line_numbers">Zeilennummern im Quelltext anzeigen</string>
+    <string name="line_number_limit">Zeilennummern sind bis 10.000 Zeilen verfügbar. Gehe zu Zeile funktioniert weiterhin im vollständigen Quelltext.</string>
+    <string name="go_to_line">Gehe zu Zeile…</string>
+    <string name="line_number">Zeilennummer</string>
+    <string name="line_range">Gib eine Zeile von 1 bis %1$d ein.</string>
+    <string name="go">Los</string>
+    <string name="outline">Überschriften</string>
+    <string name="heading_spoken">Überschrift der Ebene %1$d, %2$s</string>
+    <string name="open_with">Öffnen mit…</string>
+    <string name="open_copy_title">Schreibgeschützte Kopie öffnen mit…</string>
+    <string name="no_file_handler">Keine andere App zum Öffnen dieses Dateityps verfügbar.</string>
+    <string name="calendar_limit">Dieser Kalender ist zu groß für die Vorschau. Der vollständige Quelltext ist verfügbar.</string>
+    <string name="calendar_unavailable">Keine Kalendervorschau möglich: Die Datei ist möglicherweise ungültig, enthält keine unterstützten Termine oder überschreitet die Vorschaugrenzen. Der vollständige Quelltext ist verfügbar.</string>
+    <string name="reopen_encoding">Mit Zeichenkodierung öffnen…</string>
+    <string name="no_line_endings">Keine</string>
+    <string name="current_document">Aktuelles Dokument: %1$s</string>
+    <string name="switch_document">Zu %1$s wechseln</string>
+    <string name="search_source">Quelltext durchsuchen…</string>
+    <string name="source_query_hint">Im vollständigen Quelltext suchen</string>
+    <string name="match_case">Groß-/Kleinschreibung beachten</string>
+    <string name="whole_word">Ganzes Wort</string>
+    <string name="source_search_explanation">Treffer werden als Klartext geöffnet. Die Vorschau kann vom Quelltext abweichen.</string>
+    <string name="searching">Suche läuft…</string>
+    <string name="source_results_limited">Die ersten %1$d Treffer werden angezeigt. Grenze deine Suche für genauere Ergebnisse ein.</string>
+    <string name="source_results_count">Treffer im Quelltext: %1$d</string>
+    <string name="source_result_line">Zeile %1$d</string>
+    <string name="opening_help">Dateien öffnen und Standard-App</string>
+    <string name="opening_help_text">Datei öffnen\nWähle ein Dokument über die Android-Systemauswahl. Das funktioniert auch, wenn eine andere App Textr nicht anbietet.\n\nÖffnen mit und Teilen\nWähle in einem Dateimanager oder einer anderen App eine Datei, dann Öffnen mit oder Teilen und anschließend Textr. Auch geteilter Text kann angezeigt werden. Textrs Aktionen Datei teilen und Öffnen mit senden eine schreibgeschützte Kopie an eine andere App.\n\nStandard-App wählen\nWenn Android Immer anbietet, kannst du Textr als Standard festlegen. Die Auswahl hängt von der sendenden App und dem gemeldeten Dateityp (MIME-Typ) ab, nicht nur von der Dateiendung. Manche Apps verwenden immer ihre eigene Ansicht. Textr kann keine Zuordnung für jede Dateiendung erzwingen.\n\nNicht verfügbare Dateien im Verlauf\nVerlauf und offene Dokumente speichern Verweise, keine Inhalte. Bei verschobenen oder gelöschten Dateien oder abgelaufenen temporären Berechtigungen musst du die Datei möglicherweise erneut über Datei öffnen auswählen. Das Leeren des Verlaufs löscht keine Dateien.\n\nÄltere Textdateien\nWenn Text nicht gelesen werden kann oder falsch aussieht, versuche Mit Zeichenkodierung öffnen. Deine Auswahl ändert nur, wie Textr die Bytes liest; die Datei wird nicht konvertiert.\n\nOffline lesen\nTextr hat keine Netzwerkberechtigung. Ein in der Systemauswahl gewählter Dokumentanbieter kann unabhängig davon das Netzwerk zum Abrufen deiner Datei nutzen.\n\nGespeichertes HTML\nÖffne eine lokale HTML-Datei und wähle über die Schaltfläche für den Anzeigemodus die Markdown-Leseansicht. Der ursprüngliche Quelltext bleibt verfügbar. Als Inhalt geteiltes HTML kann ebenfalls gelesen werden; eine geteilte Webseiten-URL bleibt Text. Skripte und entfernte Bilder werden nicht geladen.\n\nLeseeinstellungen\nGröße, Umbruch, Schrift und Abstand folgen globalen Vorgaben oder gelten über Nur für dieses Dokument. Quelltext bleibt in Festbreitenschrift.\n\nStruktur und Formate\nDie JSON/XML-Struktur bietet Navigation und gezieltes Kopieren bei unverändertem Quelltext. Quelltextfarben unterstützen .env, .properties, Dockerfile und TypeScript/TSX. TSV verwendet die CSV-Tabelle zunächst mit Tabulator; gewählte Tabellenoptionen bleiben erhalten.\n\nExportieren, vergleichen und Kopien bearbeiten\nMarkdown speichern unter erstellt eine neue Datei aus der HTML-Leseansicht. Quelltext vergleichen nutzt zwei schreibgeschützte Dateistände; Strg+Auf/Ab wechselt zwischen Änderungen. Kleine Fenster und große Schrift verwenden die gemeinsame Ansicht. Kopie bearbeiten öffnet ursprünglichen TXT/Markdown-Quelltext in einem separaten Editor bis 256 Ki Zeichen. Strg+Z/Y macht Änderungen rückgängig oder wiederholt sie, Strg+F sucht/ersetzt wörtlichen Text und Strg+S speichert eine neue Kopie. Eine private Wiederherstellungskopie bleibt bis zum Verwerfen oder erfolgreichen Speichern desselben Stands erhalten. Sie wird auf der Startseite geöffnet; nach Prozessende wird der letzte abgeschlossene Zwischenstand geladen. Originale werden nie überschrieben.</string>
+    <string name="sidebar_setting">Dateiseitenleiste auf großen Bildschirmen</string>
+    <string name="sidebar_help">Offene und zuletzt geöffnete Dateien neben dem Dokument anzeigen, etwa auf einem aufgeklappten Smartphone oder Tablet. Bei wenig Platz oder vergrößerter Systemschrift wird die Seitenleiste ausgeblendet.</string>
+    <string name="open_recent">Zuletzt geöffnete Datei öffnen: %1$s</string>
+    <string name="csv_options">CSV-Tabellenoptionen…</string>
+    <string name="csv_explanation">Wähle das Trennzeichen. Die erste Zeile bleibt eine Datenzeile, sofern du sie nicht als Kopfzeile festlegst. Quelltext und geteilte Bytes bleiben unverändert.</string>
+    <string name="csv_delimiter">CSV-Trennzeichen</string>
+    <string-array name="csv_delimiters"><item>Komma (,)</item><item>Semikolon (;)</item><item>Tabulator</item><item>Senkrechter Strich (|)</item></string-array>
+    <string name="csv_header">Erste Zeile als Kopfzeile verwenden</string>
+    <string name="csv_unavailable">CSV-Tabelle nicht verfügbar: fehlerhafte Anführungszeichen oder Vorschaugrenzen überschritten. Der vollständige Quelltext ist verfügbar. Prüfe das Trennzeichen in den CSV-Tabellenoptionen.</string>
+    <string name="csv_progress">Für Fortschritt und Lesezeichen Quelltext öffnen</string>
+    <string name="reading_progress">Etwa %1$d%% · Leseposition</string>
+    <string name="add_bookmark">Lesezeichen hinzufügen…</string>
+    <string name="bookmarks">Lesezeichen</string>
+    <string name="bookmark_name">Name des Lesezeichens</string>
+    <string name="bookmark_name_required">Gib einen Namen ein</string>
+    <string name="bookmark_default">Bei %1$d%%</string>
+    <string name="bookmark_saved">Lesezeichen gespeichert</string>
+    <string name="bookmark_limit">Du kannst bis zu 100 Lesezeichen speichern. Entferne eines, um ein weiteres hinzuzufügen.</string>
+    <string name="bookmarks_empty">Noch keine Lesezeichen. Öffne eine Datei und wähle Lesezeichen hinzufügen. Geteilter Text muss zuerst außerhalb von Textr als Datei gespeichert werden.</string>
+    <string name="bookmarks_explanation">Lesezeichen speichern ungefähre Positionen und Dateiverweise unabhängig vom Verlauf und offenen Dokumenten. Geänderte Dateien und Layouts können die Position verschieben. Wähle ein Lesezeichen, um es zu öffnen, umzubenennen, neu zuzuordnen oder zu löschen.</string>
+    <string name="bookmark_named">Lesezeichen: %1$s, in %2$s</string>
+    <string name="rename_bookmark">Lesezeichen umbenennen</string>
+    <string name="reconnect_bookmark">Datei für Lesezeichen wählen…</string>
+    <string name="delete_bookmark">Lesezeichen löschen</string>
+    <string name="clear_bookmarks">Lesezeichen leeren</string>
+    <string name="clear_bookmarks_message">Alle Namen, Positionen und Verweise der Lesezeichen entfernen? Deine Dateien und der Verlauf bleiben erhalten.</string>
+    <string name="bookmark_unavailable">Dein Lesezeichen bleibt erhalten. Wähle die Datei erneut, um es neu zuzuordnen, oder verwalte es unter Lesezeichen.</string>
+    <string name="bookmark_changed">Diese Datei wurde seit dem Speichern des Lesezeichens geändert. Die Leseposition ist ungefähr.</string>
+    <string name="save">Speichern</string>
+    <string name="keyboard_shortcuts">Tastenkürzel</string>
+    <string name="keyboard_shortcuts_text">Strg+O — Datei öffnen\nStrg+F — In der aktuellen Ansicht suchen\nStrg+G — Gehe zu Zeile im Quelltext\nStrg+Tab — Nächstes offenes Dokument\nStrg+Umschalt+Tab — Vorheriges offenes Dokument\n\nDer Dokumentwechsel folgt der alphabetischen Reihenfolge der Dateinamen. Textfelder, Dialoge und Menüs behalten die Kontrolle über Tastenkürzel. Leseaktionen sind nach dem Laden verfügbar; Gehe zu Zeile benötigt eine Quelltextansicht. Übliche Kopier-, Auswahl- und Systemtastenkürzel bleiben unverändert.</string>
+    <string name="next_document">Nächstes offenes Dokument</string>
+    <string name="previous_document">Vorheriges offenes Dokument</string>
+    <string name="laying_out">Dokument wird dargestellt…</string>
+    <string name="cancel_loading">Abbrechen und zu den Dateien</string>
+    <string name="slow_reading">Die Datei wird noch gelesen. Ihr Anbieter wartet möglicherweise auf den Speicher oder eine Verbindung. Du kannst abbrechen oder eine andere Datei öffnen.</string>
+    <string name="slow_rendering">Große Dateien und lange Zeilen können beim Anzeigen länger dauern. Du kannst abbrechen oder eine andere Datei öffnen.</string>
+    <string name="opening_discovery">Aus einer anderen App öffnen? Hier erfährst du mehr über Öffnen mit, Teilen und Android-Standardeinstellungen.</string>
+    <string name="sidebar_discovery">Mehr Platz zum Lesen: In den Leseoptionen kannst du eine Dateiseitenleiste aktivieren.</string>
+    <string name="dismiss_hint">Hinweis ausblenden</string>
+    <string name="privacy_policy">Datenschutzerklärung</string>
+    <string-array name="preview_labels">
+        <item>[Bild ausgelassen]</item>
+        <item>Überschrift ohne Titel</item>
+        <item>Kalendertermine</item>
+        <item>Terminübersicht. Zeiten behalten ihre angegebene Zeitzone; es erfolgt keine Umrechnung. Wiederholungen werden nicht aufgelöst. Weitere Kalenderdaten bleiben im Quelltext.</item>
+        <item>Kalendermethode</item>
+        <item>Termin ohne Titel</item>
+        <item>Beginn</item>
+        <item>Nicht angegeben</item>
+        <item>Ende (ausschließlich)</item>
+        <item>Ort</item>
+        <item>Beschreibung</item>
+        <item>Status</item>
+        <item>Organisator</item>
+        <item>Dauer (wie angegeben)</item>
+        <item>Wiederholungsregel (nicht aufgelöst)</item>
+        <item>Zusätzliche Wiederholungen (wie angegeben)</item>
+        <item>Ausgenommene Termine (wie angegeben)</item>
+        <item>Wiederholungstermin</item>
+        <item>Wiederholungsbereich</item>
+        <item>ganztägig</item>
+        <item>Zeitzone:</item>
+        <item>Ortszeit; keine Zeitzone angegeben</item>
+        <item>Spalte</item>
+    </string-array>
+    <string name="unnamed_file">Textdatei</string>
+    <string name="csv_accessible">Barrierefreie Tabelle…</string>
+    <string name="csv_empty_cell">Leere Zelle</string>
+    <string name="csv_column">Spalte %1$d</string>
+    <string name="csv_cell_matches">Zelle %1$d von %2$d</string>
+    <string name="csv_show_source">Quelltext anzeigen</string>
+    <string name="html_reading_view">Markdown-Leseansicht</string>
+    <string name="html_limit">Die HTML-Lesevorschau ist auf 256 Ki Zeichen begrenzt. Der vollständige Quelltext ist verfügbar.</string>
+    <string name="shared_html_name">Geteilter Text.html</string>
+    <string name="document_reading_setting">Nur für dieses Dokument</string>
+    <string name="reading_font">Leseschrift (Quelltext bleibt in Festbreitenschrift)</string>
+    <string name="font_sans">Serifenlos</string>
+    <string name="font_serif">Serifenschrift</string>
+    <string name="font_monospace">Festbreitenschrift</string>
+    <string name="line_spacing">Zeilenabstand</string>
+    <string name="line_spacing_value">Zeilenabstand: %1$d%%</string>
+    <string name="use_global_reading_defaults">Globale Leseeinstellungen verwenden</string>
+    <string name="reading_preferences_help">Größe, Umbruch, Schrift und Abstand ändern die globalen Vorgaben, sofern Nur für dieses Dokument nicht gewählt ist. Zurücksetzen entfernt die Dokumenteinstellung nach Tippen auf Fertig.</string>
+    <string name="structure_outline">Struktur</string>
+    <string name="structure_help">Eintrag für Navigation oder Kopieren wählen. Werte kopieren den exakten Quelltext.</string>
+    <string name="structure_unavailable">Navigation nicht verfügbar: ungültig, nicht unterstützt oder über 256 Ki Zeichen / 2.000 Knoten / 64 Ebenen. Der vollständige Quelltext bleibt verfügbar. DTDs und Entitätsdeklarationen werden nicht unterstützt.</string>
+    <string name="structure_node_spoken">Ebene %1$d, %2$s, %3$s, Zeile %4$d, %5$s</string>
+    <string name="structure_expanded">aufgeklappt</string>
+    <string name="structure_collapsed">zugeklappt</string>
+    <string name="structure_expand">Aufklappen</string>
+    <string name="structure_collapse">Zuklappen</string>
+    <string name="structure_jump">Zum ursprünglichen Quelltext</string>
+    <string name="structure_copy_path">Pfad kopieren</string>
+    <string name="structure_copy_value">Exakten Quelltextwert kopieren</string>
+    <string name="structure_copy_limit">Kopiergrenze: 64 Ki Zeichen. Bitte im Quelltext auswählen.</string>
+    <string name="structure_copied">Kopiert</string>
+    <string name="structure_object">Objekt</string>
+    <string name="structure_array">Array</string>
+    <string name="structure_string">Zeichenkette</string>
+    <string name="structure_number">Zahl</string>
+    <string name="structure_boolean">Wahrheitswert</string>
+    <string name="structure_null">null</string>
+    <string name="structure_element">Element</string>
+    <string name="structure_attribute">Attribut</string>
+    <string name="save_copy">Neue Kopie speichern</string>
+    <string name="html_export">Markdown speichern unter…</string>
+    <string name="html_export_unavailable">Markdown-Export nicht verfügbar…</string>
+    <string name="html_export_unavailable_help">Die Umwandlung konnte innerhalb der Grenzen der Leseansicht nicht abgeschlossen werden. Der ursprüngliche Quelltext bleibt verfügbar; unvollständiges Markdown wird nicht exportiert.</string>
+    <string name="html_export_help">Den Markdown-Leseinhalt als neue UTF-8-Datei speichern. Bilder, Skripte, Formulare und versteckte Inhalte werden ausgelassen. Bitte das Ergebnis vor Weiterverwendung prüfen.</string>
+    <string name="choose_destination">Speicherort wählen</string>
+    <string name="output_writing">%1$s wird gespeichert…</string>
+    <string name="output_saved">%1$s wurde gespeichert.</string>
+    <string name="output_cancelled">Speichern von %1$s wurde abgebrochen. Die Quelle bleibt unverändert.</string>
+    <string name="output_refused">Ziel für %1$s abgelehnt: Ein neues Inhaltsdokument ist erforderlich. Die Quelle wurde nicht zum Schreiben geöffnet.</string>
+    <string name="output_interrupted">Speichern von %1$s wurde unterbrochen. Bitte vorhandene Ausgabedateien vor einem erneuten Versuch prüfen.</string>
+    <string name="output_failed">%1$s konnte nicht gespeichert werden. Die Quelle bleibt unverändert; bitte einen anderen Speicherort wählen und erneut versuchen.</string>
+    <string name="output_partial">Ein möglicherweise unvollständiges Dokument bleibt unter %1$s zurück. Bitte mit der Dateiverwaltung prüfen oder entfernen.</string>
+
+    <string name="compare_title">Quelltext vergleichen…</string>
+    <string name="compare_choose_left">Linke Datei wählen</string>
+    <string name="compare_choose_right">Rechte Datei wählen</string>
+    <string name="compare_previous">Vorherige Änderung</string>
+    <string name="compare_next">Nächste Änderung</string>
+    <string name="compare_wide">Nebeneinander · gemeinsames Scrollen</string>
+    <string name="compare_unified">Gemeinsame Vergleichsansicht</string>
+    <string name="compare_legend">= unverändert · − links entfernt · + rechts hinzugefügt</string>
+    <string name="compare_not_selected">Keine Datei gewählt</string>
+    <string name="compare_snapshot">%1$s · Stand %2$s</string>
+    <string name="compare_input">%1$s: %2$s</string>
+    <string name="compare_left_name">Links</string>
+    <string name="compare_right_name">Rechts</string>
+    <string name="compare_choose_file">Datei wählen…</string>
+    <string name="compare_open_reader">Im Reader öffnen</string>
+    <string name="compare_loading">Dateistände werden gelesen und verglichen…</string>
+    <string name="compare_limited">Vergleich innerhalb seiner Grenzen nicht verfügbar: je Datei 512 KiB und 256 Ki Zeichen, 10.000 Zeilen, 16.384 Zeichen pro Zeile und begrenzte Änderungssuche. Die Originale bleiben im Reader verfügbar.</string>
+    <string name="compare_cancelled">Vergleich abgebrochen. Eine Datei wählen oder neu laden, um es erneut zu versuchen.</string>
+    <string name="compare_read_error">Diese Datei kann nicht gelesen werden. Eine andere Datei wählen oder den Zugriff wiederherstellen und neu laden.</string>
+    <string name="compare_shared_lost">Der geteilte Dateistand ging nach dem Prozessende verloren. Diese Datei erneut wählen.</string>
+    <string name="compare_identical">Der dekodierte Text einschließlich Zeilenenden ist identisch. Kodierung oder BOM können abweichen.</string>
+    <string name="compare_change_count">Änderung %1$d von %2$d</string>
+    <string name="compare_choose_help">Beide Dateien wählen. Dateistände sind schreibgeschützt; Neuladen erfasst einen neuen Stand. Strg+Auf/Ab wechselt zwischen Änderungen.</string>
+    <string name="compare_changed">Eine Quelle hat sich seit dem erfassten Stand geändert. Der Vergleich wurde aktualisiert und seine Position zurückgesetzt.</string>
+    <string name="compare_no_line">Keine entsprechende Zeile</string>
+    <string name="compare_no_ending">kein Zeilenende</string>
+    <string name="compare_line">%1$s · Zeile %2$d · %3$s</string>
+    <string name="compare_copy_line">Exakte Quelltextzeile kopieren</string>
+
+    <string name="editor_edit_copy">Kopie bearbeiten…</string>
+    <string name="editor_title">Kopie bearbeiten</string>
+    <string name="editor_resume">Wiederherstellungskopie öffnen…</string>
+    <string name="editor_buffer">Bearbeitbare Quelltextkopie</string>
+    <string name="editor_undo">Rückgängig</string>
+    <string name="editor_redo">Wiederholen</string>
+    <string name="editor_find">Suchen</string>
+    <string name="editor_replace">Ersetzen</string>
+    <string name="editor_replace_all">Alle ersetzen</string>
+    <string name="editor_find_replace">Suchen und Ersetzen · wörtlicher Text</string>
+    <string name="editor_limit">Kopien von TXT und Markdown können bis 256 Ki Zeichen, 10.000 Zeilen und 4.096 Zeichen pro Zeile bearbeitet werden. Eingabe oder Änderung überschreitet eine Editorgrenze; vorhandener Text bleibt unverändert.</string>
+    <string name="editor_recovery_notice">Hier wird eine separate Quelltextkopie bearbeitet. Textr speichert eine private Wiederherstellungskopie mit dem Text, die von Backups ausgeschlossen ist. Sie bleibt erhalten, bis sie verworfen oder dieser Stand erfolgreich in einer neuen Datei gespeichert wird. Nach einem Prozessende wird der letzte abgeschlossene Zwischenstand wiederhergestellt; letzte Eingaben können fehlen. App-Daten löschen oder Deinstallieren entfernt die Kopie. Das Original wird nie überschrieben.</string>
+    <string name="editor_existing">Eine Wiederherstellungskopie ist bereits vorhanden. Diese öffnen und speichern oder verwerfen, bevor eine andere Kopie begonnen wird.</string>
+    <string name="editor_loading">Private Wiederherstellung wird vorbereitet…</string>
+    <string name="editor_unavailable">Keine Wiederherstellungskopie kann geöffnet werden. Im Reader eine neue Kopie beginnen. Wenn privater Speicher nicht verfügbar ist, zuerst den Speicherzugriff wiederherstellen.</string>
+    <string name="editor_dirty">Ungespeicherte Änderungen · Original unverändert</string>
+    <string name="editor_clean">Keine ungespeicherten Änderungen · Original unverändert</string>
+    <string name="editor_format">%1$s · %2$s · vorhandene Zeilenenden: %3$s</string>
+    <string name="editor_with_bom">mit BOM</string>
+    <string name="editor_no_bom">ohne BOM</string>
+    <string name="editor_no_endings">keine; neue Zeilen verwenden LF</string>
+    <string name="editor_recovery_failed">Wiederherstellung konnte nicht aktualisiert werden. Editor offen halten und eine Kopie speichern; der vorige Zwischenstand bleibt erhalten.</string>
+    <string name="editor_recovery_ready">Private Wiederherstellungskopie ist aktuell.</string>
+    <string name="editor_recovery_pending">Private Wiederherstellungskopie wird aktualisiert…</string>
+    <string name="editor_saved_recovery_removed">Gespeicherter Stand bestätigt; Wiederherstellungskopie entfernt.</string>
+    <string name="editor_encoding">Ausgabekodierung</string>
+    <string name="editor_bom">Unicode-Byte-Reihenfolgemarkierung (BOM) hinzufügen</string>
+    <string name="editor_save_help">Eine neue Ausgabedatei wählen. Vorhandener Text und Zeilenenden bleiben erhalten. Neue Zeilen folgen einheitlichem CRLF/CR des Originals; bei gemischten Zeilenenden wird LF eingefügt. Nicht darstellbare Zeichen führen zu einem sichtbaren Fehler.</string>
+    <string name="editor_conversion_title">Änderung des Ausgabeformats bestätigen</string>
+    <string name="editor_conversion">Kopie mit %1$s und der gewählten BOM-Einstellung speichern? Dies ändert das Ausgabeformat; Originalbytes sowie vorhandener Text und Zeilenenden bleiben unverändert.</string>
+    <string name="editor_unsaved">Ungespeicherte Kopie</string>
+    <string name="editor_leave_help">Diesen Stand in einer neuen Datei speichern, die private Wiederherstellungskopie verwerfen oder abbrechen und weiter bearbeiten.</string>
+    <string name="editor_discard">Kopie verwerfen</string>
+    <string name="editor_matches">%1$d Treffer</string>
+    <string name="editor_matches_limited">Erste %1$d Treffer · Navigation begrenzt; Alle ersetzen durchsucht den gesamten begrenzten Text.</string>
+    <string name="editor_match_position">Treffer %1$d von %2$d</string>
+    <string name="editor_replaced">%1$d Ersetzungen · ein Rückgängig-Schritt</string>
+    <string name="editor_discard_help">Private Wiederherstellungskopie löschen und diesen Editor schließen? Original und gespeicherte Ausgabedateien bleiben unverändert.</string>
+    <string name="editor_replace_confirm">Alle %1$d Treffer in dieser Kopie ersetzen? Dies ist ein Rückgängig-Schritt und speichert keine Datei.</string>
+    <string name="editor_saved_access">Gespeicherte Kopie jetzt öffnen, um ihren Verweis im Reader aufzunehmen. Künftiger Zugriff hängt vom gewählten Anbieter ab.</string>
+    <string name="editor_open_saved">Gespeicherte Kopie öffnen</string>
+    <string name="editor_replace_hint">Ersetzung (bis 4 Ki Zeichen)</string>
+    <string name="editor_replace_limit">Ersetzung ist auf 4 Ki Zeichen begrenzt. Der vorige Ersetzungstext bleibt unverändert.</string>
+</resources>

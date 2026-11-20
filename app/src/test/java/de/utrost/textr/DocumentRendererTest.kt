@@ -4,6 +4,20 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class DocumentRendererTest {
+    @Test fun typographyKeepsCodeMonospacedAndClampsSpacingWithoutChangingSource() {
+        val source = "# Heading\n\nSome prose and `code`."
+        val document = prepare(source, FileKind.MARKDOWN)
+        val page = DocumentRenderer.page(document, DisplayMode.PREVIEW, true, true,
+            font = ReadingFont.SERIF, lineSpacing = 200).openStream().bufferedReader().use { it.readText() }
+        assertTrue(page.contains("font-family: serif; line-height: 2.0"))
+        assertTrue(page.contains("pre, code { font-family: monospace; }"))
+        assertEquals(source, document.source.text)
+        val bounded = DocumentRenderer.page(document, DisplayMode.PLAIN, false, false,
+            font = ReadingFont.MONOSPACE, lineSpacing = 999).openStream().bufferedReader().use { it.readText() }
+        assertTrue(bounded.contains("line-height: 2.2"))
+        assertTrue(bounded.contains(SyntaxHighlighter.escape(source)))
+    }
+
     @Test fun `streamed HTML preserves Unicode across chunk boundaries and escapes source`() {
         val source = "a".repeat(8191) + "\uD83D\uDE80<&>\"'" + "&".repeat(20_000)
         val page = DocumentRenderer.page(prepare(source, FileKind.TEXT), DisplayMode.PLAIN, false, true)

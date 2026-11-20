@@ -19,10 +19,13 @@ Install `app/build/outputs/apk/debug/app-debug.apk` with `adb install -r`. This 
 - `ShareFiles` makes bounded temporary copies only after explicit Share actions and exposes them through a non-exported FileProvider with read-only URI grants. Original bytes (including BOM and line endings) are copied through the repository’s cancellable stream; preview output is never substituted. Copies expire after 24 hours on the next start/share, with a 20-copy cap.
 - `TextDocuments` enforces the 5 MiB byte limit while streaming, validates automatic UTF-8/BOM-marked UTF-16 or explicit legacy/endian decoding choices, computes line metadata, rejects binary control characters, and classifies supported syntax from filenames or MIME types.
 - `SourceSearch` performs cancellable, literal Unicode code-point matching with a linear-time KMP scan and bounded result metadata. `SourceSearchDialog` owns its short-lived worker and native result list. Search selection adds a streamed, escaped source marker without enabling JavaScript.
+- `HtmlMarkdown` converts bounded local HTML with jsoup into escaped Markdown, with input/DOM/output budgets and cancellation. Original HTML never enters WebView as active markup; see [HTML reading](html-reading.md).
 - `DocumentRenderer` and `SyntaxHighlighter` are plain Kotlin/JVM components. Previews never alter source. JSON formatting preserves duplicate keys and numeric spelling; malformed or overly nested JSON falls back to source. Highlighting accepts up to 512 Ki characters and stops adding spans after 10,000 tokens to bound the WebView node count.
 - The WebView receives generated HTML through an intercepted in-memory HTTPS response, avoiding oversized data URLs. Source is escaped as a stream to avoid allocating its full HTML expansion; soft-break elements at safe ASCII boundaries bound old WebView layout work without adding source characters. Cross-boundary search and full copying have regression coverage. Controls become available after a visual-state callback confirms layout, and renderer termination offers a plain-text retry. JavaScript, network loading, images, file access, content access, and DOM storage are disabled. A restrictive content security policy and request interception provide additional isolation. External web/email links require a user tap.
 
-Reading preferences and recent metadata stay on the device and are excluded from backup/transfer rules. Source text is not written to saved-instance bundles or preferences. URI-based documents can be reloaded after process recreation when access remains valid; unreferenced shared text is session-only.
+`StructuredNavigation` provides bounded native JSON/XML navigation. `ReadingProfile` resolves per-document typography against global defaults. `ComparisonActivity`/its session retain bounded read-only source snapshots and use the deterministic diff engine. `OutputSession` owns explicit create-document output and interruption metadata. `EditorActivity`/`EditorSession` provide bounded TXT/Markdown copy editing; `EditDraftStore` retains one content-bearing AtomicFile checkpoint in no-backup private storage. See [editor recovery](editing-copies.md), [comparison](comparison.md) and [Save as](save-as.md).
+
+Reading preferences and recent metadata stay on the device and are excluded from backup/transfer rules. Source text is not written to saved-instance bundles or preferences. Explicit copy editing is the documented private content-storage exception: its recovery checkpoint is retained until discard or saving the matching revision. URI-based documents can be reloaded after process recreation when access remains valid; unreferenced shared text is session-only.
 
 ## Automated checks
 
@@ -38,9 +41,9 @@ Device tests use a separate test-only content provider. They cover external file
 
 Reports are generated under `app/build/reports/tests/`, `app/build/reports/androidTests/`, and `app/build/reports/lint-results-debug.html`.
 
-Validation uses clean Android 10, 15, and 16 emulators (API 29, 35, and 36). The owner explicitly selected emulator validation because no physical device is available. Physical-device coverage is follow-up work, not a release gate. CI runs build, unit tests, lint, and API 29/36 instrumentation for pull requests and the default branch.
+Validation uses clean Android 10, 15, and 16 emulators (API 29, 35, and 36). The owner explicitly selected emulator validation because no physical device is available. That satisfies the original compatibility work; the later physical-device beta in #56 remains open before claiming provider, TalkBack or Magic V6 validation. CI runs build, unit tests, lint, and API 29/36 instrumentation for pull requests and the default branch.
 
-Completed configurations and evidence are recorded in [baseline validation](validation.md) and [reader UX validation](validation-reader-ux.md).
+Current 0.2-alpha evidence is in [roadmap implementation validation](validation-roadmap-implementation.md): 86 JVM tests and 123 device tests per API 29/36 passed. Earlier [baseline](validation.md) and [reader UX](validation-reader-ux.md) records retain historical configurations and counts.
 
 ## Manual acceptance checklist
 
@@ -64,9 +67,19 @@ The [release roadmap](roadmap.md) tracks this work through milestones and indivi
 
 `OpenDocuments` persists at most five URI references independently of recent history, retaining only active URI content and one transient shared-text entry in memory. `DocumentRepository` owns pin/Undo limits and releases persisted grants only after all reference owners relinquish them. Source line anchors stream with the existing HTML pipeline; Markdown heading IDs come from the bounded CommonMark tree. See [behavior and limits](open-documents.md) and `BacklogTest` for integration coverage.
 
-[Backlog validation](validation-backlog.md) records the current 20 JVM / 52 instrumentation cases and platform evidence.
+[Backlog validation](validation-backlog.md) records the historical 20 JVM / 52 instrumentation cases and platform evidence.
 ## Additional source formats
 
 `SourceHighlighter` decorates code, CSS, diff, and iCalendar source under the existing highlighting budgets. HTML uses escaped markup decoration. `CalendarPreview` summarizes bounded VEVENT data without executing code, expanding recurrence, resolving time zones, or loading resources. See [format behavior](formats.md) and [validation](validation-formats.md).
 
 Everyday-reading behavior and limits are documented in [search, encoding and navigation](everyday-reading.md); the [roadmap](roadmap.md) distinguishes the implemented batch from planned follow-ups.
+
+## Localization and public readiness
+
+English resources are the fallback; `values-de` translates UI and offline help. `preview_labels` arrays align generated Markdown/calendar labels and CSV column headings without translating document contents or supplied CSV headers. The renderer receives a translation function, keeping its JVM tests independent of Android. A language change regenerates retained previews. Android 13+ exposes English/German through app-language settings.
+
+Loading uses a generation guard and cancellation signal, with separate read/prepare/layout stages and a 1.5-second delayed explanation. During layout, native loading controls occupy a separate panel so the WebView remains visible. Removing that panel expands the viewport; reading-position restoration waits for the next draw at its final size. Discovery hints persist dismissal locally and follow the sidebar window/font thresholds. `ReleasePolishTest` covers cancellation, stale callbacks, hint persistence and localization. See [current validation](validation-public-readiness.md), [screenshots](screenshots.md), [contribution guidance](../CONTRIBUTING.md), and [Play preparation](store/readiness.md).
+
+Mode/settings/source-navigation renders reuse the attached WebView. A unique intercepted URL identifies each render, and generation checks reject stale page/visual/draw callbacks even when the native view is reused. Renderer failure disposes of the reader and offers plain-text recovery. `ReleasePolishTest` exercises native CSV table semantics and accessibility focus across transitions, with an opt-in TalkBack coexistence mode. See [reader-polish validation](validation-reader-polish.md) for the Android 10 stale-title diagnosis, exact test matrix and remaining accessibility coverage.
+
+`AccessibleCsvDialog` provides native selectable cells with collection/item metadata and native source text for bounded CSV documents. UI construction yields after at most 100 cells; closing cancels queued batches. Search uses matching cells or the existing bounded `SourceSearch` engine. Recreation persists only query/view/scroll metadata; source widgets disable text-state saving and the dialog excludes autofill. Sharing checks the active document and preserves original-byte/grant behavior. This is an explicit compatibility route for WebView accessibility omissions.

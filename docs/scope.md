@@ -6,9 +6,13 @@
 
 The first UX iteration added contextual menus and About, outgoing sharing, remembered reading state, and format overrides. The owner subsequently authorized #28–#33: manual reload, source line navigation, pinned recents with Undo, a Markdown outline, a five-document switcher, and Open with. See [behavior and limits](open-documents.md). The original source and rendering limits remain in force.
 
+## Approved output extension (2026-11-19)
+
+The roadmap implementation adds explicit **Save Markdown as…** for bounded local/shared HTML conversion. This creates a new selected output document; the original stays read-only. No broad storage or persistent write permission is requested. Pending contents remain in memory, with one-operation outcome/reference metadata for interruption recovery. See [Save as behavior and privacy](save-as.md). The separate copy editor below reuses this flow; in-place editing remains excluded.
+
 ## Purpose
 
-Provide a minimal, read-only Android app for opening and reading everyday text files. Users can select Textr from other apps, choose it as a default handler where Android allows, open files through the system picker, and revisit recent files.
+Provide a minimal offline Android reader for everyday text files. Original documents stay read-only; explicit export and a separate copy editor are approved extensions. Users can select Textr from other apps, choose it as a default handler where Android allows, open files through the system picker, and revisit recent files.
 
 ## Platform and files
 
@@ -52,7 +56,7 @@ Choose the initial display automatically and allow manual switching between appl
 
 ## Privacy and exclusions
 
-Textr has no editing, accounts, ads, analytics, or network permission. Document providers accessed through the system picker may independently use network access.
+Textr has no accounts, ads, analytics, or network permission. Original documents remain read-only; the explicit TXT/Markdown copy editor is the approved extension below. Document providers accessed through the system picker may independently use network access.
 
 The following are outside v1:
 
@@ -84,12 +88,28 @@ Implementation acceptance covers opening via the picker and another app; applica
 
 ## Additional formats (approved 2026-11-13)
 
-Java, JavaScript, CSS, HTML, Kotlin, Python, shell, SQL, diff/patch, and iCalendar receive bounded source highlighting and manual format choices. Supported iCalendar events also receive a read-only summary preview. HTML remains source-only. Calendar import, alarms, recurrence expansion, and time-zone conversion are excluded. Existing size, privacy, source-integrity, and rendering guarantees apply. See [format details and exact preview limits](formats.md).
+Java, JavaScript, CSS, HTML, Kotlin, Python, shell, SQL, diff/patch, and iCalendar receive bounded source highlighting and manual format choices. Supported iCalendar events also receive a read-only summary preview. HTML opens as source; the approved HTML reading extension below adds a bounded conversion option. Calendar import, alarms, recurrence expansion, and time-zone conversion are excluded. Existing size, privacy, source-integrity, and rendering guarantees apply. See [format details and exact preview limits](formats.md).
 
 ## Everyday reading extension (approved 2026-11-13)
 
-Issues #41–#49 track approved follow-up work. The first implementation batch adds source search with case/whole-word options and bounded results, per-file encoding overrides and decoding recovery, wide-screen tabs and active-document labels, richer Document info, and offline opening/default-app help. See [behavior and limits](everyday-reading.md). Issues #44–#46 add optional bounded CSV tables, approximate reading progress, independent named bookmarks and hardware shortcuts; see [reading extras](reading-extras.md). This explicitly extends the original CSV preview exclusion. Improved loading feedback (#49) remains planned. Existing read-only, source-size and offline requirements remain fixed.
+Issues #41–#49 track approved follow-up work. The first implementation batch adds source search with case/whole-word options and bounded results, per-file encoding overrides and decoding recovery, wide-screen tabs and active-document labels, richer Document info, and offline opening/default-app help. See [behavior and limits](everyday-reading.md). Issues #44–#46 add optional bounded CSV tables, approximate reading progress, independent named bookmarks and hardware shortcuts; see [reading extras](reading-extras.md). This explicitly extends the original CSV preview exclusion. Improved loading feedback (#49) now separates reading, preparation and layout, with explicit cancellation and delayed explanations. Existing read-only, source-size and offline requirements remain fixed.
 
 ## Optional foldable layout (requested 2026-11-13)
 
 Issue #51 adds a locally saved, opt-in sidebar for open and recent files beside the current reader on sufficiently large windows. Compact windows and enlarged system text retain existing navigation. See [layout thresholds and limits](foldable-layout.md). This does not add simultaneous document comparison, hinge-angle/tabletop layouts, or new permissions.
+
+## Public-readiness polish (2026-11-15)
+
+The authorized extension adds English/German UI and help, dismissible opening/sidebar guidance, explicit loading cancellation, and a public privacy policy linked from About. Repository screenshots and contributor documentation describe implemented behavior. Optional Play assets and bundle preparation are tracked separately in #57; store submission and production signing remain deferred. Physical beta (#56) and CSV cell accessibility (#59) remain distinct follow-ups.
+
+## HTML reading extension (requested 2026-11-18)
+
+Issues [#68](https://github.com/utrost/Textr/issues/68) and [#69](https://github.com/utrost/Textr/issues/69) authorize local/saved HTML and explicitly shared HTML content to be converted to a Markdown reading view. Original source/highlighting, read-only sharing, encoding and history rules remain available. The converter omits active content/resources and uses the existing restricted Markdown renderer. This does not enable embedded raw HTML in Markdown, website downloading, scripts or remote images. Generated-Markdown export was added by the subsequent approved output extension above. See [supported structures and limits](html-reading.md). This candidate is newer than the private `0.1-alpha` APK.
+
+## Planned feature development (tracked 2026-11-19)
+
+The [feature roadmap and backlog](feature-proposals.md) tracks future reading profiles/typography/structured navigation, source-format additions, explicit Markdown export, read-only comparison and optional edit-copy workflows. The reader preserves original bytes. Explicit export and copy editing add new output files and the documented private recovery draft. In-place editing and deferred rich-format/large-log ideas are outside these epics.
+
+## Approved copy editing extension (2026-11-19)
+
+The owner requested implementation of the roadmap, including #90–#94. **Edit a copy…** is a separate native editor for original TXT/Markdown source up to 256 Ki UTF-16 characters, 10,000 lines and 4,096 characters per line. It supports bounded undo/redo, literal find/replace, explicit encoding/BOM choices and Save as/Discard/Cancel. One content-bearing private recovery checkpoint lives in `noBackupFilesDir`, excluded from backup and independent of metadata-only reader history. There is no automatic eviction of the sole unsaved copy. A successful save clears only its confirmed matching revision; failure or cancellation preserves recovery. Process recovery uses the last completed checkpoint. See [encoding, newline, memory, retention and cleanup contract](editing-copies.md). In-place editing, rendered-preview editing, rich text and IDE workflows remain excluded.

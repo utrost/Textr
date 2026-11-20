@@ -1,132 +1,84 @@
-# Textr roadmap
+# Textr feature roadmap
 
-The roadmap leads to a signed, downloadable 0.1.0 APK with matching source, preserving Textr's minimal, offline, read-only scope. On 2026-11-12 the owner requested completion of implementation and deferred public release. Issue #13 remains open; no production signing key is created as part of implementation.
+Updated 20 November 2026. Textr is an offline Android reader that preserves originals, with explicit export and copy editing. The current testing release is **0.2-alpha**, available to repository maintainers as a draft GitHub prerelease. Public APK and store publication remain deferred.
 
-**Live tracker:** [Roadmap #14](https://github.com/utrost/Textr/issues/14). Individual GitHub issues are the source of truth for progress, acceptance criteria, and verification evidence.
+[Live tracker #14](https://github.com/utrost/Textr/issues/14) links the work below. Individual issues hold acceptance criteria; an implementation in a candidate branch is not the same as accepted and merged work. The phases describe delivery order, not dates or promised version numbers.
 
-## Current state
+## Available in the alpha
 
-The initial implementation and validation issues #1–#12 are complete, merged through #23. The baseline passed 17 JVM tests and 33 instrumentation cases on Android 10 and 16 CI, plus Android 15 and live TalkBack validation. Public release remains deferred.
+The `v0.2-alpha` tag points to source commit `e4d3ce7182978d235f6035f439e4f169adff5b60`. Its non-debuggable APK (code 2) uses the same development signing identity as 0.1-alpha; an in-place upgrade preserving settings was verified on API 36. See [release notes](release-notes-0.2-alpha.md), the [private draft release](https://github.com/utrost/Textr/releases/tag/untagged-91b226e699ea4047e362) and [signing guidance](releasing.md). The original `v0.1-alpha` artifact remains immutable.
 
-## Reader UX iteration (approved 2026-11-13)
+In addition to the baseline below, **all five feature epics and 19 implementation issues are included in 0.2-alpha**: reading profiles/typography, JSON/XML navigation, everyday formats, HTML Markdown export, read-only comparison and TXT/Markdown copy editing. Availability in the testing APK does not close review/integration or physical acceptance work.
 
-Implemented in [PR #34](https://github.com/utrost/Textr/pull/34): navigation, sharing, reading continuity, and format interpretation. These changes preserve read-only operation, Android 10+, the 5 MiB limit, and no network permission. See the [iteration milestone](https://github.com/utrost/Textr/milestone/4).
-
-| Issue | Work |
-| --- | --- |
-| [#24](https://github.com/utrost/Textr/issues/24) | Simplify reader navigation and add contextual menus and About |
-| [#25](https://github.com/utrost/Textr/issues/25) | Share original files and selected text through Android |
-| [#26](https://github.com/utrost/Textr/issues/26) | Remember reading position and display mode for recent files |
-| [#27](https://github.com/utrost/Textr/issues/27) | Add document information and a remembered Treat as format override |
-
-The owner authorized the following backlog on 2026-11-13. Implementation includes a five-document switcher and bounded source navigation; [design and limits](open-documents.md) define session persistence, memory, grant lifetime, Back behavior, pins, and Undo.
-
-Implementation: [PR #35](https://github.com/utrost/Textr/pull/35), with [validation evidence](validation-backlog.md). See the [implementation milestone](https://github.com/utrost/Textr/milestone/5).
-
-| Issue | Approved backlog implementation |
-| --- | --- |
-| [#28](https://github.com/utrost/Textr/issues/28) | Reload an externally changed document while preserving reading context |
-| [#29](https://github.com/utrost/Textr/issues/29) | Add optional source line numbers and Go to line |
-| [#30](https://github.com/utrost/Textr/issues/30) | Improve recent-file metadata and add pinning and undo |
-| [#31](https://github.com/utrost/Textr/issues/31) | Navigate Markdown documents using a heading outline |
-| [#32](https://github.com/utrost/Textr/issues/32) | Add a bounded open-document switcher |
-| [#33](https://github.com/utrost/Textr/issues/33) | Hand off a document using Open with another app |
-
-## Additional text formats (approved 2026-11-13)
-
-Implementation extends source highlighting and adds a bounded iCalendar event summary. Public release remains deferred. See [format behavior and limits](formats.md) and [milestone 6](https://github.com/utrost/Textr/milestone/6).
-
-| Issue | Work |
-| --- | --- |
-| [#36](https://github.com/utrost/Textr/issues/36) | Java, JavaScript, CSS, and HTML source highlighting |
-| [#37](https://github.com/utrost/Textr/issues/37) | Kotlin, Python, shell, SQL, and diff highlighting |
-| [#38](https://github.com/utrost/Textr/issues/38) | iCalendar recognition and source highlighting |
-| [#39](https://github.com/utrost/Textr/issues/39) | Bounded read-only iCalendar event previews |
-
-## Everyday reading (approved 2026-11-13)
-
-[Milestone 7](https://github.com/utrost/Textr/milestone/7) tracks the next improvements. The first implementation batch covers source search, encoding recovery, navigation, document metadata and offline help. CSV preview, bookmarks/progress and keyboard shortcuts are implemented by the next batch (#44–#46); loading feedback (#49) remains open. Public release is still deferred.
-
-| Issue | Work | Sequence |
+| Capability | Included behavior | Tracking |
 | --- | --- | --- |
-| [#41](https://github.com/utrost/Textr/issues/41) | Improve search with source results and matching options | First implementation batch |
-| [#42](https://github.com/utrost/Textr/issues/42) | Reopen documents with an explicit text encoding | First implementation batch |
-| [#43](https://github.com/utrost/Textr/issues/43) | Make document switching and format selection easier to discover | First implementation batch |
-| [#44](https://github.com/utrost/Textr/issues/44) | Add an optional bounded CSV table preview | Implemented |
-| [#45](https://github.com/utrost/Textr/issues/45) | Add reading progress and named document bookmarks | Implemented |
-| [#46](https://github.com/utrost/Textr/issues/46) | Support hardware keyboard reader shortcuts | Implemented |
-| [#47](https://github.com/utrost/Textr/issues/47) | Show text encoding and line information in Document info | First implementation batch |
-| [#48](https://github.com/utrost/Textr/issues/48) | Add offline help for opening files and Android defaults | First implementation batch |
-| [#49](https://github.com/utrost/Textr/issues/49) | Explain slow loading and provide a clear cancel action | Later iteration |
+| Open and share | System picker, Open with/Share, original-file sharing, document information and format overrides | #24–#27, #33 |
+| Reading continuity | Recent-file pinning/Undo, reload, saved position/mode, up to five open documents | #26, #28, #30, #32 |
+| Find and navigate | Source search, matching options, line numbers, Go to line, Markdown outline, bookmarks/progress, keyboard shortcuts | #29, #31, #41, #45, #46 |
+| Formats and decoding | Bounded source highlighting and Markdown/JSON/calendar/CSV previews; explicit encoding recovery | #36–#39, #42, #44 |
+| Layout and help | Optional wide-screen sidebar, document metadata and offline opening/default-app help | #43, #47, #48, #51 |
+| Reader polish | Loading stages/cancel, English/German interface and help, dismissible opening/sidebar hints | #49, #54, #55; implemented, acceptance pending |
+| Accessible CSV fallback | Native table/source views, search and original-byte sharing independent of WebView accessibility nodes | #59; compatibility implementation, investigation remains open |
 
-## Foldable layout (requested 2026-11-13)
+The implementation passed build/lint, **86 JVM tests and 123 device tests on each of API 29 and API 36** in [hosted CI](https://github.com/utrost/Textr/actions/runs/44590125674), source `352d178`. Release commit `e4d3ce7` changes version defaults and release documentation only; its clean release build/lint, signing/manifest/checksum, downloaded-artifact verification, fresh installation and upgrade from 0.1-alpha passed. See [implementation validation](validation-roadmap-implementation.md). Emulator evidence does not establish physical-device or human spoken-feedback acceptance.
 
-[#51](https://github.com/utrost/Textr/issues/51) adds an opt-in file sidebar beside the reader on sufficiently wide and tall windows, with automatic compact/large-text fallback. See [activation, behavior, and limits](foldable-layout.md). This supports the requested use of a foldable inner display without device-model detection. Physical Magic V6 and hinge/posture-specific validation remain follow-ups. Public release remains deferred.
+## Now — test 0.2-alpha and integrate the implementation
 
-## Original release roadmap
+- Review/integrate the stacked reader-polish, HTML and roadmap PRs (#60, #70, #95, #96). All five roadmap epics are implemented and included in the testing APK; issues remain open until accepted. Earlier failing branch runs are historical evidence, not the current implementation result.
+- Verify acceptance for #49 loading/cancel, #54 German UI/help, #55 discovery hints and #61 reopening against the integrated source. Their behavior is covered by the complete green implementation matrix.
+- Keep [#59](https://github.com/utrost/Textr/issues/59) open: the native CSV/source compatibility views are included, but the underlying WebView accessibility omission and human spoken-feedback review remain separate.
+- Exercise local/shared HTML reading and Markdown export (#68/#69, #85/#86). These are included in 0.2-alpha, with offline/source safety and bounded conversion. See [HTML behavior](html-reading.md) and [Save as](save-as.md). Live URL fetching remains outside scope.
 
-The completed foundation and validation stages are retained below for traceability. GitHub issues are the source of truth for completion evidence. Original P0/P1 priorities describe release sequencing.
+## Next — private beta feedback and reading reliability
 
-## 1. Foundation
+Use [#56 real-device beta](https://github.com/utrost/Textr/issues/56) to collect findings from the alpha. A physical device is not currently available to the implementation workflow; device-dependent checks remain open until evidence exists. Historical emulator-only acceptance for the original baseline does not imply that these new checks passed.
 
-[GitHub milestone](https://github.com/utrost/Textr/milestone/1)
+| Focus | User outcome | Acceptance |
+| --- | --- | --- |
+| Opening and recovery | Files open consistently from the picker, other apps and available document providers | Exercise denied/revoked grants, moved/unavailable files, reload and recovery with synthetic documents; originals remain unchanged |
+| Accessible reading | Controls, native CSV cells/source, search and copy remain usable with TalkBack and enlarged text | Human spoken-feedback review, repeated navigation/recreation, visible and reachable actions at 200% text |
+| Foldables and large windows | Reading context survives outer/inner display changes, rotation and resizing | Physical Magic V6 or equivalent device evidence, sidebar opt-in and compact fallback, no lost file/mode/position |
+| Responsiveness | Slow-provider reads and bounded previews explain progress and cancel reliably | Cancel during reading/preparation/layout, open another document immediately, and confirm obsolete work cannot replace it |
 
-Publish the existing source, establish automated checks, and fix the optional-provider-metadata opening failure.
+Turn reproducible beta findings into focused issues with fixture, Android/WebView versions and acceptance criteria. Keep private document contents out of reports. Prioritize opening, data integrity and accessibility regressions before convenience features.
 
-| Issue | Work | Priority | Depends on |
+## Feature roadmap implementation
+
+The requested feature roadmap now has **five epics and 19 implementation issues**, implemented in tested batches on [PR #96](https://github.com/utrost/Textr/pull/96), included in 0.2-alpha and awaiting integration and acceptance. The [feature roadmap and backlog](feature-proposals.md) contains the detailed scope, tradeoffs and dependency order. Epics are native children of [tracker #14](https://github.com/utrost/Textr/issues/14), with their implementation issues nested underneath.
+
+| Sequence | Epic | Implementation issues | State |
 | --- | --- | --- | --- |
-| [#1](https://github.com/utrost/Textr/issues/1) | Publish the initial Android source and documentation baseline | P0 | None |
-| [#2](https://github.com/utrost/Textr/issues/2) | Add CI for builds, unit tests, lint, and Android instrumentation | P0 | #1 |
-| [#3](https://github.com/utrost/Textr/issues/3) | Open readable documents when optional provider metadata is unavailable | P1 | #1 |
+| 1 — reader improvements | [#71](https://github.com/utrost/Textr/issues/71) — Reading comfort and structured navigation | [#76](https://github.com/utrost/Textr/issues/76), [#77](https://github.com/utrost/Textr/issues/77), [#78](https://github.com/utrost/Textr/issues/78), [#79](https://github.com/utrost/Textr/issues/79) | Included in 0.2-alpha; integration/acceptance pending |
+| 2 — focused format batch | [#72](https://github.com/utrost/Textr/issues/72) — Everyday text and configuration format support | [#80](https://github.com/utrost/Textr/issues/80), [#81](https://github.com/utrost/Textr/issues/81), [#82](https://github.com/utrost/Textr/issues/82), [#83](https://github.com/utrost/Textr/issues/83), [#84](https://github.com/utrost/Textr/issues/84) | Included in 0.2-alpha; integration/acceptance pending |
+| 3a — explicit export | [#73](https://github.com/utrost/Textr/issues/73) — Export HTML reading content as Markdown | [#85](https://github.com/utrost/Textr/issues/85), [#86](https://github.com/utrost/Textr/issues/86) | Included in 0.2-alpha; integration/acceptance pending |
+| 3b — compare documents | [#74](https://github.com/utrost/Textr/issues/74) — Bounded read-only document comparison | [#87](https://github.com/utrost/Textr/issues/87), [#88](https://github.com/utrost/Textr/issues/88), [#89](https://github.com/utrost/Textr/issues/89) | Included in 0.2-alpha; integration/acceptance pending |
+| 4 — deliberate editing extension | [#75](https://github.com/utrost/Textr/issues/75) — Optional plain-text and Markdown editing of copies | [#90](https://github.com/utrost/Textr/issues/90), [#91](https://github.com/utrost/Textr/issues/91), [#92](https://github.com/utrost/Textr/issues/92), [#93](https://github.com/utrost/Textr/issues/93), [#94](https://github.com/utrost/Textr/issues/94) | Included in 0.2-alpha; integration/acceptance pending |
 
-## 2. Validation
+Implementation followed reader improvements and focused formats → Markdown export and read-only comparison → TXT/Markdown editing of copies. All batches are now available for private testing; review/integration and beta feedback are next. Save as output is shared by export and editing; edit-copy saving follows the explicit scope/recovery work. Existing beta and distribution issues continue separately.
 
-[GitHub milestone](https://github.com/utrost/Textr/milestone/2)
+Original files remain read-only. Export and copy editing use new output documents; [private recovery](editing-copies.md) explicitly extends storage/privacy behavior. In-place editing, more languages, PDF/DOCX/EPUB and large/live logs remain deferred decisions. No dates or future version numbers are committed. These feature epics are independent of the first public APK gate (#13); completing all of them is not a prerequisite for publishing the accepted baseline.
 
-Validate Android integration and the app's reading, reliability, accessibility, and privacy promises. Independent work can proceed in parallel once its listed prerequisites are met.
+## Distribution work — separate from reader features
 
-| Issue | Work | Priority | Depends on |
-| --- | --- | --- | --- |
-| [#4](https://github.com/utrost/Textr/issues/4) | Validate Open with, Share, and default-handler behavior across file types | P0 | #1, #3 |
-| [#5](https://github.com/utrost/Textr/issues/5) | Complete Android 10–16 emulator compatibility validation | P0 | #1 |
-| [#6](https://github.com/utrost/Textr/issues/6) | Automate reader controls and restoration across lifecycle changes | P1 | #1 |
-| [#7](https://github.com/utrost/Textr/issues/7) | Test recent-file persistence, grant cleanup, and unavailable-file recovery | P1 | #1 |
-| [#8](https://github.com/utrost/Textr/issues/8) | Validate accessible reading controls and layouts | P1 | #1 |
-| [#9](https://github.com/utrost/Textr/issues/9) | Bound rendering work and recover from document-renderer failures | P1 | #1 |
-| [#10](https://github.com/utrost/Textr/issues/10) | Add regression coverage for offline rendering and source-file integrity | P1 | #1 |
+Private testing is available now. Preparation below does not authorize public publication or production-key creation.
 
-## 3. Release
+| Track | Work and dependencies | Status / exit gate |
+| --- | --- | --- |
+| Public downloadable APK | [#13](https://github.com/utrost/Textr/issues/13): accepted candidate, retained production signing identity, matching source/notices/checksum, downloaded-artifact verification | Deferred; private development-signed alpha does not complete this issue |
+| Privacy readiness | [#53](https://github.com/utrost/Textr/issues/53): policy/About integration and store privacy declarations | Candidate implementation exists; accountable developer/contact and final public policy URL still need owner review |
+| F-Droid build and listing | [#62](https://github.com/utrost/Textr/issues/62) secret-free release path and [#63](https://github.com/utrost/Textr/issues/63) English/German metadata/screenshots | Implemented in draft [PR #67](https://github.com/utrost/Textr/pull/67), stacked on #60; not merged; its earlier standalone CI failure must be rechecked after rebase |
+| F-Droid recipe and signing policy | [#64](https://github.com/utrost/Textr/issues/64) clean recipe/build/scanner validation; [#65](https://github.com/utrost/Textr/issues/65) signing and cross-channel updates | #64 follows the unsigned build path and an integrated tested tag; recipe must match the selected #65 route |
+| F-Droid submission | [#66](https://github.com/utrost/Textr/issues/66) | Wait for #59/#61 acceptance, #62–#65, tested source/tag, current eligibility review and explicit publication authorization; external acceptance is not guaranteed |
+| Optional Google Play | [#57](https://github.com/utrost/Textr/issues/57): AAB path, listing assets, account/signing/testing requirements | Preparation exists in #60; account-specific checks, #53/#56 follow-ups and publication decision remain open |
 
-[GitHub milestone](https://github.com/utrost/Textr/milestone/3)
+Rebase the separate F-Droid work onto accepted source before validating that channel. PR #67's older version/listing/recipe must be aligned with the selected release. Current private testing is `0.2-alpha`/code 2; preserve both alpha tags and artifacts. Future APK updates must use a version code above 2 and a compatible signing identity; switching to a production key requires uninstalling the development-signed alpha, removing private settings/history.
 
-Signing setup can proceed once CI exists. Publication waits for all foundation and validation work, verified signing, and accurate user documentation.
+Distribution sequence: accept the shared source → integrate and validate each selected build path → create a new tested tag → complete that channel's signing, policy and owner decisions → publish only when authorized. Standard F-Droid signing need not depend on an owner-signed GitHub APK; #65 determines the route.
 
-| Issue | Work | Priority | Depends on |
-| --- | --- | --- | --- |
-| [#11](https://github.com/utrost/Textr/issues/11) | Set up a repeatable signed release build and upgrade verification | P0 | #2 |
-| [#12](https://github.com/utrost/Textr/issues/12) | Prepare installation, default-app guidance, screenshots, and release notes | P1 | #4, #5, #11 |
-| [#13](https://github.com/utrost/Textr/issues/13) | Publish the first signed APK release with matching source and checksums | P0 | #2–#12; #1 is a prerequisite of those issues |
+## Product boundaries and upkeep
 
-The release must come from the tested source commit, pass signature/checksum verification, include matching source and license notices, and pass a downloaded-artifact installation check. A signing identity must be supplied and retained by the repository owner; keys and passwords stay outside source control.
+Keep Android 10+, the 5 MiB source-file limit, unchanged originals, bounded rendering/sessions and no app network permission. Explicit export, read-only comparison and TXT/Markdown copy editing are roadmap extensions; copy recovery is the documented content-bearing private-storage exception. In-place editing, file management, huge-log support, direct cloud integrations, Markdown images/embedded HTML and unbounded tabs remain outside the agreed scope. See [product scope](scope.md).
 
-## Scope and upkeep
+Update this roadmap and #14 when priorities or acceptance change. Close issues with exact-source evidence, distinguish shipped/merged/candidate/proposed work, and verify external channel requirements at submission time. Dates and version names for future phases remain unset.
 
-The owner confirmed emulator-only validation on 2026-11-12 because no physical device is available. API 29, 35, and 36 emulator evidence satisfies the compatibility release gate; physical-device checks remain follow-up coverage.
-
-Android 10+, text files up to 5 MiB, read-only behavior, and no app network permission remain fixed. Editing, unbounded tab sessions, file management, huge-log support, direct cloud integrations, Markdown images/embedded HTML, and store publication remain outside v1. New features require a separate scope decision.
-
-Close work issues with acceptance evidence and update the [tracker checklist](https://github.com/utrost/Textr/issues/14). Update this document when scope or dependencies change; use GitHub for live completion status. See the [product scope](scope.md) and [development notes](development.md) for implementation context.
-
-## Release polish follow-ups
-
-Public release remains deferred. These issues capture the release-readiness review without adding an implementation commitment to this batch.
-
-- [#49](https://github.com/utrost/Textr/issues/49): loading explanation and explicit cancellation (existing issue).
-- [#53](https://github.com/utrost/Textr/issues/53): public privacy policy and About integration.
-- [#54](https://github.com/utrost/Textr/issues/54): German interface and offline help.
-- [#55](https://github.com/utrost/Textr/issues/55): contextual opening-help and sidebar discovery.
-- [#56](https://github.com/utrost/Textr/issues/56): real-device beta, providers, accessibility and Magic V6 checks.
-- [#57](https://github.com/utrost/Textr/issues/57): optional Play App Bundle and store-listing preparation; publication remains deferred.
-- [#59](https://github.com/utrost/Textr/issues/59): investigate intermittent CSV cell accessibility in WebView 133 and validate with TalkBack; source remains the accessible baseline.
-
-Validation for #44–#46 is recorded in [reading extras validation](validation-reading-extras.md) and [PR #58](https://github.com/utrost/Textr/pull/58).
+Completed foundation, reader UX, formats, everyday-reading and foldable milestones, their issue links and the prior release plan are preserved in the [historical roadmap](roadmap-history.md). They are history, not additional outstanding work.

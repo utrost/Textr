@@ -36,3 +36,14 @@ License: GPL-3.0-only. Dependency notices are bundled in the app and source.
 - Offline help for opening files, defaults and temporary access.
 
 See [details and limits](everyday-reading.md). Public release remains deferred.
+
+## Reading extras and public repository preparation
+
+- Optional CSV tables, explicit delimiters/header rows, approximate progress, independent named bookmarks and keyboard shortcuts.
+- Optional wide-screen file sidebar with compact/large-text fallback.
+- Reading/preparation/layout feedback, explicit cancellation and delayed slow-operation explanations.
+- Dismissible opening-help and sidebar discovery hints.
+- English/German UI, help and generated preview labels; Android app-language support.
+- About privacy-policy link, public privacy/contribution/security documentation, fresh synthetic emulator screenshots and optional Play preparation drafts.
+
+Known CSV accessibility limitations and physical-device testing remain open. No public binary, production key or store upload has been created. See [current validation](validation-public-readiness.md).

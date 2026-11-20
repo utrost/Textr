@@ -64,6 +64,18 @@ class CsvPreviewTest {
         assertEquals(FileKind.TEXT, TextDocuments.kind("file.txt", "text/csv"))
     }
 
+    @Test fun generatedColumnLabelsAreLocalizedWithoutTranslatingOrChangingSource() {
+        val source = TextDocument("labels.csv", "Column,Start\nSpalte,End\n", FileKind.CSV, 28)
+        val translate: (String) -> String = { if (it == "Column") "Spalte" else "unexpected translation" }
+        val prepared = DocumentRenderer.prepare(source, translate = translate)
+        assertTrue(prepared.preview!!.contains("<th scope=\"col\">Spalte 1</th>"))
+        assertTrue(prepared.preview.contains("<td>Column</td>"))
+        assertTrue(prepared.preview.contains("<td>Start</td>"))
+        assertEquals(source, prepared.source)
+        val suppliedHeaders = DocumentRenderer.prepare(source, CsvOptions(firstRowHeader = true), translate)
+        assertTrue(suppliedHeaders.preview!!.contains("<th scope=\"col\">Column</th>"))
+    }
+
     @Test fun parsingCanBeCancelled() {
         Thread.currentThread().interrupt()
         try {

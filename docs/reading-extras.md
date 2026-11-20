@@ -12,7 +12,9 @@ Preview limits: 256 Ki UTF-16 input characters, 1,000 records (including a selec
 
 The table scrolls horizontally and vertically within the reader with sticky column headers. Semantic table/header/cell markup supports accessibility. Cells support native text selection/copy; copied cell text is decoded table content, while source view preserves CSV delimiters/quoting. **Share file** and **Open with** still send the original bytes, including BOM, encoding and line endings. HTML, formulas and links in cells remain inert text. Table scroll offsets reset when the preview is rebuilt, for example on rotation or reload; source reading positions continue to restore. No sorting, filtering, editing or spreadsheet calculation is provided.
 
-**Known accessibility limitation:** WebView 133 on the Android 16 emulator intermittently omits CSV cells from Android's accessibility tree after page changes, despite rendering them correctly. Use **Plain text** if cells cannot be reached with a screen reader. Investigation and real TalkBack validation are tracked in [#59](https://github.com/utrost/Textr/issues/59).
+For screen-reader navigation, choose **⋮ → Accessible table…**. This native compatibility view uses the current delimiter/header choices and the same preview budgets. Cells have row/column and heading metadata and support selection/copy. **Show source** provides the complete decoded CSV as selectable native text. Search finds matching cells, or up to 200 literal matches in source; queries are limited to 1,000 UTF-16 units. Its view, query and approximate position survive rotation. Share still sends original file bytes. Closing this view returns to the reader; it adds no editing, sorting or filtering.
+
+**WebView limitation:** WebView 133 can omit cells or source descendants after transitions. The compatibility view provides native table/source access independently of that bridge; it does not repair WebView itself. See [investigation and validation](validation-reader-polish.md).
 
 ## Reading progress and bookmarks
 
@@ -37,3 +39,7 @@ Opening a bookmark rereads the current file and clamps its approximate position 
 Switching follows the tab strip’s stable alphabetical filename order (file reference breaks ties) and wraps. Reader shortcuts require a loaded document; Go to line is unavailable in previews. Text fields, dialogs and menus retain control of their shortcuts; Alt/Meta combinations and standard copy/selection shortcuts are not intercepted. Holding a shortcut does not repeatedly launch actions. All actions remain available through touch controls.
 
 Discover the list in **About Textr → Keyboard shortcuts**, or Android's keyboard shortcut helper. Dispatch and helper integration use the [Android hardware-input APIs](https://developer.android.com/develop/ui/views/touch-and-input/input-compatibility-on-large-screens).
+
+## Accessibility follow-up
+
+[#59](https://github.com/utrost/Textr/issues/59) records the WebView limitation and native compatibility fallback. See [reproduction notes](csv-accessibility.md) and [validation](validation-reader-polish.md). Generated headings, native controls and help are available in English and German.

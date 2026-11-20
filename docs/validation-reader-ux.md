@@ -1,5 +1,7 @@
 # Reader UX validation
 
+Historical validation record for the batch below. For the current 0.2-alpha test matrix and release evidence, see [roadmap implementation validation](validation-roadmap-implementation.md). Earlier failures and test counts are retained as recorded.
+
 This iteration implements roadmap issues #24–#27. The earlier [baseline validation](validation.md) remains the record for original interoperability, performance, and signing rehearsals. Public release remains deferred.
 
 ## Coverage

@@ -1,0 +1,13 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'none'; img-src 'none'">
+<title>Textr CSV accessibility fixture</title>
+<style>
+body { margin:0; padding:20px; font:16px/1.6 sans-serif; }
+.csv-scroll { overflow:auto; max-height:calc(100vh - 40px); }
+table { border-collapse:collapse; margin:0; }
+th,td { border:1px solid #789486; padding:6px 12px; white-space:pre-wrap; min-width:6em; }
+th { position:sticky; top:0; background:#fafaf7; }
+</style>
+<div class="csv-scroll"><table><thead><tr><th scope="col">Heading</th><th scope="col">Other</th></tr></thead><tbody><tr><td>Cell target</td><td>Second cell</td></tr><tr><td>Third cell</td><td>Fourth cell</td></tr></tbody></table></div>

@@ -30,7 +30,7 @@ class AdditionalFormatsTest {
             assertEquals(kind.name, SyntaxHighlighter.escape(source), output.replace(Regex("</?span[^>]*>"), ""))
             assertFalse(output.contains("<script>"))
             assertTrue(DisplayMode.HIGHLIGHTED in prepared(source, kind).modes)
-            if (kind != FileKind.ICALENDAR) assertNull(prepared(source, kind).preview)
+            if (kind !in setOf(FileKind.ICALENDAR, FileKind.HTML)) assertNull(prepared(source, kind).preview)
         }
     }
 

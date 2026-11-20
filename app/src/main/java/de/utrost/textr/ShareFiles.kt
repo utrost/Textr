@@ -55,6 +55,7 @@ class ShareFiles(private val context: Context) {
         const val MAX_AGE_MS = 24 * 60 * 60 * 1000L
         const val MAX_COPIES = 20
         fun mime(name: String, kind: FileKind): String = when {
+            name.endsWith(".tsv", ignoreCase = true) -> "text/tab-separated-values"
             name.endsWith(".csv", ignoreCase = true) -> "text/csv"
             else -> when (kind) {
                 FileKind.MARKDOWN -> "text/markdown"
@@ -64,6 +65,8 @@ class ShareFiles(private val context: Context) {
                 FileKind.TOML -> "application/toml"
                 FileKind.JAVA -> "text/x-java-source"
                 FileKind.JAVASCRIPT -> "text/javascript"
+                FileKind.TYPESCRIPT -> "text/typescript"
+                FileKind.TSX -> "text/tsx"
                 FileKind.CSS -> "text/css"
                 FileKind.HTML -> "text/html"
                 FileKind.KOTLIN -> "text/x-kotlin"

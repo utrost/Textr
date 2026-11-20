@@ -7,6 +7,7 @@
         </intent>
     </queries>
     <application
+        android:localeConfig="@xml/locales_config"
         android:allowBackup="false"
         android:fullBackupContent="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -26,6 +27,8 @@
             android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/shared_paths" />
         </provider>
+        <activity android:name=".EditorActivity" android:launchMode="singleTask" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".ComparisonActivity" android:launchMode="singleTask" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -57,6 +60,9 @@
                 <data android:mimeType="application/x-sh" />
                 <data android:mimeType="application/x-shellscript" />
                 <data android:mimeType="application/sql" />
+                <data android:mimeType="application/typescript" />
+                <data android:mimeType="application/x-java-properties" />
+                <data android:mimeType="application/tsv" />
                 <data android:mimeType="application/octet-stream" />
             </intent-filter>
             <intent-filter>
@@ -87,6 +93,9 @@
                 <data android:mimeType="application/x-sh" />
                 <data android:mimeType="application/x-shellscript" />
                 <data android:mimeType="application/sql" />
+                <data android:mimeType="application/typescript" />
+                <data android:mimeType="application/x-java-properties" />
+                <data android:mimeType="application/tsv" />
                 <data android:mimeType="application/octet-stream" />
             </intent-filter>
         </activity>

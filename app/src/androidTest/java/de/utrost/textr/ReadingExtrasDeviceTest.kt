@@ -403,7 +403,18 @@ class ReadingExtrasDeviceTest {
         repeat(3) { attempt ->
             try {
                 var node = device.wait(Until.findObject(selector), 3000)
-                if (node == null) node = device.findObject(By.scrollable(true))?.scrollUntil(Direction.DOWN, Until.findObject(selector))
+                if (node == null) {
+                    // Prefer the dialog's native scroll container to the reader
+                    // behind it. A single scroll can report its end before the
+                    // next accessibility snapshot includes the newly visible row.
+                    for (step in 0 until 4) {
+                        val scroller = device.findObject(By.clazz("android.widget.ScrollView").scrollable(true))
+                            ?: device.findObject(By.scrollable(true)) ?: break
+                        scroller.scroll(Direction.DOWN, 0.8f)
+                        node = device.wait(Until.findObject(selector), 1000)
+                        if (node != null) break
+                    }
+                }
                 if (node == null) {
                     device.dumpWindowHierarchy(java.io.File(context.cacheDir, "extras-control.xml"))
                     device.takeScreenshot(java.io.File(context.cacheDir, "extras-control.png"))

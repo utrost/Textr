@@ -1,6 +1,6 @@
 package de.utrost.textr
 
-data class CsvOptions(val delimiter: Char = ',', val firstRowHeader: Boolean = false) {
+data class CsvOptions(val delimiter: Char = ',', val firstRowHeader: Boolean = false, val configured: Boolean = delimiter != ',' || firstRowHeader) {
     init { require(delimiter in DELIMITERS) }
     companion object { val DELIMITERS = listOf(',', ';', '\t', '|') }
 }
@@ -55,13 +55,13 @@ object CsvPreview {
         return rows
     }
 
-    fun render(source: String, options: CsvOptions): String = buildString {
+    fun render(source: String, options: CsvOptions, translate: (String) -> String = { it }): String = buildString {
         val rows = parse(source, options.delimiter)
         val columns = rows.maxOfOrNull { it.size } ?: 0
         append("<div class=\"csv-scroll\"><table class=\"csv\"><thead><tr>")
         // Generated headings are explicit; the first source row remains data by default.
         for (index in 0 until columns) {
-            val label = if (options.firstRowHeader) rows.first().getOrNull(index).orEmpty() else "Column ${index + 1}"
+            val label = if (options.firstRowHeader) rows.first().getOrNull(index).orEmpty() else "${translate("Column")} ${index + 1}"
             append("<th scope=\"col\">").append(SyntaxHighlighter.escape(label)).append("</th>")
         }
         append("</tr></thead><tbody>")

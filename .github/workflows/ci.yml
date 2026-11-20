@@ -79,13 +79,18 @@ jobs:
       - name: Run connected tests
         uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
         with:
+          # Match the locally validated runtime rather than floating SDK emulator updates.
+          emulator-build: 15004761 # 36.4.10
           api-level: ${{ matrix.api }}
           target: google_apis
           arch: x86_64
           profile: pixel_2
+          pre-emulator-launch-script: python3 .github/scripts/configure-test-avd.py "$HOME/.android/avd/test.avd/config.ini"
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
-          script: ./gradlew :app:connectedDebugAndroidTest --stacktrace
+          script: |
+            .github/scripts/prepare-test-device.sh
+            ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.minimumHeapMiB=128 --stacktrace
       - name: Retain device reports
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

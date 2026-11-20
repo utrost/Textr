@@ -37,3 +37,7 @@ The copy preserves original source bytes and uses the same bounded private cache
 See [search and encoding details](everyday-reading.md) for recovery, metadata, and source-results navigation.
 
 Named bookmarks are a third independent owner of URI read access. Closing all documents and clearing history keeps bookmarked references; delete or clear bookmarks separately. See [reading extras](reading-extras.md).
+
+## Interrupted loading
+
+The loading panel offers Cancel and return to files and Open file during reading, preparation and layout. Cancelling an unfinished read does not add it to recent history. Already opened documents retain their existing references; cancellation does not delete files.

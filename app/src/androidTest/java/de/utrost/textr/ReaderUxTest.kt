@@ -82,7 +82,9 @@ class ReaderUxTest {
             }
             assertTrue(position > 0)
             click(By.desc("Back to files"))
-            click("long.ini")
+            // A stale title node can still say long.ini after Back and resolve
+            // to the new Textr title at click time. Only activate the recent button.
+            click(By.clazz(android.widget.Button::class.java).text("long.ini").clickable(true))
             ready(scenario)
             assertPosition(scenario, position)
         }
@@ -261,7 +263,14 @@ class ReaderUxTest {
         assertTrue("Format selection should close the picker",
             device.wait(Until.gone(By.text(context.getString(R.string.treat_as))), 5000))
     }
-    private fun menu(label: String) { click(By.desc("More options")); click(label) }
+    private fun menu(label: String) {
+        click(By.desc("More options"))
+        if (!device.wait(Until.hasObject(By.text(label)), 1_000)) {
+            val popup = androidx.test.uiautomator.UiScrollable(androidx.test.uiautomator.UiSelector().className("android.widget.ListView").scrollable(true))
+            assertTrue("Menu action reachable by scrolling: $label", popup.scrollTextIntoView(label))
+        }
+        click(label)
+    }
     private fun click(label: String) = click(By.text(java.util.regex.Pattern.compile(java.util.regex.Pattern.quote(label), 2)))
     private fun click(selector: BySelector) {
         repeat(3) { attempt ->

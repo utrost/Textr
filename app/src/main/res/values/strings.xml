@@ -19,7 +19,7 @@
     <string name="plain_text">Plain text</string>
     <string name="highlighted">Highlighted</string>
     <string name="preview">Preview</string>
-    <string name="loading">Opening file…</string>
+    <string name="loading">Reading file…</string>
     <string name="rendering">Preparing view…</string>
     <string name="cannot_open">Cannot open this file</string>
     <string name="open_again">Open file again</string>
@@ -62,7 +62,7 @@
     <string name="automatic">Automatic</string>
     <string name="source_code">Source code</string>
     <string name="report_issue">Report an issue</string>
-    <string name="about_privacy">A read-only text viewer. No accounts, ads, analytics, or network permission.\n\nHistory, open documents and bookmarks store references and reading metadata, not document contents. Bookmarks also keep names you enter and a source fingerprint to detect changes. Clear bookmarks separately from history. Sharing or opening a file with another app creates a temporary copy. Old copies are cleaned on the next app start or share after 24 hours; only the latest 20 are kept.\n\nLicensed under GPL-3.0-only.</string>
+    <string name="about_privacy">Offline text reading, comparison and editing of separate copies. No accounts, ads, analytics, or network permission.\n\nHistory, open documents and bookmarks store references and reading metadata, not document contents. Bookmarks also keep names you enter and a source fingerprint to detect changes. Clear bookmarks separately from history. Sharing or opening a file with another app creates a temporary copy. Old copies are cleaned on the next app start or share after 24 hours; only the latest 20 are kept.\n\nEdit a copy explicitly retains one private content-bearing recovery checkpoint, excluded from backup. Resume it from home. Discard or a successful save of the matching revision removes it; failed or cancelled saves keep recovery. Very recent typing may be lost on process termination. Original files stay unchanged.\n\nLicensed under GPL-3.0-only.</string>
     <string name="about_details">Textr %1$s\n\n%2$s</string>
     <string name="reload">Reload</string>
     <string name="open_documents">Open documents</string>
@@ -103,7 +103,7 @@
     <string name="source_results_count">%1$d matches in source</string>
     <string name="source_result_line">Line %1$d</string>
     <string name="opening_help">Opening files and defaults</string>
-    <string name="opening_help_text">Open file\nChoose a document through Android’s system picker. This is also the fallback when another app does not offer Textr.\n\nOpen with and Share\nIn a file manager or another app, select a file, choose Open with or Share, then choose Textr. Shared text can also be viewed. Textr’s own Share file and Open with actions send a read-only copy to another app.\n\nChoosing a default\nWhen Android offers Always, you can select Textr as the default. The available choices depend on the sending app and the reported file type (MIME type), not just the filename extension. Some apps always use their own viewer. Textr cannot force an association for every extension.\n\nUnavailable recent files\nRecent files and open documents store references, not contents. A moved or deleted file, or an expired temporary permission, may require you to select it again using Open file. Clearing history does not delete your files.\n\nOlder text files\nIf text cannot be decoded or looks wrong, try Reopen with encoding. Your choice only changes how Textr reads the bytes; it does not convert the file.\n\nOffline viewing\nTextr has no network permission. A document provider selected in the system picker may independently use the network to retrieve your file.</string>
+    <string name="opening_help_text">Open file\nChoose a document through Android’s system picker. This is also the fallback when another app does not offer Textr.\n\nOpen with and Share\nIn a file manager or another app, select a file, choose Open with or Share, then choose Textr. Shared text can also be viewed. Textr’s own Share file and Open with actions send a read-only copy to another app.\n\nChoosing a default\nWhen Android offers Always, you can select Textr as the default. The available choices depend on the sending app and the reported file type (MIME type), not just the filename extension. Some apps always use their own viewer. Textr cannot force an association for every extension.\n\nUnavailable recent files\nRecent files and open documents store references, not contents. A moved or deleted file, or an expired temporary permission, may require you to select it again using Open file. Clearing history does not delete your files.\n\nOlder text files\nIf text cannot be decoded or looks wrong, try Reopen with encoding. Your choice only changes how Textr reads the bytes; it does not convert the file.\n\nOffline viewing\nTextr has no network permission. A document provider selected in the system picker may independently use the network to retrieve your file.\n\nSaved HTML\nOpen a local HTML file, then choose Markdown reading view from the display-mode button. The original source stays available. HTML shared as content can also be read; a shared website URL stays text. Scripts and remote images are not loaded.\n\nReading settings\nSize, wrapping, font and spacing can follow global defaults or use Only this document. Source stays monospace.\n\nStructure and formats\nJSON/XML Structure offers navigation and explicit copy actions while keeping original source. Source colors include .env, .properties, Dockerfile and TypeScript/TSX. TSV uses the CSV table with Tab as its initial delimiter; explicit table choices are remembered.\n\nExport, comparison and copy editing\nSave Markdown as creates a new file from HTML reading output. Compare source uses two read-only snapshots; Ctrl+Up/Down navigates changes, and compact/large-text windows use unified view. Edit a copy opens original TXT/Markdown source in a separate editor, up to 256 Ki characters. Undo/redo uses Ctrl+Z/Y; Ctrl+F finds/replaces literal text and Ctrl+S saves a new copy. A private recovery copy persists until discarded or its matching revision is saved. Resume it from home; process recovery restores the last completed checkpoint. Originals are never overwritten.</string>
     <string name="sidebar_setting">File sidebar on wide screens</string>
     <string name="sidebar_help">Keep open and recent files beside the reader on an unfolded phone or tablet. The sidebar hides when space is limited or system text is enlarged.</string>
     <string name="open_recent">Open recent file: %1$s</string>
@@ -143,4 +143,162 @@ Ctrl+Shift+Tab — Previous open document
 Document switching follows alphabetical filename order. Shortcuts leave text fields, dialogs and menus in control. Reader actions are available after loading; Go to line requires a source view. Standard copy, selection and system shortcuts are unchanged.</string>
     <string name="next_document">Next open document</string>
     <string name="previous_document">Previous open document</string>
+    <string name="laying_out">Laying out document…</string>
+    <string name="cancel_loading">Cancel and return to files</string>
+    <string name="slow_reading">Still reading the file. Its provider may be waiting for storage or a connection. You can cancel or open another file.</string>
+    <string name="slow_rendering">Large files and long lines can take longer to display. You can cancel or open another file.</string>
+    <string name="opening_discovery">Opening from another app? Learn how Open with, Share and Android defaults work.</string>
+    <string name="sidebar_discovery">More room to read: you can enable a file sidebar in Reading settings.</string>
+    <string name="dismiss_hint">Dismiss hint</string>
+    <string name="privacy_policy">Privacy policy</string>
+    <string-array name="preview_labels">
+        <item>[image omitted]</item>
+        <item>Untitled heading</item>
+        <item>Calendar events</item>
+        <item>Event summary. Times keep their supplied time zone; no conversion is applied. Recurrences are not expanded. Other calendar data remains in source.</item>
+        <item>Calendar method</item>
+        <item>Untitled event</item>
+        <item>Start</item>
+        <item>Not supplied</item>
+        <item>End (exclusive)</item>
+        <item>Location</item>
+        <item>Description</item>
+        <item>Status</item>
+        <item>Organizer</item>
+        <item>Duration (as supplied)</item>
+        <item>Recurrence rule (not expanded)</item>
+        <item>Additional recurrence dates (as supplied)</item>
+        <item>Excluded dates (as supplied)</item>
+        <item>Recurrence instance</item>
+        <item>Recurrence range</item>
+        <item>all day</item>
+        <item>time zone:</item>
+        <item>floating time; no time zone supplied</item>
+        <item>Column</item>
+    </string-array>
+    <string name="unnamed_file">Text file</string>
+    <string name="csv_accessible">Accessible table…</string>
+    <string name="csv_empty_cell">Empty cell</string>
+    <string name="csv_column">Column %1$d</string>
+    <string name="csv_cell_matches">Cell %1$d of %2$d</string>
+    <string name="csv_show_source">Show source</string>
+    <string name="html_reading_view">Markdown reading view</string>
+    <string name="html_limit">HTML reading preview is limited to 256 Ki characters. The full source is available.</string>
+    <string name="shared_html_name">Shared text.html</string>
+    <string name="document_reading_setting">Only this document</string>
+    <string name="reading_font">Reading font (source stays monospace)</string>
+    <string name="font_sans">Sans serif</string>
+    <string name="font_serif">Serif</string>
+    <string name="font_monospace">Monospace</string>
+    <string name="line_spacing">Line spacing</string>
+    <string name="line_spacing_value">Line spacing: %1$d%%</string>
+    <string name="use_global_reading_defaults">Use global reading defaults</string>
+    <string name="reading_preferences_help">Size, wrapping, font and spacing change the global defaults unless Only this document is selected. Reset removes this document’s override when you tap Done.</string>
+    <string name="structure_outline">Structure</string>
+    <string name="structure_help">Select an entry for navigation or copy actions. Values copy exact source.</string>
+    <string name="structure_unavailable">Navigation unavailable: malformed, unsupported, or over the 256 Ki character / 2,000 node / 64 level budget. The complete source remains available. DTDs and entity declarations are unsupported.</string>
+    <string name="structure_node_spoken">Level %1$d, %2$s, %3$s, line %4$d, %5$s</string>
+    <string name="structure_expanded">expanded</string>
+    <string name="structure_collapsed">collapsed</string>
+    <string name="structure_expand">Expand</string>
+    <string name="structure_collapse">Collapse</string>
+    <string name="structure_jump">Go to original source</string>
+    <string name="structure_copy_path">Copy path</string>
+    <string name="structure_copy_value">Copy exact source value</string>
+    <string name="structure_copy_limit">Copy limit: 64 Ki characters. Select from source instead.</string>
+    <string name="structure_copied">Copied</string>
+    <string name="structure_object">object</string>
+    <string name="structure_array">array</string>
+    <string name="structure_string">string</string>
+    <string name="structure_number">number</string>
+    <string name="structure_boolean">boolean</string>
+    <string name="structure_null">null</string>
+    <string name="structure_element">element</string>
+    <string name="structure_attribute">attribute</string>
+    <string name="save_copy">Save a new copy</string>
+    <string name="html_export">Save Markdown as…</string>
+    <string name="html_export_unavailable">Markdown export unavailable…</string>
+    <string name="html_export_unavailable_help">Conversion could not complete within the reading-view limits. Original source remains available; no partial Markdown will be exported.</string>
+    <string name="html_export_help">Save the Markdown reading content as a new UTF-8 file. Images, scripts, forms and hidden content are omitted. Review the result before reuse.</string>
+    <string name="choose_destination">Choose destination</string>
+    <string name="output_writing">Saving %1$s…</string>
+    <string name="output_saved">Saved %1$s.</string>
+    <string name="output_cancelled">Saving %1$s was cancelled. The source remains unchanged.</string>
+    <string name="output_refused">Destination refused for %1$s: a new content document is required. The source was not opened for writing.</string>
+    <string name="output_interrupted">Saving %1$s was interrupted. Please inspect any output before retrying.</string>
+    <string name="output_failed">Could not save %1$s. The source remains unchanged; choose another destination and try again.</string>
+    <string name="output_partial">A possibly incomplete document remains at %1$s. Inspect or remove it with your file manager.</string>
+
+    <string name="compare_title">Compare source…</string>
+    <string name="compare_choose_left">Choose left input</string>
+    <string name="compare_choose_right">Choose right input</string>
+    <string name="compare_previous">Previous change</string>
+    <string name="compare_next">Next change</string>
+    <string name="compare_wide">Side by side · linked scrolling</string>
+    <string name="compare_unified">Unified comparison</string>
+    <string name="compare_legend">= unchanged · − removed on left · + added on right</string>
+    <string name="compare_not_selected">No input selected</string>
+    <string name="compare_snapshot">%1$s · captured %2$s</string>
+    <string name="compare_input">%1$s: %2$s</string>
+    <string name="compare_left_name">Left</string>
+    <string name="compare_right_name">Right</string>
+    <string name="compare_choose_file">Choose a file…</string>
+    <string name="compare_open_reader">Open in reader</string>
+    <string name="compare_loading">Reading and comparing snapshots…</string>
+    <string name="compare_limited">Comparison unavailable within its limits: 512 KiB and 256 Ki characters per input, 10,000 lines, 16,384 characters per line, and a bounded change search. Original files remain available in the reader.</string>
+    <string name="compare_cancelled">Comparison cancelled. Choose or reload an input to try again.</string>
+    <string name="compare_read_error">Cannot read this input. Choose another file or restore access, then reload.</string>
+    <string name="compare_shared_lost">The shared snapshot was lost after the process ended. Choose that input again.</string>
+    <string name="compare_identical">Decoded text is identical, including line endings. Encodings or BOMs may differ.</string>
+    <string name="compare_change_count">Change %1$d of %2$d</string>
+    <string name="compare_choose_help">Choose both inputs. Snapshots are read-only; reloading captures a new version. Ctrl+Up/Down moves between changes.</string>
+    <string name="compare_changed">A source changed since its captured version. The comparison was refreshed and its position reset.</string>
+    <string name="compare_no_line">No corresponding line</string>
+    <string name="compare_no_ending">no line ending</string>
+    <string name="compare_line">%1$s · line %2$d · %3$s</string>
+    <string name="compare_copy_line">Copy exact source line</string>
+
+    <string name="editor_edit_copy">Edit a copy…</string>
+    <string name="editor_title">Editing a copy</string>
+    <string name="editor_resume">Resume recovery copy…</string>
+    <string name="editor_buffer">Editable source copy</string>
+    <string name="editor_undo">Undo</string>
+    <string name="editor_redo">Redo</string>
+    <string name="editor_find">Find</string>
+    <string name="editor_replace">Replace</string>
+    <string name="editor_replace_all">Replace all</string>
+    <string name="editor_find_replace">Find and replace · literal text</string>
+    <string name="editor_limit">Copy editing accepts TXT and Markdown up to 256 Ki characters, 10,000 lines and 4,096 characters per line. The requested input or change exceeds an editor limit; existing text is unchanged.</string>
+    <string name="editor_recovery_notice">This edits a separate source copy. Textr stores one private recovery copy containing the text, excluded from backup. It remains until you discard it or successfully save that revision to a new file. Process recovery restores the last completed checkpoint; very recent typing may be lost. Clearing app data or uninstalling removes recovery. The original file is never overwritten.</string>
+    <string name="editor_existing">A recovery copy already exists. Resume it and save or discard it before starting a different copy.</string>
+    <string name="editor_loading">Preparing private recovery…</string>
+    <string name="editor_unavailable">No recovery copy can be opened. Return to the reader to start a new copy. If private storage is unavailable, restore storage access first.</string>
+    <string name="editor_dirty">Unsaved changes · original unchanged</string>
+    <string name="editor_clean">No unsaved changes · original unchanged</string>
+    <string name="editor_format">%1$s · %2$s · existing line endings: %3$s</string>
+    <string name="editor_with_bom">with BOM</string>
+    <string name="editor_no_bom">without BOM</string>
+    <string name="editor_no_endings">none; new lines use LF</string>
+    <string name="editor_recovery_failed">Recovery could not be updated. Keep this editor open and save a copy; the previous checkpoint is retained.</string>
+    <string name="editor_recovery_ready">Private recovery copy is up to date.</string>
+    <string name="editor_recovery_pending">Updating private recovery copy…</string>
+    <string name="editor_saved_recovery_removed">Saved revision confirmed; recovery copy removed.</string>
+    <string name="editor_encoding">Output encoding</string>
+    <string name="editor_bom">Include Unicode byte-order mark (BOM)</string>
+    <string name="editor_save_help">Choose a new output file. Existing text and line endings are preserved. New lines follow a uniform original CRLF/CR convention; mixed endings insert LF. Characters that cannot be encoded cause a visible failure.</string>
+    <string name="editor_conversion_title">Confirm output format change</string>
+    <string name="editor_conversion">Save the copy using %1$s and the selected BOM setting? This changes the output format; original bytes and existing text/newlines remain unchanged.</string>
+    <string name="editor_unsaved">Unsaved copy</string>
+    <string name="editor_leave_help">Save this revision to a new file, discard the private recovery copy, or cancel to continue editing.</string>
+    <string name="editor_discard">Discard copy</string>
+    <string name="editor_matches">%1$d matches</string>
+    <string name="editor_matches_limited">First %1$d matches · navigation limited; Replace all scans the complete bounded buffer.</string>
+    <string name="editor_match_position">Match %1$d of %2$d</string>
+    <string name="editor_replaced">%1$d replacements · one undo step</string>
+    <string name="editor_discard_help">Delete the private recovery copy and close this editor? Original and saved output files remain unchanged.</string>
+    <string name="editor_replace_confirm">Replace all %1$d matches throughout this copy? This is one undo step and does not save a file.</string>
+    <string name="editor_saved_access">Open the saved copy now to add its reference to the reader. Future access depends on the selected provider.</string>
+    <string name="editor_open_saved">Open saved copy</string>
+    <string name="editor_replace_hint">Replacement (up to 4 Ki characters)</string>
+    <string name="editor_replace_limit">Replacement is limited to 4 Ki characters. The previous replacement text is unchanged.</string>
 </resources>
