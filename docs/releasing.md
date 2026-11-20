@@ -10,6 +10,10 @@ On 18 November 2026 the owner requested a release APK for private testing, uploa
 
 The draft includes the APK, SHA-256 checksum, public signing certificate fingerprint, and exact tagged GPLv3 source. Draft assets require repository write access; publishing the draft would make the testing APK public.
 
+## Private 0.2-alpha update
+
+The owner requested a new release on 20 November 2026. Version `0.2-alpha` (code 2) includes the roadmap implementation from PR #96 and retains the 0.1-alpha development signing identity for in-place updates. It remains a draft prerelease for private testing; production signing is deferred. See [release notes](release-notes-0.2-alpha.md).
+
 ## Prepare the signing identity
 
 Reuse an existing Textr release key if one exists. Losing it prevents updates to installations signed with it. For a first release, the owner can create a key outside the checkout with JDK 17's `keytool`:
