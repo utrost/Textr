@@ -180,6 +180,22 @@ class EverydayReadingDeviceTest {
                 click(By.res(context.packageName, "match_case"))
                 click(By.res(context.packageName, "whole_word"))
                 assertTrue(device.wait(Until.hasObject(By.text("3 matches in source")), 10000))
+                // All option combinations have three matches in this fixture. The
+                // old status text can remain visible until the injected click is
+                // handled; wait for the selected options AND the refreshed adapter.
+                await {
+                    var populated = false
+                    scenario.onActivity {
+                        val root = android.view.inspector.WindowInspector.getGlobalWindowViews()
+                            .firstOrNull { view -> view.findViewById<android.widget.ListView>(R.id.source_results) != null }
+                        val list = root?.findViewById<android.widget.ListView>(R.id.source_results)
+                        populated = root?.findViewById<android.widget.CheckBox>(R.id.match_case)?.isChecked == true &&
+                            root.findViewById<android.widget.CheckBox>(R.id.whole_word)?.isChecked == true &&
+                            list?.adapter?.count == list?.headerViewsCount?.plus(3) &&
+                            root.findViewById<TextView>(R.id.source_result_count)?.text.toString() == context.getString(R.string.source_results_count, 3)
+                    }
+                    populated
+                }
                 click(By.text("Line 3")); ready(scenario)
                 scenario.onActivity { assertTrue(it.findViewById<WebView>(R.id.reader).height > 0) }
             }
@@ -209,9 +225,20 @@ class EverydayReadingDeviceTest {
             try {
                 var node = device.wait(Until.findObject(selector), 3000)
                 if (node == null) {
-                    val list = device.findObject(By.res(context.packageName, "source_results"))
-                        ?: device.findObject(By.scrollable(true))
-                    node = list?.scrollUntil(Direction.DOWN, Until.findObject(selector))
+                    val sourceList = device.findObject(By.res(context.packageName, "source_results"))
+                    if (sourceList != null) {
+                        // On API 36 scrollUntil returned null with the native list
+                        // still above its final row (retained hierarchy/screenshot).
+                        // Reacquire the list after each bounded gesture and inspect
+                        // the requested row instead of treating that return as EOF.
+                        for (step in 0 until 10) {
+                            val list = device.findObject(By.res(context.packageName, "source_results")) ?: break
+                            list.scroll(Direction.DOWN, 0.7f)
+                            device.waitForIdle()
+                            node = device.findObject(selector)
+                            if (node != null) break
+                        }
+                    } else node = device.findObject(By.scrollable(true))?.scrollUntil(Direction.DOWN, Until.findObject(selector))
                 }
                 if (node == null) {
                     device.dumpWindowHierarchy(java.io.File(context.cacheDir, "reader-test-failure.xml"))

@@ -133,6 +133,13 @@ class EditorDeviceTest {
             } finally { directory.setWritable(true, true); file.setWritable(true, true) }
             scenario.onActivity { it.findViewById<Button>(R.id.retry_recovery).performClick() }
             checkpoint(source + " unsaved")
+            // Atomic persistence happens on the worker before its UI acknowledgement.
+            // Wait for that acknowledgement rather than racing it after reading disk.
+            await {
+                var acknowledged = false
+                scenario.onActivity { acknowledged = !model(it).recoveryFailed && model(it).checkpointRevision == model(it).buffer!!.revision }
+                acknowledged
+            }
             scenario.onActivity { assertFalse(model(it).recoveryFailed); assertTrue(model(it).dirty) }
         }
     }
