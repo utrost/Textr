@@ -44,11 +44,11 @@ Turn reproducible beta findings into focused issues with fixture, Android/WebVie
 
 ## Next roadmap — reliable daily use
 
-The next roadmap adds **six epics and 13 implementation issues**. These are planned follow-ups, separate from the five completed 0.2-alpha epics. No date or version is promised. Existing reliability, private-beta and distribution issues remain open and are linked from the new epics rather than duplicated.
+The next roadmap adds **six epics and 13 implementation issues**. These are follow-ups, separate from the five completed 0.2-alpha epics; the reliability implementation is in progress and the other tracks remain planned. No date or version is promised. Existing reliability, private-beta and distribution issues remain open and are linked from the new epics rather than duplicated.
 
 | Order | Epic | New implementation issues | State |
 | --- | --- | --- | --- |
-| 1 | [#98](https://github.com/utrost/Textr/issues/98) — Reliable daily use: recovery and acceptance | [#99](https://github.com/utrost/Textr/issues/99) | Planned |
+| 1 | [#98](https://github.com/utrost/Textr/issues/98) — Reliable daily use: recovery and acceptance | [#99](https://github.com/utrost/Textr/issues/99) | Implementation in progress; #56/#59 acceptance remains open |
 | 2 | [#100](https://github.com/utrost/Textr/issues/100) — Copy editor polish: preview, navigation and saved copies | [#101](https://github.com/utrost/Textr/issues/101), [#102](https://github.com/utrost/Textr/issues/102), [#103](https://github.com/utrost/Textr/issues/103) | Planned |
 | 3 | [#104](https://github.com/utrost/Textr/issues/104) — Comparison improvements: draft review and portable diffs | [#105](https://github.com/utrost/Textr/issues/105), [#106](https://github.com/utrost/Textr/issues/106), [#107](https://github.com/utrost/Textr/issues/107) | Planned |
 | 4 | [#108](https://github.com/utrost/Textr/issues/108) — Reading organization: recents search and reference collections | [#109](https://github.com/utrost/Textr/issues/109), [#110](https://github.com/utrost/Textr/issues/110) | Planned |
@@ -109,3 +109,7 @@ Completed foundation, reader UX, formats, everyday-reading and foldable mileston
 ## Branch housekeeping
 
 After merging #96, ten fully merged remote branches and four local branches were removed. Their commits remain reachable from `main`; alpha tags/artifacts are unchanged. The unmerged F-Droid branch and Dependabot PR branches are retained. PR #67 now targets `main` rather than the removed reader-polish branch.
+
+## Reliability implementation follow-up
+
+The first implementation batch addresses #97 and #99: pending-position preservation during recreation, actionable opening/output errors, cancellation returning to the previous reader snapshot, explicit bookmark reconnection and private-recovery retry. See [behavior](recovery.md) and [validation](validation-reliability.md). Full validation and integration are pending; #98 remains open for #56 physical acceptance and #59 WebView investigation.

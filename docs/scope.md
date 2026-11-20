@@ -108,8 +108,10 @@ Issues [#68](https://github.com/utrost/Textr/issues/68) and [#69](https://github
 
 ## Planned feature development (tracked 2026-11-19)
 
-The [feature roadmap and backlog](feature-proposals.md) tracks future reading profiles/typography/structured navigation, source-format additions, explicit Markdown export, read-only comparison and optional edit-copy workflows. The reader preserves original bytes. Explicit export and copy editing add new output files and the documented private recovery draft. In-place editing and deferred rich-format/large-log ideas are outside these epics.
+The [feature roadmap and backlog](feature-proposals.md) separates completed 0.2-alpha features from the next reliability, editor-polish, comparison, organization, focused-format and release-preparation batch. The reader preserves original bytes. Explicit export and copy editing add new output files and the documented private recovery draft. In-place editing and deferred rich-format/large-log ideas are outside these epics.
 
 ## Approved copy editing extension (2026-11-19)
 
 The owner requested implementation of the roadmap, including #90–#94. **Edit a copy…** is a separate native editor for original TXT/Markdown source up to 256 Ki UTF-16 characters, 10,000 lines and 4,096 characters per line. It supports bounded undo/redo, literal find/replace, explicit encoding/BOM choices and Save as/Discard/Cancel. One content-bearing private recovery checkpoint lives in `noBackupFilesDir`, excluded from backup and independent of metadata-only reader history. There is no automatic eviction of the sole unsaved copy. A successful save clears only its confirmed matching revision; failure or cancellation preserves recovery. Process recovery uses the last completed checkpoint. See [encoding, newline, memory, retention and cleanup contract](editing-copies.md). In-place editing, rendered-preview editing, rich text and IDE workflows remain excluded.
+
+Reader recovery retains at most one last-ready snapshot in memory during a replacement load or error. It uses existing document limits, survives activity recreation only, and is released on home or replaced when the next document becomes ready. This does not add a persisted document cache. See [recovery behavior](recovery.md).

@@ -63,12 +63,12 @@ class BacklogTest {
             assertTrue("Shortened content clamps scroll (allow CSS pixel rounding)", scroll(scenario) <= 4)
             context.contentResolver.call(uri("mutable.ini"), "missing", uri("mutable.ini").toString(), null)
             menu("Reload")
-            assertTrue(device.wait(Until.hasObject(By.text(context.getString(R.string.access_error))), 10000))
+            assertTrue(device.wait(Until.hasObject(By.text(context.getString(R.string.file_unavailable))), 10000))
             replace("mutable.ini", "restored = file")
             click(By.desc("Back to files")); click("mutable.ini"); ready(scenario)
             context.contentResolver.call(uri("mutable.ini"), "revoke", uri("mutable.ini").toString(), null)
             menu("Reload")
-            assertTrue(device.wait(Until.hasObject(By.text(context.getString(R.string.access_error))), 10000))
+            assertTrue(device.wait(Until.hasObject(By.text(context.getString(R.string.access_denied))), 10000))
         }
     }
 

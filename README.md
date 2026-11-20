@@ -20,6 +20,8 @@ The source is public. Public APK distribution, production signing and store publ
 
 ![Read-only comparison with linked side-by-side source views](docs/images/reading-comparison.png)
 
+The reliability follow-up implements clearer [opening/save recovery](docs/recovery.md) and preserves pending reading position during recreation. It is undergoing validation separately from the 0.2-alpha APK; see [evidence and remaining acceptance](docs/validation-reliability.md).
+
 [More screenshots and capture details](docs/screenshots.md) · [Feature roadmap](docs/roadmap.md)
 
 

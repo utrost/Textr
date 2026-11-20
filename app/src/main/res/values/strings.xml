@@ -301,4 +301,20 @@ Document switching follows alphabetical filename order. Shortcuts leave text fie
     <string name="editor_open_saved">Open saved copy</string>
     <string name="editor_replace_hint">Replacement (up to 4 Ki characters)</string>
     <string name="editor_replace_limit">Replacement is limited to 4 Ki characters. The previous replacement text is unchanged.</string>
+    <string name="access_denied">Access was denied or permission has expired. Select the file again to request access.</string>
+    <string name="file_unavailable">The provider could not open this file. It may have moved, been deleted, or be temporarily unavailable. Retry or select it again.</string>
+    <string name="provider_unavailable">The document provider stopped responding. Retry when it is available or choose another file.</string>
+    <string name="picker_unavailable">The system file picker could not be opened. Your current document is kept.</string>
+    <string name="retry_open">Retry opening</string>
+    <string name="return_to_document">Return to previous document</string>
+    <string name="reselect_help">Selecting a different file opens it with its own reading settings. Existing bookmarks and recovery drafts stay with their original document.</string>
+    <string name="bookmark_reconnect_title">Reconnect this bookmark?</string>
+    <string name="bookmark_reconnect_help">You selected a different file. Reconnect this bookmark and its reading position only if this is the same document at a new location. Open separately keeps the bookmark unchanged.</string>
+    <string name="bookmark_reconnect">Reconnect bookmark</string>
+    <string name="open_separately">Open separately</string>
+    <string name="retry_recovery">Retry private recovery</string>
+    <string name="editor_recovery_unreadable">The private recovery copy could not be read. Retry or return to files; the copy is kept. Discard permanently removes it.</string>
+    <string name="output_access_denied">Permission to save %1$s was denied. Your source is unchanged. Choose another destination with Save a new copy.</string>
+    <string name="output_unavailable">The destination for %1$s is unavailable. Your source is unchanged. Try Save a new copy when the provider is available, or choose another destination.</string>
+    <string name="output_encoding_failed">%1$s contains characters that cannot be saved in the selected encoding. Your source is unchanged. Use Save a new copy and choose a suitable encoding, such as UTF-8.</string>
 </resources>

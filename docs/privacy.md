@@ -1,5 +1,7 @@
 # Textr privacy policy
 
+Reader recovery may temporarily retain the last ready document snapshot in memory while another file opens or fails. It is bounded by the existing reader limits, released on returning home or replaced when the next document is ready, and not written to history or a recovery file. Output operation metadata also retains a categorical failure reason, without exception messages or file contents.
+
 Effective: 19 November 2026. Applies to the Textr Android app (`de.utrost.textr`), maintained by [utrost](https://github.com/utrost) in the [Textr project](https://github.com/utrost/Textr).
 
 Textr reads original documents without changing them and offers explicit export and editing of separate text/Markdown copies. It has no accounts, advertising, analytics, developer-operated backend, or Android network permission. Textr does not send your documents or usage information to its maintainer.

@@ -295,4 +295,20 @@
     <string name="editor_open_saved">Gespeicherte Kopie öffnen</string>
     <string name="editor_replace_hint">Ersetzung (bis 4 Ki Zeichen)</string>
     <string name="editor_replace_limit">Ersetzung ist auf 4 Ki Zeichen begrenzt. Der vorige Ersetzungstext bleibt unverändert.</string>
+    <string name="access_denied">Der Zugriff wurde verweigert oder die Berechtigung ist abgelaufen. Wähle die Datei erneut, um Zugriff anzufordern.</string>
+    <string name="file_unavailable">Der Anbieter konnte diese Datei nicht öffnen. Sie wurde möglicherweise verschoben, gelöscht oder ist vorübergehend nicht verfügbar. Versuche es erneut oder wähle sie neu aus.</string>
+    <string name="provider_unavailable">Der Dokumentanbieter antwortet nicht mehr. Versuche es erneut, wenn er verfügbar ist, oder wähle eine andere Datei.</string>
+    <string name="picker_unavailable">Die System-Dateiauswahl konnte nicht geöffnet werden. Dein aktuelles Dokument bleibt erhalten.</string>
+    <string name="retry_open">Öffnen erneut versuchen</string>
+    <string name="return_to_document">Zum vorherigen Dokument</string>
+    <string name="reselect_help">Eine andere Datei wird mit ihren eigenen Leseeinstellungen geöffnet. Vorhandene Lesezeichen und Wiederherstellungskopien bleiben ihrem ursprünglichen Dokument zugeordnet.</string>
+    <string name="bookmark_reconnect_title">Dieses Lesezeichen neu zuordnen?</string>
+    <string name="bookmark_reconnect_help">Du hast eine andere Datei gewählt. Ordne dieses Lesezeichen und seine Leseposition nur neu zu, wenn es dasselbe Dokument an einem neuen Ort ist. Separat öffnen lässt das Lesezeichen unverändert.</string>
+    <string name="bookmark_reconnect">Lesezeichen neu zuordnen</string>
+    <string name="open_separately">Separat öffnen</string>
+    <string name="retry_recovery">Private Wiederherstellung erneut versuchen</string>
+    <string name="editor_recovery_unreadable">Die private Wiederherstellungskopie konnte nicht gelesen werden. Versuche es erneut oder kehre zu den Dateien zurück; die Kopie bleibt erhalten. Verwerfen entfernt sie dauerhaft.</string>
+    <string name="output_access_denied">Die Berechtigung zum Speichern von %1$s wurde verweigert. Die Quelle bleibt unverändert. Wähle über Kopie speichern einen anderen Speicherort.</string>
+    <string name="output_unavailable">Der Speicherort für %1$s ist nicht verfügbar. Die Quelle bleibt unverändert. Versuche Kopie speichern erneut, sobald der Anbieter verfügbar ist, oder wähle einen anderen Speicherort.</string>
+    <string name="output_encoding_failed">%1$s enthält Zeichen, die nicht in der gewählten Kodierung gespeichert werden können. Die Quelle bleibt unverändert. Wähle über Kopie speichern eine passende Kodierung, etwa UTF-8.</string>
 </resources>

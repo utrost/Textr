@@ -131,9 +131,31 @@ class EditorDeviceTest {
                 assertEquals(source, store.read()!!.text)
                 scenario.onActivity { assertTrue(it.findViewById<TextView>(R.id.editor_status).text.contains(it.getString(R.string.editor_recovery_failed))) }
             } finally { directory.setWritable(true, true); file.setWritable(true, true) }
-            editor(scenario) { it.text.append(" retried") }; checkpoint(source + " unsaved retried")
+            scenario.onActivity { it.findViewById<Button>(R.id.retry_recovery).performClick() }
+            checkpoint(source + " unsaved")
+            scenario.onActivity { assertFalse(model(it).recoveryFailed); assertTrue(model(it).dirty) }
         }
     }
+    @Test fun unreadableRecoveryCanBeRetriedWithoutDiscardingIt() {
+        val draft = EditDraft.new(TextDocument("recovery.md", source, FileKind.MARKDOWN, source.toByteArray().size, "UTF-8"), sourceUri.toString())
+        assertTrue(store.create(draft))
+        val file = File(context.noBackupFilesDir, "edits/current.json")
+        val bytes = file.readBytes()
+        file.writeText("interrupted fixture")
+        try {
+            ActivityScenario.launch<EditorActivity>(Intent(context, EditorActivity::class.java)).use { scenario ->
+                await { var failed = false; scenario.onActivity { failed = model(it).unavailable && model(it).recoveryFailed }; failed }
+                scenario.onActivity { assertTrue(it.findViewById<TextView>(R.id.editor_status).text.contains(it.getString(R.string.editor_recovery_unreadable))) }
+                assertEquals("interrupted fixture", file.readText())
+                file.writeBytes(bytes)
+                scenario.onActivity { it.findViewById<Button>(R.id.retry_recovery).performClick() }
+                ready(scenario)
+                editor(scenario) { assertEquals(source, it.text.toString()) }
+                assertEquals(draft.id, store.read()!!.id)
+            }
+        } finally { file.writeBytes(bytes) }
+    }
+
     @Test fun realSavePickerPreservesBomEncodingNewlinesAndDeletesOnlyConfirmedRecovery() {
         fixture("configure", "edited.md")
         val monitor = monitor(target("edited.md"))
@@ -168,6 +190,16 @@ class EditorDeviceTest {
                 await { var failed = false; scenario.onActivity { failed = ViewModelProvider(it)[OutputSession::class.java].status.result == OutputResult.FAILED }; failed }
                 assertEquals(source + "!", store.read()!!.text)
                 scenario.onActivity { assertTrue(model(it).dirty) }
+                scenario.recreate()
+                assertNotNull(device.wait(Until.findObject(By.textContains("Permission to save")), 5000))
+                instrumentation.removeMonitor(monitor)
+                fixture("configure", "retry.md"); monitor = monitor(target("retry.md"))
+                val retry = device.wait(Until.findObject(By.clazz(Button::class.java).text(context.getString(R.string.save_copy))), 5000)
+                assertNotNull("Failure dialog offers Save a new copy", retry)
+                retry!!.click(); click(R.string.choose_destination)
+                await { var saved = false; scenario.onActivity { saved = !model(it).dirty && !model(it).loading }; saved }
+                assertNull(store.read())
+                assertEquals(source + "!", DocumentRepository(context).read(target("retry.md"), null, android.os.CancellationSignal()).text)
             }
         } finally { instrumentation.removeMonitor(monitor) }
     }

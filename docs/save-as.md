@@ -1,5 +1,7 @@
 # Save as a new document
 
+The reliability follow-up distinguishes denied permission, unavailable destinations and encoding failures where evidence allows, and offers **Save a new copy** to choose a destination again. Failure categories are stored with existing operation metadata; exception messages and contents are not stored. See [opening and recovery](recovery.md). These additions are not in the immutable 0.2-alpha APK.
+
 **Save Markdown as…** exports the converter's actual Markdown reading content through Android's Create document picker. It writes UTF-8 without a BOM, suggests a sanitized `.md` name, and uses `text/markdown`. Local and shared HTML are eligible when conversion completes within its existing budgets. An unavailable-conversion action explains why export cannot proceed. Images, scripts, forms, hidden content and unsupported structures follow the same omission/link policy as the reading view; inspect the result before reusing it. The generated WebView HTML is never converted back into Markdown.
 
 This is an explicit extension from reading/sharing to creating a user-selected output file. Source files remain read-only. The app requests neither broad storage nor directory access and does not retain a destination write grant. It refuses the original URI and recognized document-ID aliases before opening a writer. Android's normal Create document UI creates a new name when the suggested name already exists; providers control their own implementation. Original sharing still copies original bytes.

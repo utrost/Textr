@@ -51,7 +51,7 @@ class EditorSession(application: Application) : AndroidViewModel(application) {
                 val value = old ?: snapshot?.let { EditDraft.new(it.document, it.uri, it.bom).also { check(store.create(it)) } }
                 handler.post {
                     if (request != generation) return@post
-                    loading = false; blockedByExisting = blocked
+                    loading = false; recoveryFailed = false; blockedByExisting = blocked
                     draft = value
                     if (value != null && !blocked) restore(value) else unavailable = value == null
                     notifyChange()
@@ -60,6 +60,11 @@ class EditorSession(application: Application) : AndroidViewModel(application) {
                 handler.post { if (request == generation) { loading = false; unavailable = true; recoveryFailed = true; notifyChange() } }
             }
         }
+    }
+    fun retryRecovery() {
+        if (loading) return
+        if (buffer == null) { initialize(null); return }
+        draft?.let { queueCheckpoint(it) }
     }
     fun resumeExisting() { draft?.let { blockedByExisting = false; restore(it); notifyChange() } }
     private fun restore(value: EditDraft) {

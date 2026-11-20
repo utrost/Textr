@@ -27,6 +27,7 @@ class EditorActivity : ReadingScreen() {
     private lateinit var discard: Button
     private lateinit var find: Button
     private lateinit var resume: Button
+    private lateinit var retryRecovery: Button
     private var replacing = false
     private var exitAfterSave = false
     private var dialog: AlertDialog? = null
@@ -77,6 +78,8 @@ class EditorActivity : ReadingScreen() {
         body.addView(status)
         resume = button(R.string.editor_resume) { model.resumeExisting() }.apply { id = R.id.editor_resume; visibility = View.GONE }
         body.addView(resume, LinearLayout.LayoutParams(-1, -2))
+        retryRecovery = button(R.string.retry_recovery) { model.retryRecovery() }.apply { id = R.id.retry_recovery; visibility = View.GONE }
+        body.addView(retryRecovery, LinearLayout.LayoutParams(-1, -2))
         editor = EditText(this).apply {
             id = R.id.editor_text; isSaveEnabled = false
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
@@ -136,12 +139,14 @@ class EditorActivity : ReadingScreen() {
         val enabled = buffer != null && !model.loading && !outputs.busy
         editor.isEnabled = enabled; save.isEnabled = enabled; find.isEnabled = enabled; discard.isEnabled = enabled || (model.unavailable && model.recoveryFailed && !model.loading && !outputs.busy)
         undo.isEnabled = enabled && buffer?.canUndo == true; redo.isEnabled = enabled && buffer?.canRedo == true
+        retryRecovery.visibility = if (model.recoveryFailed) View.VISIBLE else View.GONE
+        retryRecovery.isEnabled = !model.loading && !outputs.busy
         resume.visibility = if (model.blockedByExisting) View.VISIBLE else View.GONE
         title.text = getString(R.string.editor_title) + (draft?.let { " · ${it.name}" } ?: "")
         val message = when {
             model.loading -> getString(R.string.editor_loading)
             model.blockedByExisting -> getString(R.string.editor_existing)
-            model.unavailable -> getString(R.string.editor_unavailable)
+            model.unavailable -> getString(if (model.recoveryFailed) R.string.editor_recovery_unreadable else R.string.editor_unavailable)
             draft != null && buffer != null -> getString(if (model.dirty) R.string.editor_dirty else R.string.editor_clean) + "\n" +
                 getString(R.string.editor_format, draft.encoding.charsetName, if (draft.bom) getString(R.string.editor_with_bom) else getString(R.string.editor_no_bom), draft.endings.ifBlank { getString(R.string.editor_no_endings) }) + "\n" +
                 getString(if (model.recoveryFailed) R.string.editor_recovery_failed else if (model.checkpointRevision >= buffer.revision) R.string.editor_recovery_ready else if (!model.dirty && model.checkpointRevision < 0) R.string.editor_saved_recovery_removed else R.string.editor_recovery_pending)
@@ -205,7 +210,11 @@ class EditorActivity : ReadingScreen() {
         }
         if (displayedOutput == value && outputDialog?.isShowing == true) return
         outputDialog?.dismiss(); outputDialog = null; displayedOutput = value
-        outputDialog = OutputDialogs.create(this, value, outputs::cancel) {
+        outputDialog = OutputDialogs.create(this, value, outputs::cancel, retry = if (model.buffer != null) ({
+            exitAfterSave = false
+            outputs.acknowledge()
+            saveCopy()
+        }) else null) {
             outputs.acknowledge()
             if (exitAfterSave && !model.dirty && value.result == OutputResult.SAVED) finish() else exitAfterSave = false
         }?.also {
