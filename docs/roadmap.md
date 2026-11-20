@@ -2,7 +2,7 @@
 
 Updated 20 November 2026. Textr is an offline Android reader that preserves originals, with explicit export and copy editing. The current testing release is **0.2-alpha**, available to repository maintainers as a draft GitHub prerelease. Public APK and store publication remain deferred.
 
-[Live tracker #14](https://github.com/utrost/Textr/issues/14) links the work below. Individual issues hold acceptance criteria; feature implementation is complete on `main`; reliability, physical acceptance and distribution gates remain separate. The phases describe delivery order, not dates or promised version numbers.
+[Live tracker #14](https://github.com/utrost/Textr/issues/14) links the work below. Individual issues hold acceptance criteria; the 0.2-alpha feature batch is complete on `main`; the next feature batch is planned, while reliability, physical acceptance and distribution gates remain separate. The phases describe delivery order, not dates or promised version numbers.
 
 ## Available in the alpha
 
@@ -42,9 +42,32 @@ Use [#56 real-device beta](https://github.com/utrost/Textr/issues/56) to collect
 
 Turn reproducible beta findings into focused issues with fixture, Android/WebView versions and acceptance criteria. Keep private document contents out of reports. Prioritize opening, data integrity and accessibility regressions before convenience features.
 
-## Feature roadmap implementation
+## Next roadmap — reliable daily use
 
-The requested feature roadmap now has **five epics and 19 implementation issues**, implemented in tested batches on [PR #96](https://github.com/utrost/Textr/pull/96), included in 0.2-alpha and merged into `main`. The [feature roadmap and backlog](feature-proposals.md) contains the detailed scope, tradeoffs and dependency order. Epics are native children of [tracker #14](https://github.com/utrost/Textr/issues/14), with their implementation issues nested underneath.
+The next roadmap adds **six epics and 13 implementation issues**. These are planned follow-ups, separate from the five completed 0.2-alpha epics. No date or version is promised. Existing reliability, private-beta and distribution issues remain open and are linked from the new epics rather than duplicated.
+
+| Order | Epic | New implementation issues | State |
+| --- | --- | --- | --- |
+| 1 | [#98](https://github.com/utrost/Textr/issues/98) — Reliable daily use: recovery and acceptance | [#99](https://github.com/utrost/Textr/issues/99) | Planned |
+| 2 | [#100](https://github.com/utrost/Textr/issues/100) — Copy editor polish: preview, navigation and saved copies | [#101](https://github.com/utrost/Textr/issues/101), [#102](https://github.com/utrost/Textr/issues/102), [#103](https://github.com/utrost/Textr/issues/103) | Planned |
+| 3 | [#104](https://github.com/utrost/Textr/issues/104) — Comparison improvements: draft review and portable diffs | [#105](https://github.com/utrost/Textr/issues/105), [#106](https://github.com/utrost/Textr/issues/106), [#107](https://github.com/utrost/Textr/issues/107) | Planned |
+| 4 | [#108](https://github.com/utrost/Textr/issues/108) — Reading organization: recents search and reference collections | [#109](https://github.com/utrost/Textr/issues/109), [#110](https://github.com/utrost/Textr/issues/110) | Planned |
+| 5 | [#111](https://github.com/utrost/Textr/issues/111) — Focused formats: JSON Lines and lightweight markup | [#112](https://github.com/utrost/Textr/issues/112), [#113](https://github.com/utrost/Textr/issues/113), [#114](https://github.com/utrost/Textr/issues/114) | Planned |
+| 6 | [#115](https://github.com/utrost/Textr/issues/115) — Repeatable release preparation and channel readiness | [#116](https://github.com/utrost/Textr/issues/116) | Planned |
+
+**Delivery order:** address #97 and recovery failures first, with #59 investigation and #56 physical acceptance continuing. The first feature batch is **draft Markdown preview (#101) and compare draft with original (#105)**. Then deliver editor navigation/reopening and comparison filters/export, followed by recents/collections and the focused format batch. Release automation can proceed independently; distribution gates remain unchanged.
+
+Draft comparison uses the original editing snapshot, not an unannounced reread of the provider file. Preview and comparison never save the draft. Collections contain bounded metadata/references only. AsciiDoc/reStructuredText support is source highlighting; Markdown task lists are read-only. Every issue defines acceptance and validation, preserving offline operation, unchanged originals and current resource limits.
+
+Dependencies: collections (#110) follow recovery/reselection behavior (#99); exact unified-diff export (#107) follows filter semantics (#106); task-list rendering (#114) follows the shared draft-preview path (#101). Existing distribution issues #13/#53/#57/#62–#66 retain their owner decisions and acceptance requirements.
+
+**Deferred decisions:** in-place editing, multiple recovery drafts and EPUB require separate scope/privacy/resource decisions backed by use cases. PDF/DOCX, direct URL fetching and large/live logs remain outside this batch. Future language support follows demonstrated demand.
+
+See the [feature backlog](feature-proposals.md) for the issue breakdown and [0.2-alpha design record](feature-roadmap-0.2.md) for the completed batch.
+
+## Completed 0.2-alpha feature roadmap
+
+The requested feature roadmap now has **five epics and 19 implementation issues**, implemented in tested batches on [PR #96](https://github.com/utrost/Textr/pull/96), included in 0.2-alpha and merged into `main`. The [0.2-alpha design record](feature-roadmap-0.2.md) contains the completed scope, tradeoffs and dependency order. Epics are native children of [tracker #14](https://github.com/utrost/Textr/issues/14), with their implementation issues nested underneath.
 
 | Sequence | Epic | Implementation issues | State |
 | --- | --- | --- | --- |
