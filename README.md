@@ -4,7 +4,7 @@ Textr is an offline text reader and inspector for Android, with explicit editing
 
 **Android 10+ · Offline · English and German · GPL-3.0-only**
 
-**Current testing release:** [0.2-alpha](https://github.com/utrost/Textr/releases/tag/untagged-91b226e699ea4047e362) (version code 2), a private draft prerelease for repository maintainers. It includes HTML-to-Markdown reading/export, reading profiles, structured navigation, more text formats, comparison and TXT/Markdown copy editing. It updates 0.1-alpha in place with the same development signing identity. See [release notes](docs/release-notes-0.2-alpha.md).
+**Current testing release:** [0.3-alpha](https://github.com/utrost/Textr/releases) (version code 3), a private draft prerelease for repository maintainers. It adds reading-position preservation and actionable file/save recovery to the 0.2-alpha features. It updates either previous alpha in place with the same development signing identity. See [release notes](docs/release-notes-0.3-alpha.md).
 
 **Integration status:** the implementation is merged into `main` through [PR #96](https://github.com/utrost/Textr/pull/96). All five 0.2-alpha feature epics and 19 implementation issues are complete. The [next roadmap](docs/roadmap.md#next-roadmap--reliable-daily-use) plans six epics and 13 new implementation issues around reliability, copy editing, comparison, reading organization, formats and release preparation. The implementation passed build/lint, 86 JVM tests and 123 device tests per API 29/36. The subsequent [main run](https://github.com/utrost/Textr/actions/runs/44716759569) passed build/unit/lint and API 36, but API 29 passed 122/123 with a foldable-position failure tracked in [#97](https://github.com/utrost/Textr/issues/97). [Validation](docs/validation-roadmap-implementation.md) retains exact-source evidence. Physical-device/human TalkBack review and [WebView accessibility #59](https://github.com/utrost/Textr/issues/59) remain open.
 
@@ -20,7 +20,7 @@ The source is public. Public APK distribution, production signing and store publ
 
 ![Read-only comparison with linked side-by-side source views](docs/images/reading-comparison.png)
 
-The reliability follow-up implements clearer [opening/save recovery](docs/recovery.md) and preserves pending reading position during recreation. It is tested in [PR #117](https://github.com/utrost/Textr/pull/117), awaiting integration, and is separate from the 0.2-alpha APK. Build/lint, 86 JVM tests and 129 device tests per API 29/36 pass; see [evidence and remaining acceptance](docs/validation-reliability.md).
+The reliability follow-up implements clearer [opening/save recovery](docs/recovery.md) and preserves pending reading position during recreation. It is merged through [PR #117](https://github.com/utrost/Textr/pull/117) and included in 0.3-alpha. Build/lint, 86 JVM tests and 129 device tests per API 29/36 pass; see [evidence and remaining acceptance](docs/validation-reliability.md).
 
 [More screenshots and capture details](docs/screenshots.md) · [Feature roadmap](docs/roadmap.md)
 

@@ -30,8 +30,8 @@ android {
         applicationId = "de.utrost.textr"
         minSdk = 29
         targetSdk = 36
-        versionCode = providers.gradleProperty("textrVersionCode").orNull?.toInt() ?: 2
-        versionName = providers.gradleProperty("textrVersionName").orNull ?: "0.2-alpha"
+        versionCode = providers.gradleProperty("textrVersionCode").orNull?.toInt() ?: 3
+        versionName = providers.gradleProperty("textrVersionName").orNull ?: "0.3-alpha"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     compileOptions {
