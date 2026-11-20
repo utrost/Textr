@@ -1,6 +1,6 @@
 # Opening and recovery
 
-The reliability follow-up to 0.2-alpha adds these actions. They are not included in the immutable 0.2-alpha APK.
+These actions are included in 0.3-alpha. The immutable 0.2-alpha APK predates them.
 
 When opening fails, Textr distinguishes denied access, a file the provider could not open, a stopped provider and an unknown access failure. A provider's file-not-found response can also mean temporary unavailability; Textr does not claim that the file was definitely deleted. Format, size and decoding errors retain their specific explanations and encoding recovery.
 
