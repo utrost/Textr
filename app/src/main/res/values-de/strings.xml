@@ -311,4 +311,7 @@
     <string name="output_access_denied">Die Berechtigung zum Speichern von %1$s wurde verweigert. Die Quelle bleibt unverändert. Wähle über Kopie speichern einen anderen Speicherort.</string>
     <string name="output_unavailable">Der Speicherort für %1$s ist nicht verfügbar. Die Quelle bleibt unverändert. Versuche Kopie speichern erneut, sobald der Anbieter verfügbar ist, oder wähle einen anderen Speicherort.</string>
     <string name="output_encoding_failed">%1$s enthält Zeichen, die nicht in der gewählten Kodierung gespeichert werden können. Die Quelle bleibt unverändert. Wähle über Kopie speichern eine passende Kodierung, etwa UTF-8.</string>
+    <string name="copy_all">Alles kopieren</string>
+    <string name="copy_all_limit">Dieses Dokument ist zu groß, um es auf einmal zu kopieren (Grenze: 256 Ki Zeichen). Bitte Datei teilen oder einen kleineren Abschnitt auswählen. Es wurde nichts kopiert.</string>
+    <string name="copy_all_failed">Das Dokument konnte nicht kopiert werden. Bitte erneut versuchen oder Datei teilen verwenden.</string>
 </resources>
