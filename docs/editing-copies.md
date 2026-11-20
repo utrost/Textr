@@ -1,5 +1,7 @@
 # Editing text and Markdown copies
 
+The reliability follow-up adds actionable output errors and **Retry private recovery**, including retrying an unreadable checkpoint without discarding it. See [opening and recovery](recovery.md). These additions are not in the immutable 0.2-alpha APK.
+
 Implemented for #90–#94 and included in 0.2-alpha. The scope and recovery design was recorded before implementation. The original reader remains read-only. Editing is an explicit **Edit a copy…** action for original TXT/Markdown source, with a separate native editor. HTML reading conversions must first be exported and reopened as Markdown. The editor never writes to its input URI; every save uses the existing create-document flow and original-URI guard.
 
 ## Bounded state and recovery

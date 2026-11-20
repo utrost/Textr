@@ -130,6 +130,54 @@ class FoldableLayoutTest {
         }
     }
 
+    @Test fun recreationDuringPageLayoutKeepsPendingPosition() = display {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val app = context.applicationContext as android.app.Application
+        val captured = java.util.concurrent.CountDownLatch(1)
+        val savedPosition = java.util.concurrent.atomic.AtomicInteger(-1)
+        val callbacks = object : android.app.Application.ActivityLifecycleCallbacks {
+            override fun onActivityCreated(activity: android.app.Activity, state: Bundle?) {
+                if (activity !is MainActivity || state == null) return
+                val decor = activity.window.decorView
+                val listener = object : android.view.ViewTreeObserver.OnGlobalLayoutListener {
+                    override fun onGlobalLayout() {
+                        val reader = activity.findViewById<WebView>(R.id.reader) ?: return
+                        if (reader.tag == true || captured.count == 0L) return
+                        decor.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                        val saved = Bundle()
+                        instrumentation.callActivityOnSaveInstanceState(activity, saved)
+                        savedPosition.set(saved.getInt("scroll", -1))
+                        captured.countDown()
+                        activity.recreate()
+                    }
+                }
+                decor.viewTreeObserver.addOnGlobalLayoutListener(listener)
+            }
+            override fun onActivityStarted(activity: android.app.Activity) = Unit
+            override fun onActivityResumed(activity: android.app.Activity) = Unit
+            override fun onActivityPaused(activity: android.app.Activity) = Unit
+            override fun onActivityStopped(activity: android.app.Activity) = Unit
+            override fun onActivitySaveInstanceState(activity: android.app.Activity, state: Bundle) = Unit
+            override fun onActivityDestroyed(activity: android.app.Activity) = Unit
+        }
+        ActivityScenario.launch<MainActivity>(intent("long.ini")).use { scenario ->
+            ready(scenario)
+            scenario.onActivity {
+                val reader = it.findViewById<WebView>(R.id.reader)
+                reader.scrollTo(0, 600)
+                assertEquals(600, reader.scrollY)
+            }
+            app.registerActivityLifecycleCallbacks(callbacks)
+            try {
+                scenario.recreate()
+                assertTrue("Captured recreation during unfinished WebView layout", captured.await(15, java.util.concurrent.TimeUnit.SECONDS))
+                assertEquals("A loading WebView must not replace the pending saved position", 600, savedPosition.get())
+                ready(scenario)
+                scenario.onActivity { assertEquals(600, it.findViewById<WebView>(R.id.reader).scrollY) }
+            } finally { app.unregisterActivityLifecycleCallbacks(callbacks) }
+        }
+    }
+
     @Test fun largeTextAndShortWindowsKeepSinglePane() = display {
         context.getSharedPreferences("reading", 0).edit().putBoolean("fileSidebar", true).commit()
         ActivityScenario.launch<MainActivity>(intent("sample.json")).use { scenario ->

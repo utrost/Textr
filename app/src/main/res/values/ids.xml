@@ -56,4 +56,5 @@
     <item type="id" name="editor_match_count" />
     <item type="id" name="editor_replace_all" />
     <item type="id" name="editor_discard" />
+    <item name="retry_recovery" type="id" />
 </resources>

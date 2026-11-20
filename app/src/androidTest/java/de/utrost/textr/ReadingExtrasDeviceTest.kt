@@ -218,7 +218,7 @@ class ReadingExtrasDeviceTest {
             } finally { instrumentation.removeMonitor(canceled) }
             val failed = monitorPicker(Intent().setData(uri("missing.txt")))
             try {
-                click("Open file again"); await { failed.hits > 0 }
+                click("Open file again"); await { failed.hits > 0 }; click("Reconnect bookmark")
                 assertTrue(device.wait(Until.hasObject(By.textContains("Your bookmark is kept")), 5000))
                 assertEquals(bookmark.uri, Bookmarks(context).entries().single().uri)
             } finally { instrumentation.removeMonitor(failed) }
@@ -226,7 +226,7 @@ class ReadingExtrasDeviceTest {
             val selected = monitorPicker(Intent().setData(uri("reconnected.txt"))
                 .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION))
             try {
-                click("Open file again"); await { selected.hits > 0 }; awaitDocument(scenario, "reconnected.txt")
+                click("Open file again"); await { selected.hits > 0 }; click("Reconnect bookmark"); awaitDocument(scenario, "reconnected.txt")
                 assertEquals(uri("reconnected.txt").toString(), Bookmarks(context).entries().single().uri)
                 scenario.onActivity { assertTrue(it.findViewById<WebView>(R.id.reader).scrollY > 1500) }
             } finally { instrumentation.removeMonitor(selected) }

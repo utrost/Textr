@@ -77,7 +77,7 @@ class ReaderIntegrationTest {
         ActivityScenario.launch<MainActivity>(openIntent("missing.txt")).use { scenario ->
             awaitText(scenario, context.getString(R.string.open_again))
             scenario.onActivity { activity ->
-                assertTrue(texts(activity.window.decorView).contains(context.getString(R.string.access_error)))
+                assertTrue(texts(activity.window.decorView).contains(context.getString(R.string.file_unavailable)))
             }
         }
     }

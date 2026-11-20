@@ -79,6 +79,9 @@ class OutputDeviceTest {
             instrumentation.runOnMainSync { session.begin(OutputRequest(id, "text/plain", text, null, encoding)); session.pickerResult(uri(id)) }
             await { session.status.phase == OutputPhase.COMPLETE }
             assertEquals(id, OutputResult.FAILED, session.status.result)
+            val reason = when (mode) { "denied" -> OutputFailure.ACCESS; "normal" -> OutputFailure.ENCODING; else -> OutputFailure.UNKNOWN }
+            assertEquals(reason, session.status.failure)
+            assertEquals(reason, model().status.failure)
             assertEquals(mode.contains("keep"), session.status.partial)
             assertEquals(mode.contains("keep"), fixture("inspect", id).getBoolean("exists"))
             instrumentation.runOnMainSync { session.acknowledge() }

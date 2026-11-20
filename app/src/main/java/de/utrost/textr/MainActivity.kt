@@ -35,7 +35,11 @@ import java.io.ByteArrayInputStream
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
+data class ReaderReturnState(val document: PreparedDocument, val original: TextDocument,
+    val uri: String?, val reading: ReadingState, val query: String, val searching: Boolean, val grantFlags: Int)
+
 class ReaderSession : ViewModel() {
+    var returnState: ReaderReturnState? = null
     // In-memory only: survive rotation without retaining document contents on disk.
     var document: PreparedDocument? = null
     var original: TextDocument? = null
@@ -138,8 +142,16 @@ class MainActivity : ComponentActivity() {
     private val picker = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) result.data?.let { data ->
             data.data?.let { uri ->
-                openDocument(uri, grantFlags = data.flags, bookmark = pickerBookmark)
+                val bookmark = pickerBookmark
                 pickerBookmark = null
+                if (bookmark != null && bookmark.uri != uri.toString()) {
+                    AlertDialog.Builder(this).setTitle(R.string.bookmark_reconnect_title)
+                        .setMessage(R.string.bookmark_reconnect_help)
+                        .setNegativeButton(R.string.cancel, null)
+                        .setNeutralButton(R.string.open_separately) { _, _ -> openDocument(uri, grantFlags = data.flags) }
+                        .setPositiveButton(R.string.bookmark_reconnect) { _, _ -> openDocument(uri, grantFlags = data.flags, bookmark = bookmark) }
+                        .create().present()
+                } else openDocument(uri, grantFlags = data.flags, bookmark = bookmark)
             }
         }
         pickerBookmark = null
@@ -395,6 +407,7 @@ class MainActivity : ComponentActivity() {
         cancelWork()
         document = null
         session.original = null
+        session.returnState = null
         formatOverride = null
         encodingOverride = null
         csvOptions = CsvOptions()
@@ -713,7 +726,9 @@ class MainActivity : ComponentActivity() {
         if (!canInteract() || outputDialogStatus == status && outputDialog?.isShowing == true) return
         outputDialog?.dismiss()
         outputDialogStatus = status
-        outputDialog = OutputDialogs.create(this, status, outputs::cancel, outputs::acknowledge)?.also { it.present() }
+        outputDialog = OutputDialogs.create(this, status, outputs::cancel,
+            retry = if (document?.convertedMarkdown != null && webView?.tag == true) ({ outputs.acknowledge(); exportHtml() }) else null,
+            acknowledge = outputs::acknowledge)?.also { it.present() }
     }
 
     private fun shareDocument(openWith: Boolean = false) {
@@ -760,7 +775,13 @@ class MainActivity : ComponentActivity() {
                 type = "*/*"
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
             })
-        } catch (_: ActivityNotFoundException) { showError(R.string.access_error) }
+        } catch (_: ActivityNotFoundException) {
+            pickerBookmark = null
+            Toast.makeText(this, R.string.picker_unavailable, Toast.LENGTH_LONG).show()
+        } catch (_: SecurityException) {
+            pickerBookmark = null
+            Toast.makeText(this, R.string.picker_unavailable, Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun showLicenses() {
@@ -889,13 +910,7 @@ class MainActivity : ComponentActivity() {
                 }
             } catch (error: Exception) {
                 runOnUiThread {
-                    if (request == generation && !isDestroyed) showError(when ((error as? DocumentException)?.reason) {
-                        ReadFailure.TOO_LARGE -> R.string.too_large
-                        ReadFailure.BINARY -> R.string.binary_file
-                        ReadFailure.ENCODING -> R.string.unsupported_encoding
-                        ReadFailure.SOURCE -> R.string.unsupported_uri
-                        else -> R.string.access_error
-                    })
+                    if (request == generation && !isDestroyed) showError(readErrorMessage(error))
                 }
             }
         }
@@ -955,7 +970,7 @@ class MainActivity : ComponentActivity() {
             setText(if (message == R.string.loading) R.string.slow_reading else R.string.slow_rendering)
             accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
         }
-        body.addView(button(R.string.cancel_loading) { showHome() })
+        body.addView(button(R.string.cancel_loading) { returnToReader() })
         body.addView(button(R.string.open_file) { openPicker() })
         body.addView(explanation)
         overlay.addView(body)
@@ -990,14 +1005,21 @@ class MainActivity : ComponentActivity() {
         if (currentUri != null && message in setOf(R.string.unsupported_encoding, R.string.binary_file))
             body.addView(button(R.string.reopen_encoding) { showEncodings() })
         if (pendingBookmark != null) body.addView(TextView(this).apply { text = getString(R.string.bookmark_unavailable); setTextColor(foreground()) })
+        if (currentUri != null && message in setOf(R.string.access_error, R.string.access_denied, R.string.file_unavailable, R.string.provider_unavailable))
+            body.addView(button(R.string.retry_open) {
+                currentUri?.let { openDocument(it, restoredMode = requestedMode, grantFlags = pendingGrantFlags, restoring = true, bookmark = pendingBookmark) }
+            })
         body.addView(button(R.string.open_again) { openPicker(pendingBookmark) })
-        content.addView(body, FrameLayout.LayoutParams(-1, -1))
+        body.addView(TextView(this).apply { setText(R.string.reselect_help); setTextColor(foreground()) })
+        body.addView(button(if (session.returnState != null) R.string.return_to_document else R.string.back_to_files) { returnToReader() })
+        content.addView(ScrollView(this).apply { isFillViewport = true; addView(body) }, FrameLayout.LayoutParams(-1, -1))
     }
 
     private fun render() {
         if (!canInteract()) return
         val prepared = document ?: return
-        val scroll = webView?.scrollY ?: pendingScroll
+        val scroll = readerPosition()
+        pendingScroll = scroll
         cancelWork()
         val request = generation
         showProgress(R.string.rendering, keepReader = true)
@@ -1034,7 +1056,6 @@ class MainActivity : ComponentActivity() {
                 showLoadingControls(R.string.laying_out)
                 // Stream in-memory content rather than embedding multi-MiB text in a data URL.
                 view.loadUrl(view.documentUrl)
-                pendingScroll = 0
                 if (prepared.notice != PreviewNotice.NONE) {
                     Toast.makeText(this, if (prepared.notice == PreviewNotice.MARKDOWN_LIMIT) R.string.markdown_limit
                         else if (prepared.notice == PreviewNotice.HTML_LIMIT) R.string.html_limit
@@ -1179,6 +1200,7 @@ class MainActivity : ComponentActivity() {
                                                 Toast.makeText(this@MainActivity, R.string.bookmark_changed, Toast.LENGTH_LONG).show()
                                             pendingBookmark = null
                                         }
+                                        pendingScroll = view.scrollY
                                         view.tag = true
                                         updateProgress()
                                         modeButton.isEnabled = (document?.modes?.size ?: 0) > 1
@@ -1742,7 +1764,7 @@ class MainActivity : ComponentActivity() {
         // While loading, remember only a mode explicitly requested for this URI,
         // never the previous document's mode. Format changes request automatic mode.
         outState.putString("mode", if (document != null) mode.name else requestedMode?.name)
-        outState.putInt("scroll", webView?.scrollY ?: pendingScroll)
+        outState.putInt("scroll", readerPosition())
         outState.putString("query", searchField.text.toString())
         outState.putString("format", formatOverride?.name)
         outState.putString("encoding", encodingOverride?.name)
@@ -1763,6 +1785,10 @@ class MainActivity : ComponentActivity() {
         val view = webView ?: return
         if (document != null && view.tag == true) {
             val reading = ReadingState(mode, view.scrollY.coerceAtLeast(0), formatOverride, encodingOverride, csvOptions, readingProfile)
+            session.original?.let { original ->
+                session.returnState = ReaderReturnState(document!!, original, currentUri?.toString(), reading,
+                    searchField.text.toString().take(1000), searchRow.visibility == View.VISIBLE, pendingGrantFlags)
+            }
             currentUri?.let { repository.saveReadingState(it, reading) }
             openDocuments.entries.find { it.key == (currentUri?.toString() ?: "shared-text") }?.let {
                 it.reading = reading
@@ -1786,8 +1812,35 @@ class MainActivity : ComponentActivity() {
         super.onStop()
     }
 
+    // An unfinished WebView reports transient zero coordinates during recreation.
+    private fun readerPosition() = webView?.takeIf { it.tag == true }?.scrollY ?: pendingScroll
+
+    private fun returnToReader() {
+        val saved = session.returnState ?: return showHome()
+        cancelWork()
+        clearContent()
+        pendingBookmark = null
+        pendingStructure = null
+        pendingAccessibleCsv = null
+        document = saved.document
+        session.original = saved.original
+        currentUri = saved.uri?.let(Uri::parse)
+        pendingGrantFlags = saved.grantFlags
+        mode = saved.reading.mode ?: saved.document.defaultMode
+        formatOverride = saved.reading.format
+        encodingOverride = saved.reading.encoding
+        csvOptions = saved.reading.csv
+        readingProfile = saved.reading.profile
+        applyReadingProfile()
+        pendingScroll = saved.reading.scroll
+        searchField.setText(saved.query)
+        searchRow.visibility = if (saved.searching) View.VISIBLE else View.GONE
+        render()
+    }
+
     private fun navigateBack() {
-        if (searchRow.visibility == View.VISIBLE) closeSearch()
+        if (document == null && session.returnState != null) returnToReader()
+        else if (searchRow.visibility == View.VISIBLE) closeSearch()
         else if (currentUri != null || document != null) showHome()
         else finish()
     }

@@ -23,10 +23,11 @@ data class OutputRequest(val name: String, val mime: String, val text: String, v
     val encoding: TextEncoding = TextEncoding.UTF8, val bom: Boolean = false,
     val draftId: String? = null, val revision: Long = 0)
 enum class OutputPhase { IDLE, PICKING, WRITING, COMPLETE }
+enum class OutputFailure { ACCESS, UNAVAILABLE, ENCODING, UNKNOWN }
 enum class OutputResult { SAVED, CANCELLED, FAILED, REFUSED, INTERRUPTED }
 data class OutputStatus(val phase: OutputPhase = OutputPhase.IDLE, val name: String = "",
     val target: Uri? = null, val result: OutputResult? = null, val partial: Boolean = false,
-    val draftId: String? = null, val revision: Long = 0)
+    val draftId: String? = null, val revision: Long = 0, val failure: OutputFailure? = null)
 
 class OutputSession(application: Application) : AndroidViewModel(application) {
     private val resolver = application.contentResolver
@@ -45,13 +46,14 @@ class OutputSession(application: Application) : AndroidViewModel(application) {
         metadata.getString("target", null)?.let { target ->
             val saved = OutputResult.entries.find { it.name == metadata.getString("result", null) } ?: OutputResult.INTERRUPTED
             status = OutputStatus(OutputPhase.COMPLETE, metadata.getString("name", "").orEmpty(), Uri.parse(target), saved,
-                metadata.getBoolean("partial", saved != OutputResult.SAVED), metadata.getString("draftId", null), metadata.getLong("revision", 0))
+                metadata.getBoolean("partial", saved != OutputResult.SAVED), metadata.getString("draftId", null), metadata.getLong("revision", 0),
+                OutputFailure.entries.find { it.name == metadata.getString("failure", null) })
         }
     }
     private fun persist(value: OutputStatus) {
         metadata.edit().clear().putString("name", value.name).putString("target", value.target?.toString())
             .putString("result", value.result?.name).putBoolean("partial", value.partial)
-            .putString("draftId", value.draftId).putLong("revision", value.revision).commit()
+            .putString("draftId", value.draftId).putLong("revision", value.revision).putString("failure", value.failure?.name).commit()
     }
 
     fun begin(value: OutputRequest): Intent {
@@ -85,6 +87,7 @@ class OutputSession(application: Application) : AndroidViewModel(application) {
             var mayDelete = false
             var result = OutputResult.FAILED
             var partial = false
+            var failure: OutputFailure? = null
             try {
                 if (!safeTarget(target, snapshot.sourceUri)) {
                     result = OutputResult.REFUSED
@@ -96,14 +99,20 @@ class OutputSession(application: Application) : AndroidViewModel(application) {
                         result = OutputResult.SAVED
                     }
                 }
-            } catch (_: Exception) {
+            } catch (error: Exception) {
+                failure = when (error) {
+                    is SecurityException -> OutputFailure.ACCESS
+                    is java.io.FileNotFoundException, is android.os.DeadObjectException -> OutputFailure.UNAVAILABLE
+                    is java.nio.charset.CharacterCodingException -> OutputFailure.ENCODING
+                    else -> OutputFailure.UNKNOWN
+                }
                 result = if (cancellation.isCanceled || Thread.currentThread().isInterrupted) OutputResult.CANCELLED else OutputResult.FAILED
             } finally {
                 writingThread = null
                 Thread.interrupted()
                 if (mayDelete && result != OutputResult.SAVED) partial = !removeOutput(target)
                 else if (result == OutputResult.FAILED) partial = true
-                val completed = OutputStatus(OutputPhase.COMPLETE, snapshot.name, target, result, partial, snapshot.draftId, snapshot.revision)
+                val completed = OutputStatus(OutputPhase.COMPLETE, snapshot.name, target, result, partial, snapshot.draftId, snapshot.revision, failure)
                 persist(completed)
                 handler.post { request = null; signal = null; publish(completed) }
             }
