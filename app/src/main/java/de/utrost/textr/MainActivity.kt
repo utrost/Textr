@@ -2,6 +2,8 @@ package de.utrost.textr
 
 import android.app.AlertDialog
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Color
@@ -503,6 +505,7 @@ class MainActivity : ComponentActivity() {
             if (!homeShown) {
                 item(R.string.open_file) { openPicker() }
                 val ready = document != null && webView?.tag == true
+                item(R.string.copy_all, ready) { copyAll() }
                 item(if (currentUri == null && (session.original?.bytes ?: 0) < 100_000) R.string.share_text else R.string.share_file,
                     ready && !sharing) { shareDocument() }
                 item(R.string.open_with, ready && !sharing) { shareDocument(openWith = true) }
@@ -540,6 +543,28 @@ class MainActivity : ComponentActivity() {
             if (homeShown) item(R.string.opening_help) { showOpeningHelp() }
             item(R.string.about) { showAbout() }
             show()
+        }
+    }
+
+    private fun copyAll() {
+        if (!canInteract() || webView?.tag != true) return
+        val source = session.original ?: return
+        // Bound the UTF-16 clipboard payload below Android's shared Binder transaction budget.
+        // Never truncate: a rejected copy leaves the existing clipboard untouched.
+        if (source.text.length > 256 * 1024) {
+            AlertDialog.Builder(this).setTitle(R.string.copy_all).setMessage(R.string.copy_all_limit)
+                .setPositiveButton(R.string.done, null).create().present()
+            return
+        }
+        try {
+            val clip = ClipData.newPlainText(getString(R.string.app_name), source.text)
+            if (Build.VERSION.SDK_INT >= 33) clip.description.extras = android.os.PersistableBundle().apply {
+                putBoolean("android.content.extra.IS_SENSITIVE", true)
+            }
+            getSystemService(ClipboardManager::class.java).setPrimaryClip(clip)
+            if (Build.VERSION.SDK_INT < 33) Toast.makeText(this, R.string.structure_copied, Toast.LENGTH_SHORT).show()
+        } catch (_: RuntimeException) {
+            Toast.makeText(this, R.string.copy_all_failed, Toast.LENGTH_LONG).show()
         }
     }
 

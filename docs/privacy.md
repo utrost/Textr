@@ -22,7 +22,7 @@ Save Markdown as creates a new user-selected file from the bounded HTML reading 
 
 Only your explicit Share file or Open with action creates a temporary app-private copy of the original bytes for another app, with read access. At most 20 copies are retained. Copies older than 24 hours are removed on the next Textr start or share, not by a background timer; Android may clear cache earlier. Short shared text can be sent directly as text, while larger shared text is shared as a UTF-8 file. Recipients can keep their own copies under their own policies.
 
-Copying selected text places it on the Android clipboard, which is managed by Android and may be accessible to other apps subject to platform restrictions. Clearing Textr history does not clear the clipboard or recipient copies.
+Copying selected text or using Copy all places text on the Android clipboard, which is managed by Android and may be accessible to other apps subject to platform restrictions. Clearing Textr history does not clear the clipboard or recipient copies.
 
 A document provider selected in Android’s picker may use its own network access to retrieve files. Textr’s lack of network permission does not prevent that provider from using the network. Tapped web/email links, source links, privacy links and issue links open in an external app. Those apps and websites have their own privacy practices; automatic remote resources in document previews are blocked.
 

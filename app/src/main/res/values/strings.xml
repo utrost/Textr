@@ -317,4 +317,7 @@ Document switching follows alphabetical filename order. Shortcuts leave text fie
     <string name="output_access_denied">Permission to save %1$s was denied. Your source is unchanged. Choose another destination with Save a new copy.</string>
     <string name="output_unavailable">The destination for %1$s is unavailable. Your source is unchanged. Try Save a new copy when the provider is available, or choose another destination.</string>
     <string name="output_encoding_failed">%1$s contains characters that cannot be saved in the selected encoding. Your source is unchanged. Use Save a new copy and choose a suitable encoding, such as UTF-8.</string>
+    <string name="copy_all">Copy all</string>
+    <string name="copy_all_limit">This document is too large to copy all at once (limit: 256 Ki characters). Use Share file or select a smaller part. Nothing was copied.</string>
+    <string name="copy_all_failed">Could not copy the document. Try again or use Share file.</string>
 </resources>

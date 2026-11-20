@@ -72,6 +72,34 @@ class BacklogTest {
         }
     }
 
+    @Test fun copyAllPreservesExactSourceWithoutLineNumbers() {
+        val expected = "Alpha 🚀\r\nBeta\rGamma\n\t  trailing  "
+        replace("copy-all.txt", expected)
+        context.getSharedPreferences("reading", 0).edit().putBoolean("lineNumbers", true).commit()
+        ActivityScenario.launch<MainActivity>(intent("copy-all.txt")).use { scenario ->
+            ready(scenario)
+            menu(context.getString(R.string.copy_all))
+            scenario.onActivity {
+                val clip = it.getSystemService(android.content.ClipboardManager::class.java).primaryClip!!
+                assertEquals(expected, clip.getItemAt(0).text.toString())
+                assertEquals(expected, ViewModelProvider(it)[ReaderSession::class.java].original!!.text)
+            }
+        }
+    }
+
+    @Test fun copyAllRejectsOversizedSourceWithoutReplacingClipboard() {
+        replace("copy-all-large.txt", "a".repeat(256 * 1024 + 1))
+        ActivityScenario.launch<MainActivity>(intent("copy-all-large.txt")).use { scenario ->
+            ready(scenario)
+            scenario.onActivity { it.getSystemService(android.content.ClipboardManager::class.java)
+                .setPrimaryClip(android.content.ClipData.newPlainText("fixture", "keep this")) }
+            menu(context.getString(R.string.copy_all))
+            assertTrue(device.wait(Until.hasObject(By.text(context.getString(R.string.copy_all_limit))), 5000))
+            scenario.onActivity { assertEquals("keep this", it.getSystemService(android.content.ClipboardManager::class.java)
+                .primaryClip!!.getItemAt(0).text.toString()) }
+        }
+    }
+
     @Test fun sourceNumbersDoNotEnterClipboardAndGoToLineUsesLogicalLines() {
         replace("numbered.txt", "Alpha source line\nBeta source line\nGamma source line")
         context.getSharedPreferences("reading", 0).edit().putBoolean("lineNumbers", true).commit()
