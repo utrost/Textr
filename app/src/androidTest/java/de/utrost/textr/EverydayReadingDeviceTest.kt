@@ -192,7 +192,17 @@ class EverydayReadingDeviceTest {
     private fun ready(scenario: ActivityScenario<MainActivity>) = await {
         var ready = false; scenario.onActivity { ready = it.findViewById<WebView>(R.id.reader)?.tag == true }; ready
     }
-    private fun menu(label: String) { click(By.desc("More options")); click(label) }
+    private fun menu(label: String) {
+        click(By.desc("More options"))
+        // The document WebView may also be scrollable. Target the popup's native
+        // list so an off-screen menu item never scrolls the document behind it.
+        val popup = device.wait(Until.findObject(By.clazz(android.widget.ListView::class.java)), 3000)
+        assertNotNull("Native options menu", popup)
+        val selector = By.text(java.util.regex.Pattern.compile(java.util.regex.Pattern.quote(label), 2))
+        val item = popup!!.findObject(selector) ?: popup.scrollUntil(Direction.DOWN, Until.findObject(selector))
+        assertNotNull("Menu item: $label", item)
+        item!!.click(); device.waitForIdle()
+    }
     private fun click(text: String) = click(By.text(java.util.regex.Pattern.compile(java.util.regex.Pattern.quote(text), 2)))
     private fun click(selector: BySelector) {
         repeat(3) { attempt ->
