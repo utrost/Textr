@@ -8,7 +8,7 @@ The five 0.2-alpha epics and 19 implementation issues are merged (#96): reading 
 
 ## Current batch — 0.5-alpha preparation
 
-The ten remaining feature/automation issues are implemented on `feat/roadmap-completion`, under local and hosted validation before integration. Committed defaults advance to **0.5-alpha / code 5** so the next candidate can upgrade the previous development-signed alpha. This document does not announce a public APK or completed physical beta.
+The ten remaining feature/automation implementations are delivered in [PR #127](https://github.com/utrost/Textr/pull/127). See its checks and the validation record below for exact integration evidence. Committed defaults advance to **0.5-alpha / code 5** so the next candidate can upgrade the previous development-signed alpha. This document does not announce a public APK or completed physical beta.
 
 | Epic | Implemented behavior | Tracking |
 | --- | --- | --- |
@@ -27,7 +27,7 @@ Usage and limits: [editor](editing-copies.md), [comparison/export](comparison.md
 | Privacy/contact | Policy and About link implemented; maintainer confirms **utrost** and public Textr issues as privacy/support contact | #53 |
 | Secret-free F-Droid build | Explicit unsigned non-debuggable release path, guarded owner-signing path and repeatable verification | #62 |
 | Listing metadata | Current English/German Fastlane text, icons, synthetic screenshots and version-code 5 changelogs | #63 |
-| F-Droid recipe | Recipe drafted; lint passes; clean fdroidserver build and final tagged-source checks in progress | #64 |
+| F-Droid recipe | Recipe and clean public-commit fdroidserver build/source/binary scan pass; final immutable tag check accompanies packaging | #64 |
 | Signing policy | **Standard F-Droid signing selected**. No owner production key needed. Development-signed alphas and F-Droid cannot update each other in place | #65 |
 | Optional Play | AAB path and listing/Data safety drafts prepared; account-specific declarations, signing and actual upload remain owner-dependent | #57 |
 | External F-Droid submission | Deferred pending eligibility, final review and authorization; no external request submitted | #66 |

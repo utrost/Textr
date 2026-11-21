@@ -68,7 +68,8 @@ class RoadmapCompletionDeviceTest {
     private fun click(label:Int) { val item=device.wait(Until.findObject(By.text(context.getString(label))),5000);assertNotNull("Missing action $label",item);item!!.click();device.waitForIdle() }
     @Test fun editorLineActionsKeyboardBoundsAndRecreationKeepOneStepUndo() {
         val original="a\r\nb\r\nc\r\n"
-        editor(original).use{scenario->
+        device.executeShellCommand("settings put system font_scale 2.0")
+        try{editor(original).use{scenario->
             editorReady(scenario)
             scenario.onActivity{
                 it.findViewById<EditText>(R.id.editor_text).setSelection(0,6)
@@ -80,6 +81,7 @@ class RoadmapCompletionDeviceTest {
             }
             instrumentation.runOnMainSync{
                 val root=WindowInspector.getGlobalWindowViews().first{it.findViewById<EditText>(R.id.editor_line_input)!=null}
+                val done=root.findViewById<Button>(android.R.id.button1);val rect=android.graphics.Rect();assertTrue(done.getGlobalVisibleRect(rect));assertEquals(done.height,rect.height())
                 root.findViewById<EditText>(R.id.editor_line_input).setText("99")
                 root.findViewById<Button>(android.R.id.button1).performClick()
                 assertNotNull(root.findViewById<EditText>(R.id.editor_line_input).error)
@@ -88,7 +90,7 @@ class RoadmapCompletionDeviceTest {
             }
             scenario.recreate();editorReady(scenario)
             scenario.onActivity{assertEquals(6,it.findViewById<EditText>(R.id.editor_text).selectionStart);assertEquals(original,editorModel(it).buffer!!.text)}
-        }
+        }}finally{device.executeShellCommand("settings put system font_scale 1.0")}
     }
     @Test fun draftComparisonCapturesOriginalDespiteProviderChangesAndPreservesUndo() {
         val original="# Original\r\nbody"

@@ -1,4 +1,4 @@
-Textr 0.1.0
+Textr
 Licensed under GNU GPL version 3 only. See Textr-GPL-3.0.txt.
 
 CommonMark Java and GFM tables extension 0.32.0

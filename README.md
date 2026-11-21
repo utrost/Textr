@@ -4,9 +4,9 @@ Textr is an offline text reader and inspector for Android, with explicit editing
 
 **Android 10+ · Offline · English and German · GPL-3.0-only**
 
-**Private testing:** 0.4-alpha (code 4) is an immutable draft candidate with the merged quality-of-life batch. The current implementation branch prepares **0.5-alpha (code 5)** with editor line actions, original/draft review, comparison filters and exact patch export, collections, JSONL navigation, markup highlighting, read-only Markdown tasks and verified draft-release tools. See the [roadmap](docs/roadmap.md) for exact integration and validation status. Draft assets require repository write access.
+**Private testing:** the current source/candidate is **0.5-alpha (code 5)**, adding editor line actions, original/draft review, comparison filters and exact patch export, collections, JSONL navigation, markup highlighting, read-only Markdown tasks and verified draft-release tools. Earlier private drafts, including 0.4-alpha, remain immutable. See [releases](https://github.com/utrost/Textr/releases) and the [roadmap](docs/roadmap.md); draft APK assets require repository write access.
 
-**Integration:** the previous reader, reliability and eight QoL improvements are merged through [PR #126](https://github.com/utrost/Textr/pull/126). The roadmap completion batch is under validation; physical-provider, human TalkBack and foldable acceptance remain open in [#56](https://github.com/utrost/Textr/issues/56), with the underlying [WebView accessibility investigation #59](https://github.com/utrost/Textr/issues/59).
+**Roadmap completion:** [PR #127](https://github.com/utrost/Textr/pull/127) contains the ten remaining feature/automation implementations, distribution preparation and updated documentation. See [validation](docs/validation-roadmap-completion.md) and the PR checks for exact-source evidence. The earlier eight QoL improvements are merged through [PR #126](https://github.com/utrost/Textr/pull/126). Physical-provider, human TalkBack and foldable acceptance remain open in [#56](https://github.com/utrost/Textr/issues/56), with the underlying [WebView accessibility investigation #59](https://github.com/utrost/Textr/issues/59).
 
 The source is public. Public APK distribution, production signing and store publication remain deferred. Draft release assets require repository write access; everyone can [build locally](#build-and-install).
 
@@ -18,7 +18,7 @@ The source is public. Public APK distribution, production signing and store publ
 | --- | --- | --- |
 | ![Saved HTML in the offline Markdown reading view](docs/images/reading-html.png) | ![Native JSON structure navigation](docs/images/reading-structure.png) | ![Native copy editor with Save as and undo controls](docs/images/reading-editor.png) |
 
-![Read-only comparison with linked side-by-side source views](docs/images/reading-comparison.png)
+![Exact comparison with display filters and unified patch export](docs/images/roadmap-comparison.png)
 
 | Collections | JSONL records | Read-only tasks at 200% text |
 | --- | --- | --- |

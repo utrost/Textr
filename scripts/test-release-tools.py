@@ -86,6 +86,26 @@ class ReleaseGuards(unittest.TestCase):
         with patch.object(release, 'run', side_effect=ci), self.assertRaisesRegex(ValueError, 'exact requested'):
             release.prepare(self.args)
 
+    def test_remote_lightweight_and_annotated_tags_must_match_source(self):
+        tag = 'v0.5-alpha'
+        for output in ['', self.sha + '\trefs/tags/' + tag + '\n', 'a' * 40 + '\trefs/tags/' + tag + '\n' + self.sha + '\trefs/tags/' + tag + '^{}\n']:
+            with patch.object(release, 'run', return_value=output):
+                self.assertEqual(bool(output), release.remote_tag_matches(tag, self.sha))
+        with patch.object(release, 'run', return_value='b' * 40 + '\trefs/tags/' + tag + '\n'):
+            with self.assertRaisesRegex(ValueError, 'Remote release tag'):
+                release.remote_tag_matches(tag, self.sha)
+
+    def test_package_rejects_unverified_extra_assets(self):
+        package = self.root / 'extra-assets'
+        package.mkdir()
+        (package / 'BUILD.json').write_text(json.dumps({'apk': 'app.apk', 'source': 'source.tar.gz'}))
+        for name in ['app.apk', 'source.tar.gz', 'RELEASE-NOTES.md', 'SIGNING.txt', 'apk-verification.txt']:
+            (package / name).write_bytes(b'synthetic fixture')
+        (package / 'SHA256SUMS').write_text(''.join(release.digest(path) + '  ' + path.name + '\n' for path in sorted(package.iterdir())))
+        (package / 'unexpected.txt').write_text('unverified')
+        with self.assertRaisesRegex(ValueError, 'unverified extra'):
+            release.verify(package, 'a' * 64)
+
     def manifest_fixture(self, extra_permission=False, weak_signature=False):
         names = [release.APP_ID + '.permission.FIND_SELECTION', release.APP_ID + '.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION']
         badging = "package: name='de.utrost.textr' versionCode='5' versionName='0.5-alpha'\nsdkVersion:'29'\ntargetSdkVersion:'36'\n"

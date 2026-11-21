@@ -43,4 +43,8 @@ Captured 21 November 2026 from the 0.5-alpha implementation branch on the dispos
 | --- | --- | --- |
 | ![Named collection with separate reference actions and visible Done](images/roadmap-collections.png) | ![Every JSONL line, including blank and invalid records](images/roadmap-json-lines.png) | ![Dark Markdown tasks with checked and unchecked text labels at 200%](images/roadmap-tasks-dark-large.png) |
 
-Reproduce with `RoadmapCompletionDeviceTest` on a disposable emulator. It writes `roadmap-*.png` to the target app cache using UiDevice screenshots; extract with `adb exec-out run-as de.utrost.textr cat cache/NAME.png > NAME.png`. Do not run concurrently with other instrumentation. The existing comparison image above remains the earlier side-by-side mode; filter/export UI will be refreshed after final validation.
+Reproduce with `RoadmapCompletionDeviceTest` on a disposable emulator. It writes `roadmap-*.png` to the target app cache using UiDevice screenshots; extract with `adb exec-out run-as de.utrost.textr cat cache/NAME.png > NAME.png`. Do not run concurrently with other instrumentation. The existing comparison image above remains the earlier side-by-side mode; the current filter/export controls are shown below.
+
+![Exact comparison with independent display filters and explicit patch export](images/roadmap-comparison.png)
+
+The comparison capture waits for the bottom action to be fully visible within the window frame before saving the screenshot; the same check passes in instrumentation. Filenames and sample text are synthetic.

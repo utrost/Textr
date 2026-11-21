@@ -19,6 +19,7 @@ import zipfile
 
 REPO = Path(__file__).resolve().parents[1]
 APP_ID = 'de.utrost.textr'
+REMOTE = 'https://github.com/utrost/Textr.git'
 
 
 def run(args, cwd=REPO, env=None, capture=True):
@@ -104,6 +105,8 @@ def verify(directory, expected_certificate=None):
         hashes[name] = expected
     if set(hashes) != required:
         raise ValueError('Checksum manifest does not exactly cover required artifacts')
+    if {path.name for path in directory.iterdir()} != required | {'SHA256SUMS'}:
+        raise ValueError('Package contains unverified extra artifacts')
     cert = manifest['certificateSha256']
     if expected_certificate and cert != expected_certificate.lower():
         raise ValueError('Package certificate differs from the expected identity')
@@ -124,6 +127,16 @@ def verify(directory, expected_certificate=None):
     if manifest['versionCode'] <= manifest['previousVersionCode']:
         raise ValueError('Version code must exceed the previous installed release')
     return manifest
+
+
+def remote_tag_matches(tag, commit):
+    refs = dict(line.split(None, 1)[::-1] for line in run(['git', 'ls-remote', '--tags', REMOTE,
+                'refs/tags/' + tag, 'refs/tags/' + tag + '^{}']).splitlines())
+    ref = 'refs/tags/' + tag
+    target = refs.get(ref + '^{}', refs.get(ref))
+    if target is not None and target != commit:
+        raise ValueError('Remote release tag exists on another commit; never repoint a release tag')
+    return target is not None
 
 
 def prepare(args):
@@ -151,6 +164,7 @@ def prepare(args):
     ci = json.loads(run(['gh', 'api', f'repos/utrost/Textr/actions/runs/{args.ci_run}']))
     if ci['head_sha'] != commit or ci['conclusion'] != 'success':
         raise ValueError('CI must have passed on the exact requested source commit')
+    remote_tag_matches(tag, commit)
     plan['ciRun'] = ci['html_url']
     signing = Path(args.signing_properties).resolve()
     if not signing.is_file() or signing.is_relative_to(REPO):
@@ -190,7 +204,7 @@ def prepare(args):
         changelog = checkout / f'fastlane/metadata/android/en-US/changelogs/{code}.txt'
         if not changelog.is_file():
             raise ValueError('Committed English changelog is required for this version code')
-        notes = f"# Textr {name} — private testing draft\n\n" + changelog.read_text().strip() + f"\n\nSource: `{commit}`. Version code {code}, Android 10/API 29+.\n\nValidated CI: {plan['ciRun']}\n\nAPK signing/manifest/notices and exact version match verified. Downloaded assets are checksum-verified after upload. Existing releases are immutable. Public publication, production-key creation and signing-channel decisions remain explicit owner actions.\n\nInstall over a previous alpha only when its certificate matches SIGNING.txt. Physical providers, human TalkBack and foldables remain tracked separately.\n"
+        notes = f"# Textr {name} — private testing draft\n\n" + changelog.read_text().strip() + f"\n\nSource: `{commit}`. Version code {code}, Android 10/API 29+.\n\nValidated CI: {plan['ciRun']}\n\nAPK signing/manifest/notices and exact version match verified. Downloaded assets are checksum-verified after upload. Existing releases are immutable. Public publication and production-key creation remain explicit owner actions; the selected standard F-Droid signing channel is documented separately.\n\nInstall over a previous alpha only when its certificate matches SIGNING.txt. Physical providers, human TalkBack and foldables remain tracked separately.\n"
         (package / 'RELEASE-NOTES.md').write_text(notes)
         (package / 'SHA256SUMS').write_text(''.join(digest(p) + '  ' + p.name + '\n' for p in sorted(package.iterdir())))
         verify(package, args.expected_certificate)
@@ -200,8 +214,10 @@ def prepare(args):
         tags = run(['gh', 'api', '--paginate', 'repos/utrost/Textr/releases', '--jq', '.[].tag_name']).splitlines()
         if tag in tags:
             raise ValueError('Release already exists; nothing was overwritten')
+        if not remote_tag_matches(tag, commit):
+            run(['git', 'push', REMOTE, commit + ':refs/tags/' + tag])
         assets = [str(p) for p in sorted(output.iterdir())]
-        run(['gh', 'release', 'create', tag, '--repo', 'utrost/Textr', '--draft', '--prerelease', '--target', commit,
+        run(['gh', 'release', 'create', tag, '--repo', 'utrost/Textr', '--draft', '--prerelease', '--verify-tag', '--target', commit,
              '--title', f'Textr {name} — private testing', '--notes-file', output / 'RELEASE-NOTES.md', *assets])
         release = json.loads(run(['gh', 'release', 'view', tag, '--repo', 'utrost/Textr', '--json', 'isDraft,url']))
         if not release['isDraft']:
