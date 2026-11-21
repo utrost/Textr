@@ -19,6 +19,17 @@ data class OpenDocument(
 class OpenDocuments(context: Context) {
     private val preferences = context.getSharedPreferences("open_documents", Context.MODE_PRIVATE)
     private val repository = DocumentRepository(context)
+    private val closed = ArrayDeque<OpenDocument>()
+    val hasClosed get() = closed.isNotEmpty()
+    fun clearClosed() { closed.clear() }
+    fun forgetClosed(key: String) { closed.removeAll { it.key == key } }
+    fun reopen(): OpenDocument? {
+        val entry = closed.removeLastOrNull() ?: return null
+        entries.find { it.key == entry.key }?.let { return it }
+        entries.add(entry)
+        while (entries.size > LIMIT) entries.removeAt(0)
+        save(); return entry
+    }
     val entries = mutableListOf<OpenDocument>()
     init {
         try {
@@ -46,7 +57,14 @@ class OpenDocuments(context: Context) {
         save()
         return entry
     }
-    fun close(key: String) { entries.removeAll { it.key == key }; save() }
+    fun close(key: String) {
+        entries.find { it.key == key }?.let { entry ->
+            closed.removeAll { it.key == key || (entry.shared != null && it.shared != null) }
+            closed.addLast(entry.copy())
+            while (closed.size > LIMIT) closed.removeFirst()
+        }
+        entries.removeAll { it.key == key }; save()
+    }
     fun save() {
         val array = JSONArray()
         entries.filter { it.uri != null }.forEach {

@@ -28,6 +28,9 @@ class EditorSession(application: Application) : AndroidViewModel(application) {
     private var pending: EditDraft? = null
     private var draining = false
     private var generation = 0
+    var previewOpen = false
+    var previewScroll = 0
+    var editorScroll = 0
     val findState = EditorFindState()
     var initialized = false
     var loading = false; private set

@@ -1,5 +1,7 @@
 # Reading preferences
 
+The quality-of-life review branch adds [Keep screen awake while reading](quality-of-life.md#keep-the-screen-awake), off by default, and a setting to forget the last save location. These additions are not in 0.3-alpha.
+
 Settings provides text size (12–28), line wrapping, three Android system font families and line spacing (120–220%). Source and code always use monospace; the selected family applies to prose and native table cells. Android system text scaling applies in addition to the selected size. Theme, line numbers and the file sidebar remain global settings.
 
 Without an override, a document follows the latest global defaults. With a document open, select **Only this document** before tapping **Done** to store its size, wrapping, font and spacing separately. Other documents keep their settings. **Use global reading defaults**, followed by **Done**, removes the override. Cancel makes no changes. When the document checkbox is clear, Done updates the global defaults.
