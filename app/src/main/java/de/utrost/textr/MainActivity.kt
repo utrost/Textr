@@ -113,7 +113,6 @@ class MainActivity : ComponentActivity() {
         lineSpacing = effective.lineSpacing
     }
     private var pendingScroll = 0
-    private var restoreSearchScroll: Int? = null
     private var formatOverride: FileKind? = null
     private var requestedMode: DisplayMode? = null
     private var homeShown = false
@@ -311,7 +310,8 @@ class MainActivity : ComponentActivity() {
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                     if (s.isNullOrEmpty()) searchCount.text = ""
                     if (searchField.hasFocus() && !s.isNullOrEmpty()) rememberPosition()
-                    webView?.findAllAsync(s?.toString().orEmpty())
+                    if (searchField.hasFocus()) (webView as? ReaderWebView)?.cancelFindRestore()
+                    webView?.takeIf { it.tag == true }?.findAllAsync(s?.toString().orEmpty())
                 }
                 override fun afterTextChanged(s: Editable?) = Unit
             })
@@ -385,6 +385,7 @@ class MainActivity : ComponentActivity() {
     private fun foreground() = Color.parseColor(if (dark) "#E3E9E5" else "#202923")
 
     private fun cancelWork() {
+        (webView as? ReaderWebView)?.cancelFindRestore()
         generation++
         stopSlowLoading()
         cancellation?.cancel()
@@ -987,7 +988,7 @@ class MainActivity : ComponentActivity() {
                     mode = restoredMode?.takeIf { it in prepared.modes } ?: prepared.defaultMode
                     if (uri != null) {
                         repository.retainReadAccess(uri, grantFlags)
-                        repository.remember(uri, prepared.source.name)
+                        repository.remember(uri, prepared.source.name, original.kind)
                         pendingBookmark?.let {
                             if (it.uri != uri.toString()) bookmarks.reconnect(it.id, uri.toString(), prepared.source.name)
                         }
@@ -1180,6 +1181,53 @@ class MainActivity : ComponentActivity() {
     }
 
     private inner class ReaderWebView(context: android.content.Context) : WebView(context) {
+        var restoringPosition: Int? = null; private set
+        private var pendingFindPosition: Int? = null
+        private var findRestore: Runnable? = null
+        private var restoreDeadline = 0L
+        fun cancelFindRestore() {
+            findRestore?.let(::removeCallbacks)
+            findRestore = null; restoringPosition = null; pendingFindPosition = null
+        }
+        fun prepareFindRestore(position: Int?) {
+            cancelFindRestore()
+            pendingFindPosition = position; restoringPosition = position
+        }
+        fun completeFindRestore(current: () -> Boolean) {
+            val position = pendingFindPosition ?: return
+            cancelFindRestore()
+            restoringPosition = position
+            restoreDeadline = android.os.SystemClock.uptimeMillis() + 2000
+            findRestore = Runnable {
+                cancelFindRestore()
+                if (current() && tag == true) scrollTo(0, position)
+            }
+            settleFindScroll()
+        }
+        private fun settleFindScroll() {
+            findRestore?.let { restore ->
+                removeCallbacks(restore)
+                // Chromium may animate to the active match after find completion.
+                // Restore after scrolling settles, with a bounded wait and user cancellation.
+                postDelayed(restore, minOf(200L, (restoreDeadline - android.os.SystemClock.uptimeMillis()).coerceAtLeast(0)))
+            }
+        }
+        override fun onScrollChanged(left: Int, top: Int, oldLeft: Int, oldTop: Int) {
+            super.onScrollChanged(left, top, oldLeft, oldTop)
+            settleFindScroll()
+        }
+        override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+            if (event.action == KeyEvent.ACTION_DOWN) cancelFindRestore()
+            return super.dispatchKeyEvent(event)
+        }
+        override fun onGenericMotionEvent(event: android.view.MotionEvent): Boolean {
+            if (event.actionMasked == android.view.MotionEvent.ACTION_SCROLL) cancelFindRestore()
+            return super.onGenericMotionEvent(event)
+        }
+        override fun onTouchEvent(event: android.view.MotionEvent): Boolean {
+            if (event.actionMasked == android.view.MotionEvent.ACTION_DOWN) cancelFindRestore()
+            return super.onTouchEvent(event)
+        }
         override fun startActionMode(callback: android.view.ActionMode.Callback, type: Int): android.view.ActionMode? {
             val wrapped = object : android.view.ActionMode.Callback2() {
                 override fun onCreateActionMode(mode: android.view.ActionMode, menu: android.view.Menu) = callback.onCreateActionMode(mode, menu)
@@ -1219,6 +1267,7 @@ class MainActivity : ComponentActivity() {
         fun current() = webView === this && generation == renderGeneration && canInteract()
         id = R.id.reader
         tag = false
+        prepareFindRestore(if (searchRow.visibility == View.VISIBLE && searchField.text.isNotEmpty()) scroll else null)
         // Keep the WebView accessibility bridge enabled throughout loading.
         // Do not invalidate its virtual tree by toggling descendant exposure.
         importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
@@ -1246,10 +1295,7 @@ class MainActivity : ComponentActivity() {
         addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> updateProgress() }
         setFindListener { active, total, done ->
             if (done && current() && tag == true) {
-                restoreSearchScroll?.let { position ->
-                    restoreSearchScroll = null
-                    postOnAnimation { if (current()) scrollTo(0, position) }
-                }
+                completeFindRestore(::current)
                 searchCount.text = if (searchField.text.isEmpty()) "" else if (total == 0) getString(R.string.no_matches) else getString(R.string.matches, active + 1, total)
                 searchCount.contentDescription = if (searchField.text.isEmpty()) "" else if (total == 0) getString(R.string.no_matches) else getString(R.string.matches_spoken, active + 1, total)
             }
@@ -1741,7 +1787,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun closeSearch() {
-        restoreSearchScroll = null
+        (webView as? ReaderWebView)?.cancelFindRestore()
         searchRow.visibility = View.GONE
         searchField.setText("")
         searchField.clearFocus()
@@ -1936,20 +1982,19 @@ class MainActivity : ComponentActivity() {
         session.navigation.push(documentKey(), NavigationPosition(mode, readerPosition(), searchField.text.toString().take(SourceSearch.MAX_QUERY),
             searchRow.visibility == View.VISIBLE, openDocuments.entries.find { it.key == documentKey() }?.sourceSearch ?: SourceSearchOptions()))
     }
-    private fun findNext(forward: Boolean) { rememberPosition(); webView?.findNext(forward) }
+    private fun findNext(forward: Boolean) { rememberPosition(); (webView as? ReaderWebView)?.cancelFindRestore(); webView?.findNext(forward) }
     private fun previousPosition() {
         val prepared = document ?: return
         val position = session.navigation.pop(documentKey()) ?: return
         mode = position.mode.takeIf { it in prepared.modes } ?: prepared.defaultMode
         anchor = null; sourceMatch = null; targetLine = 0
         pendingScroll = position.scroll
+        // Restoring the query must not launch a find on the outgoing page.
+        webView?.tag = false
         searchField.clearFocus()
         searchField.setText(position.query)
         searchRow.visibility = if (position.searching) View.VISIBLE else View.GONE
         openDocuments.entries.find { it.key == documentKey() }?.sourceSearch = position.sourceSearch
-        restoreSearchScroll = if (position.searching) position.scroll else null
-        // Do not sample the outgoing WebView when rendering the restored location.
-        webView?.tag = false
         render()
     }
     private fun reopenClosed() {
@@ -1965,7 +2010,7 @@ class MainActivity : ComponentActivity() {
     override fun onPause() { resumed = false; updateScreenAwake(); super.onPause() }
 
     // An unfinished WebView reports transient zero coordinates during recreation.
-    private fun readerPosition() = webView?.takeIf { it.tag == true }?.scrollY ?: pendingScroll
+    private fun readerPosition() = (webView as? ReaderWebView)?.restoringPosition ?: webView?.takeIf { it.tag == true }?.scrollY ?: pendingScroll
 
     private fun returnToReader() {
         val saved = session.returnState ?: return showHome()

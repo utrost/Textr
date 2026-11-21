@@ -1,6 +1,6 @@
 # Save as a new document
 
-The quality-of-life review branch adds [everyday reading conveniences](quality-of-life.md), including draft preview, navigation/closed history, selection search and save-location hints. These additions are not in 0.3-alpha.
+The quality-of-life review branch adds a [last successful save-location hint](quality-of-life.md#reuse-a-save-location), shared by editor saves and HTML export. This is not in 0.3-alpha.
 
 The reliability follow-up distinguishes denied permission, unavailable destinations and encoding failures where evidence allows, and offers **Save a new copy** to choose a destination again. Failure categories are stored with existing operation metadata; exception messages and contents are not stored. See [opening and recovery](recovery.md). These additions are not in the immutable 0.2-alpha APK.
 

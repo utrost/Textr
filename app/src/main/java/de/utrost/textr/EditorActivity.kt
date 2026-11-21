@@ -144,7 +144,7 @@ class EditorActivity : ReadingScreen() {
         if (buffer != null && editor.text.toString() != buffer.text) renderBuffer()
         val enabled = buffer != null && !model.loading && !outputs.busy
         editor.isEnabled = enabled; save.isEnabled = enabled; find.isEnabled = enabled; discard.isEnabled = enabled || (model.unavailable && model.recoveryFailed && !model.loading && !outputs.busy)
-        preview.visibility = if (draft?.name?.let { TextDocuments.kind(it, null) } == FileKind.MARKDOWN) View.VISIBLE else View.GONE
+        preview.visibility = if (draft?.markdown == true) View.VISIBLE else View.GONE
         preview.isEnabled = enabled
         undo.isEnabled = enabled && buffer?.canUndo == true; redo.isEnabled = enabled && buffer?.canRedo == true
         retryRecovery.visibility = if (model.recoveryFailed) View.VISIBLE else View.GONE
@@ -174,7 +174,7 @@ class EditorActivity : ReadingScreen() {
     private fun showPreview() {
         val buffer = model.buffer ?: return
         if (model.loading || outputs.busy || draftPreview != null) return
-        if (model.draft?.name?.let { TextDocuments.kind(it, null) } != FileKind.MARKDOWN) return
+        if (model.draft?.markdown != true) return
         buffer.select(EditSelection(editor.selectionStart.coerceAtLeast(0), editor.selectionEnd.coerceAtLeast(0)))
         if (!model.previewOpen) model.editorScroll = editor.scrollY
         val revision = buffer.revision

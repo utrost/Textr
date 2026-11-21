@@ -4,7 +4,7 @@ Scope: #101, #109 and #120–#125, on `feat/quality-of-life`, stacked on Copy al
 
 ## Checks
 
-Debug app/test builds, lint and **88 JVM tests** pass (zero failures, errors or skips). Full Android API 29 and API 36 emulator regressions are in progress; results will be recorded before publishing the implementation PR.
+Debug app/test builds, lint and **88 JVM tests** pass (zero failures, errors or skips). The final 18-case focused regression set passes on each of Android API 29 and API 36, followed by a further format-metadata/filtering check on each API. Final hosted full-suite results are pending in PR #126.
 
 New coverage checks combined recent-file filtering/recreation, bounded navigation and changed fingerprints, previous-position restoration after Go to line, exact converted/source clipboard behavior and oversized-copy rejection, bounded/session-only closed history and duplicate handling, UI reopen after recreation, foreground screen-on lifecycle, actual native selection-to-source-search with an unchanged clipboard, Unicode/multiline queries and rejection without option loss, unsaved draft preview/selection/undo/recreation, and successful-only save-location updates.
 
@@ -23,3 +23,13 @@ Draft preview tests require a visible viewport and restored preview scroll, with
 The save hint uses [DocumentsContract.EXTRA_INITIAL_URI](https://developer.android.com/reference/android/provider/DocumentsContract#EXTRA_INITIAL_URI), passing the opaque successful document URI. Provider-specific support and location fallback are controlled by Android/the provider.
 
 Selection integration follows [Android ACTION_PROCESS_TEXT](https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT); [Chromium's native selection helper](https://chromium.googlesource.com/chromium/src/+/refs/tags/133.0.6943.141/content/public/android/java/src/org/chromium/content/browser/selection/SelectActionMenuHelper.java) discovers exported text processors, which is why the destination additionally requires Textr's signature permission.
+
+## Regression findings and first full runs
+
+The first local full runs executed 142 cases per API: API 29 passed 139, and API 36 passed 140. Failures exposed menu helpers that assumed actions/settings remained on screen, a comparison check preceding the first resized layout, and a selection test depending on an intermittently missing WebView accessibility node. Helpers now scroll the native popup/settings container, wait for the same full-visibility assertion, and exercise native text selection even when the virtual text node is absent. The behavior assertions remain.
+
+An additional active-Find regression reproduced a real position-restoration bug: the recorded position was 650, but Chromium later moved it to 0 while finding the restored query. Query changes no longer start searches on an outgoing page. Each rendered page retains the intended position through its first Find, waits for native scrolling to settle (200 ms quiet period, bounded to two seconds), and cancels restoration on user touch, keyboard or wheel input. The regression verifies query, position and recreation together. Inactive/pending restoration is cancelled with the page's generation. Search/navigation, settings, document switching, draft preview/recovery and comparison layout all pass in the 18-case runs.
+
+Markdown classification now survives draft recovery without a filename extension; legacy checkpoints infer it from the name. Recent metadata retains the last detected format, so extensionless names can be filtered without provider reads. Explicit overrides take precedence. Both use backward-compatible optional metadata.
+
+[First hosted run 44915162377](https://github.com/utrost/Textr/actions/runs/44915162377) passed build/unit/lint. API 29 failed only the settings menu helper. API 36's retained accessibility report shows a blocking **“System UI isn't responding”** dialog near the start of the suite, followed by widespread missing-control failures; that run also contains the now-fixed search-position and settings cases. It is retained as failed evidence, not treated as acceptance. The updated candidate receives a fresh full hosted run.

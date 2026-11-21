@@ -23,6 +23,6 @@ class ReadingNavigation {
 
 object RecentFiltering {
     fun filter(files: List<RecentFile>, query: String, kind: FileKind?): List<RecentFile> = files.filter {
-        it.name.contains(query, ignoreCase = true) && (kind == null || (it.reading.format ?: TextDocuments.kind(it.name, null)) == kind)
+        it.name.contains(query, ignoreCase = true) && (kind == null || (it.reading.format ?: it.knownFormat ?: TextDocuments.kind(it.name, null)) == kind)
     }.sortedWith(compareByDescending<RecentFile> { it.pinned }.thenByDescending { it.openedAt })
 }

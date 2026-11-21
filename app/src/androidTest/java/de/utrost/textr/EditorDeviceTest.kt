@@ -61,6 +61,26 @@ class EditorDeviceTest {
     private fun ready(scenario: ActivityScenario<EditorActivity>) = await { var ready = false; scenario.onActivity { ready = model(it).buffer != null && !model(it).loading }; ready }
     private fun editor(scenario: ActivityScenario<EditorActivity>, action: (EditText) -> Unit) = scenario.onActivity { action(it.findViewById(R.id.editor_text)) }
     private fun checkpoint(text: String) = await { try { store.read()?.text == text } catch (_: Exception) { false } }
+    @Test fun markdownKindSurvivesRecoveryEvenWithoutFilenameExtension() {
+        val draft = EditDraft.new(TextDocument("README", "# Markdown", FileKind.MARKDOWN, 10), null)
+        assertTrue(store.create(draft)); assertTrue(store.read()!!.markdown)
+        ActivityScenario.launch<EditorActivity>(Intent(context, EditorActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)).use { scenario ->
+            ready(scenario)
+            scenario.onActivity {
+                assertTrue(model(it).draft!!.markdown)
+                assertEquals(View.VISIBLE, it.findViewById<Button>(R.id.preview_draft).visibility)
+            }
+        }
+        for (session in sessions) {
+            val worker = EditorSession::class.java.getDeclaredField("worker").apply { isAccessible = true }.get(session) as java.util.concurrent.ExecutorService
+            assertTrue(worker.awaitTermination(10, java.util.concurrent.TimeUnit.SECONDS))
+        }
+        val file = File(context.noBackupFilesDir, "edits/current.json")
+        val value = org.json.JSONObject(file.readText()).apply { remove("markdown"); put("name", "legacy.md") }
+        file.writeText(value.toString())
+        assertTrue("Older Markdown checkpoints remain previewable", store.read()!!.markdown)
+    }
+
     @Test fun markdownPreviewUsesUnsavedSnapshotAndPreservesEditorThroughRecreation() {
         launch().use { scenario ->
             ready(scenario)

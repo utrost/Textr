@@ -1,6 +1,6 @@
 # Reading preferences
 
-The quality-of-life review branch adds [everyday reading conveniences](quality-of-life.md), including draft preview, navigation/closed history, selection search and save-location hints. These additions are not in 0.3-alpha.
+The quality-of-life review branch adds [Keep screen awake while reading](quality-of-life.md#keep-the-screen-awake), off by default, and a setting to forget the last save location. These additions are not in 0.3-alpha.
 
 Settings provides text size (12–28), line wrapping, three Android system font families and line spacing (120–220%). Source and code always use monospace; the selected family applies to prose and native table cells. Android system text scaling applies in addition to the selected size. Theme, line numbers and the file sidebar remain global settings.
 

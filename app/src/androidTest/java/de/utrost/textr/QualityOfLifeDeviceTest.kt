@@ -36,6 +36,7 @@ class QualityOfLifeDeviceTest {
         repository.setSessionReferences(emptySet()); repository.clear()
     }
     @Test fun recentFiltersCombineAndSurviveRecreation() {
+        repository.remember(uri("README"), "README", FileKind.MARKDOWN)
         repository.remember(uri("Alpha.md"), "Alpha.md"); repository.remember(uri("Alpha.txt"), "Alpha.txt"); repository.remember(uri("Beta.md"), "Beta.md")
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             scenario.onActivity {
@@ -49,6 +50,12 @@ class QualityOfLifeDeviceTest {
             assertTrue(device.wait(Until.hasObject(By.text(context.getString(R.string.recent_no_matches))), 5000))
             click(R.string.clear_filters)
             assertTrue(device.wait(Until.hasObject(By.text("Alpha.txt")), 5000))
+            scenario.onActivity {
+                it.findViewById<EditText>(R.id.recent_query).setText("README")
+                it.findViewById<Spinner>(R.id.recent_format).setSelection(FileKind.entries.indexOf(FileKind.MARKDOWN) + 1)
+            }
+            assertTrue(device.wait(Until.hasObject(By.text("README")), 5000))
+            assertEquals(FileKind.MARKDOWN, DocumentRepository(context).recentFiles().single { it.name == "README" }.knownFormat)
         }
     }
     @Test fun previousPositionSurvivesRecreationAndChangedReloadInvalidatesIt() {
@@ -114,8 +121,18 @@ class QualityOfLifeDeviceTest {
             ready(scenario)
             scenario.onActivity { it.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("sentinel", "unchanged")) }
             val word = device.wait(Until.findObject(By.textContains("needle needle")), 5000)
-            assertNotNull("Accessible reader text", word)
-            word!!.longClick()
+            if (word != null) word.longClick() else {
+                // Some WebViews omit source accessibility nodes (#59). Exercise the
+                // native selection gesture at the first word without requiring that bridge.
+                var x = 0; var y = 0
+                scenario.onActivity {
+                    val web = it.findViewById<WebView>(R.id.reader)
+                    val location = IntArray(2); web.getLocationOnScreen(location)
+                    val density = it.resources.displayMetrics.density
+                    x = location[0] + (32 * density).toInt(); y = location[1] + (32 * density).toInt()
+                }
+                device.swipe(x, y, x, y, 100)
+            }
             device.waitForIdle()
             val action = By.text(java.util.regex.Pattern.compile(java.util.regex.Pattern.quote(context.getString(R.string.find_selected)), 2))
             if (!device.wait(Until.hasObject(action), 2000)) (device.findObject(By.res("android", "overflow")) ?: device.findObject(By.res("android", "floating_toolbar_overflow_button")))?.click()
@@ -188,7 +205,12 @@ class QualityOfLifeDeviceTest {
             device.findObject(By.desc(context.getString(R.string.find))).click()
             scenario.onActivity { it.findViewById<EditText>(R.id.search_query).setText("reference") }
             await { device.hasObject(By.res(context.packageName, "search_count").textContains("400")) }
-            device.pressBack(); device.waitForIdle()
+            scenario.onActivity {
+                val field = it.findViewById<EditText>(R.id.search_query)
+                field.clearFocus()
+                it.getSystemService(android.view.inputmethod.InputMethodManager::class.java).hideSoftInputFromWindow(field.windowToken, 0)
+            }
+            device.waitForIdle()
             scenario.onActivity { it.findViewById<WebView>(R.id.reader).scrollTo(0, 650) }
             val before = scroll(scenario)
             menu(R.string.go_to_line)
@@ -196,8 +218,17 @@ class QualityOfLifeDeviceTest {
             click(R.string.go); ready(scenario)
             await { scroll(scenario) > before + 1000 }
             menu(R.string.previous_position); ready(scenario)
-            await { device.hasObject(By.res(context.packageName, "search_count").textContains("400")) && kotlin.math.abs(scroll(scenario) - before) <= 3 }
+            try { await { device.hasObject(By.res(context.packageName, "search_count").textContains("400")) && kotlin.math.abs(scroll(scenario) - before) <= 3 } }
+            catch (error: AssertionError) {
+                var detail = ""
+                scenario.onActivity { detail = "expected=$before actual=${scroll(scenario)} query=${it.findViewById<EditText>(R.id.search_query).text} count=${it.findViewById<TextView>(R.id.search_count).text}" }
+                throw AssertionError(detail, error)
+            }
             scenario.onActivity { assertEquals("reference", it.findViewById<EditText>(R.id.search_query).text.toString()) }
+            device.waitForIdle(); assertTrue(kotlin.math.abs(scroll(scenario) - before) <= 3)
+            scenario.recreate(); ready(scenario)
+            await { kotlin.math.abs(scroll(scenario) - before) <= 3 }
+            device.waitForIdle(); assertTrue(kotlin.math.abs(scroll(scenario) - before) <= 3)
         }
     }
 

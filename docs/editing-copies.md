@@ -1,6 +1,6 @@
 # Editing text and Markdown copies
 
-The quality-of-life review branch adds [everyday reading conveniences](quality-of-life.md), including draft preview, navigation/closed history, selection search and save-location hints. These additions are not in 0.3-alpha.
+The quality-of-life review branch adds [previewing unsaved Markdown drafts](quality-of-life.md#preview-an-unsaved-markdown-draft), preserving selection, scroll and undo history. This is not in 0.3-alpha.
 
 The reliability follow-up adds actionable output errors and **Retry private recovery**, including retrying an unreadable checkpoint without discarding it. See [opening and recovery](recovery.md). These additions are not in the immutable 0.2-alpha APK.
 

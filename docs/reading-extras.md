@@ -1,6 +1,6 @@
 # CSV tables, bookmarks and keyboard shortcuts
 
-The quality-of-life review branch adds [everyday reading conveniences](quality-of-life.md), including draft preview, navigation/closed history, selection search and save-location hints. These additions are not in 0.3-alpha.
+The quality-of-life review branch adds [previous reading positions and selected-text search](quality-of-life.md). These additions are not in 0.3-alpha.
 
 The reliability follow-up asks for explicit confirmation before reconnecting a bookmark to a different URI. Open separately and Cancel preserve the original bookmark; successful explicit reconnection updates only the selected bookmark. See [opening and recovery](recovery.md).
 

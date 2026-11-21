@@ -4,7 +4,7 @@ Implemented on the quality-of-life branch for #101, #109 and #120–#125. These 
 
 ## Find a recent file
 
-The home screen offers **Search recent filenames**, a format filter and **Clear filters**. Name matching ignores case; format matching uses stored format overrides or the filename. Filters combine, and pinned results stay first. An empty result explains that no files match. Filtering uses local history metadata without opening providers or searching document contents. Filters survive activity recreation within the session; clearing history also resets them.
+The home screen offers **Search recent filenames**, a format filter and **Clear filters**. Name matching ignores case; format matching uses stored format overrides, the last detected format, or the filename for older entries. Filters combine, and pinned results stay first. An empty result explains that no files match. Filtering uses local history metadata without opening providers or searching document contents. Filters survive activity recreation within the session; clearing history also resets them.
 
 ## Return after a jump
 
@@ -22,7 +22,7 @@ Both clipboard actions accept at most 256 Ki UTF-16 characters. Oversized copies
 
 In the copy editor, **Preview Markdown draft** renders an immutable snapshot of the current unsaved Markdown revision. The preview uses the existing bounded Markdown renderer, with JavaScript, remote resources, images and file/content access disabled. Supported links open externally only when tapped. **Back to editing** or Android Back returns to the unchanged buffer, selection, scroll position and undo history. Preview never saves an output or clears recovery.
 
-Preview remains open across activity recreation, with its own scroll position. An obsolete revision is labeled stale; unavailable or over-budget rendering leaves the editable draft intact. Process loss still follows the existing private draft recovery workflow. Plain-text drafts have no Markdown preview button.
+Preview remains open across activity recreation, with its own scroll position. An obsolete revision is labeled stale; unavailable or over-budget rendering leaves the editable draft intact. Process loss still follows the existing private draft recovery workflow. Markdown classification is retained with recovery even when the provider’s filename has no Markdown extension. Older checkpoints infer it from the filename. Plain-text drafts have no Markdown preview button.
 
 ## Reopen an accidentally closed document
 

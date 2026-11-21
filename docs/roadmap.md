@@ -10,7 +10,7 @@ Version code 3 adds the recovery and reading-position fixes from merged PR #117 
 
 ## Quality-of-life batch — implementation branch
 
-All eight requested improvements have implementations on `feat/quality-of-life`, pending review/merge and a later release. This includes the existing Copy all change from PR #119. The 0.3-alpha APK remains unchanged. See [usage](quality-of-life.md) and [validation](validation-quality-of-life.md).
+All eight requested improvements are implemented in [PR #126](https://github.com/utrost/Textr/pull/126) (`feat/quality-of-life`), pending review/merge and a later release. This includes the existing Copy all change from PR #119. The 0.3-alpha APK remains unchanged. See [usage](quality-of-life.md) and [validation](validation-quality-of-life.md).
 
 | Issue | Improvement | State |
 | --- | --- | --- |
