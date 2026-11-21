@@ -152,7 +152,7 @@ class ReaderControlsTest {
             scenario.onActivity {
                 (it.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager).clearPrimaryClip()
             }
-            val text = device.wait(Until.findObject(By.text("Copyable Textr selection")), 5000)
+            val text = SourceNodeProbe.find(By.text("Copyable Textr selection"), 5000, "copy-node-missing")
             assertNotNull(text)
             text!!.longClick()
             click("Copy")

@@ -171,13 +171,15 @@ class QualityOfLifeDeviceTest {
             scenario.onActivity { it.findSelectedText("Grüße 🚀\nsecond line") }
             assertTrue(device.wait(Until.hasObject(By.res(context.packageName, "source_query")), 5000))
             device.findObject(By.res(context.packageName, "match_case")).click()
+            assertTrue("Match case checked after its native click", device.wait(Until.hasObject(By.res(context.packageName, "match_case").checked(true)), 5000))
             device.findObject(By.res(context.packageName, "whole_word")).click()
+            assertTrue("Whole word checked after its native click", device.wait(Until.hasObject(By.res(context.packageName, "whole_word").checked(true)), 5000))
             click(R.string.done)
             scenario.onActivity {
                 it.findSelectedText(" \n "); it.findSelectedText("x".repeat(SourceSearch.MAX_QUERY + 1))
                 val entry = ViewModelProvider(it)[ReaderSession::class.java].openDocuments!!.entries.single()
                 assertEquals("Grüße 🚀\nsecond line", entry.sourceSearch.query)
-                assertTrue(entry.sourceSearch.matchCase); assertTrue(entry.sourceSearch.wholeWord)
+                assertTrue("Retained match case: ${entry.sourceSearch}", entry.sourceSearch.matchCase); assertTrue("Retained whole word: ${entry.sourceSearch}", entry.sourceSearch.wholeWord)
                 it.findSelectedText("Title")
             }
             assertTrue(device.wait(Until.hasObject(By.res(context.packageName, "source_query")), 5000))
