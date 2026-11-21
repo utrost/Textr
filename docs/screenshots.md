@@ -1,6 +1,6 @@
 # Screenshots
 
-Refreshed 21 November 2026 from the 0.5-alpha app source (`a410407`, application tree unchanged from `d9a3e42`), using its debug build and test fixture provider. Captured on an Android 16/API 36 emulator with WebView 133.0.6943.137, using synthetic documents only. Phone captures use 1080×1920 at 420 dpi; the wide capture uses 1600×1200 at 240 dpi. System font scale is 1.0. These are emulator screenshots, not photographs or physical Magic V6 validation. Pixels are not retouched; Android’s demo clock is used where supported.
+Refreshed 21 November 2026 from the 0.5-alpha app source (`a410407`, application tree unchanged from `d9a3e42`), using its debug build and test fixture provider. Captured on an Android 16/API 36 emulator with WebView 133.0.6943.137, using synthetic documents only. Phone captures use 1080×1920 at 420 dpi; the wide capture uses 1600×1200 at 240 dpi. System font scale is 1.0. These are emulator screenshots, not photographs or physical Magic V6 validation. Later source changes update About/offline help/recovery disclosure; the pictured screens are unchanged. Pixels are not retouched; Android’s demo clock is used where supported.
 
 | Home | Markdown | Source |
 | --- | --- | --- |
