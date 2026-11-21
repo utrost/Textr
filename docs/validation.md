@@ -1,8 +1,8 @@
 # Validation records
 
-Current testing release: **0.2-alpha**. See [roadmap implementation validation](validation-roadmap-implementation.md) for 86 JVM tests, 123 device tests per API 29/36, final hosted evidence and signed-release/upgrade verification. [Release notes](release-notes-0.2-alpha.md) and the [roadmap](roadmap.md) distinguish available features from review and physical-device acceptance.
+Current testing release: **0.3-alpha**, a private draft prerelease. See [reliability validation](validation-reliability.md), [release notes](release-notes-0.3-alpha.md) and the [roadmap](roadmap.md). The immutable 0.2-alpha [implementation record](validation-roadmap-implementation.md) remains available separately.
 
-See [reliability follow-up validation](validation-reliability.md) for the next implementation batch (#97/#99), separate from the immutable alpha.
+[Quality-of-life validation](validation-quality-of-life.md) tracks the eight requested additions in [PR #126](https://github.com/utrost/Textr/pull/126), which are not included in 0.3-alpha.
 
 ## Historical 0.1.0 baseline
 

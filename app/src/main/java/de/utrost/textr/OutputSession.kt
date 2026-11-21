@@ -61,8 +61,8 @@ class OutputSession(application: Application) : AndroidViewModel(application) {
         require(value.text.length <= MAX_FILE_BYTES && value.mime.startsWith("text/"))
         request = value
         publish(OutputStatus(OutputPhase.PICKING, value.name, draftId = value.draftId, revision = value.revision))
-        return Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE)
-            .setType(value.mime).putExtra(Intent.EXTRA_TITLE, value.name)
+        return SaveLocation(getApplication()).apply(Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE)
+            .setType(value.mime).putExtra(Intent.EXTRA_TITLE, value.name))
     }
     /** Used after process death: no source contents are serialized or silently reconstructed. */
     fun restorePending(name: String, sourceUri: String?) {
@@ -113,6 +113,7 @@ class OutputSession(application: Application) : AndroidViewModel(application) {
                 if (mayDelete && result != OutputResult.SAVED) partial = !removeOutput(target)
                 else if (result == OutputResult.FAILED) partial = true
                 val completed = OutputStatus(OutputPhase.COMPLETE, snapshot.name, target, result, partial, snapshot.draftId, snapshot.revision, failure)
+                if (result == OutputResult.SAVED) SaveLocation(getApplication()).saved(target)
                 persist(completed)
                 handler.post { request = null; signal = null; publish(completed) }
             }

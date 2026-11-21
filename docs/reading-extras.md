@@ -1,5 +1,7 @@
 # CSV tables, bookmarks and keyboard shortcuts
 
+The quality-of-life review branch adds [previous reading positions and selected-text search](quality-of-life.md). These additions are not in 0.3-alpha.
+
 The reliability follow-up asks for explicit confirmation before reconnecting a bookmark to a different URI. Open separately and Cancel preserve the original bookmark; successful explicit reconnection updates only the selected bookmark. See [opening and recovery](recovery.md).
 
 Issues [#44](https://github.com/utrost/Textr/issues/44), [#45](https://github.com/utrost/Textr/issues/45) and [#46](https://github.com/utrost/Textr/issues/46) extend the read-only reader. Public release remains deferred.

@@ -72,6 +72,34 @@ class BacklogTest {
         }
     }
 
+    @Test fun copyAllPreservesExactSourceWithoutLineNumbers() {
+        val expected = "Alpha 🚀\r\nBeta\rGamma\n\t  trailing  "
+        replace("copy-all.txt", expected)
+        context.getSharedPreferences("reading", 0).edit().putBoolean("lineNumbers", true).commit()
+        ActivityScenario.launch<MainActivity>(intent("copy-all.txt")).use { scenario ->
+            ready(scenario)
+            menu(context.getString(R.string.copy_all))
+            scenario.onActivity {
+                val clip = it.getSystemService(android.content.ClipboardManager::class.java).primaryClip!!
+                assertEquals(expected, clip.getItemAt(0).text.toString())
+                assertEquals(expected, ViewModelProvider(it)[ReaderSession::class.java].original!!.text)
+            }
+        }
+    }
+
+    @Test fun copyAllRejectsOversizedSourceWithoutReplacingClipboard() {
+        replace("copy-all-large.txt", "a".repeat(256 * 1024 + 1))
+        ActivityScenario.launch<MainActivity>(intent("copy-all-large.txt")).use { scenario ->
+            ready(scenario)
+            scenario.onActivity { it.getSystemService(android.content.ClipboardManager::class.java)
+                .setPrimaryClip(android.content.ClipData.newPlainText("fixture", "keep this")) }
+            menu(context.getString(R.string.copy_all))
+            assertTrue(device.wait(Until.hasObject(By.text(context.getString(R.string.copy_all_limit))), 5000))
+            scenario.onActivity { assertEquals("keep this", it.getSystemService(android.content.ClipboardManager::class.java)
+                .primaryClip!!.getItemAt(0).text.toString()) }
+        }
+    }
+
     @Test fun sourceNumbersDoNotEnterClipboardAndGoToLineUsesLogicalLines() {
         replace("numbered.txt", "Alpha source line\nBeta source line\nGamma source line")
         context.getSharedPreferences("reading", 0).edit().putBoolean("lineNumbers", true).commit()
@@ -281,9 +309,31 @@ class BacklogTest {
         fail("Expected scroll $expected: $state")
     }
     private fun ready(scenario: ActivityScenario<MainActivity>) = await { var value = false; scenario.onActivity { value = it.findViewById<WebView>(R.id.reader)?.tag == true }; value }
-    private fun menu(label: String) { click(By.desc("More options")); click(label) }
+    private fun menu(label: String) {
+        click(By.desc("More options"))
+        val popup = device.wait(Until.findObject(By.clazz(android.widget.ListView::class.java)), 5000)
+        assertNotNull("Native options menu", popup)
+        val selector = By.text(java.util.regex.Pattern.compile(java.util.regex.Pattern.quote(label), 2))
+        val item = popup!!.findObject(selector) ?: popup.scrollUntil(androidx.test.uiautomator.Direction.DOWN, Until.findObject(selector))
+        assertNotNull("Menu item: $label", item)
+        item!!.click(); device.waitForIdle()
+    }
     private fun click(label: String) = click(By.text(java.util.regex.Pattern.compile(java.util.regex.Pattern.quote(label), 2)))
-    private fun click(selector: BySelector) { val item = device.wait(Until.findObject(selector), 5000); assertNotNull("Missing $selector", item); item!!.click(); device.waitForIdle() }
+    private fun click(selector: BySelector) {
+        // Activity transitions can replace a node between lookup and click.
+        // Retry only stale references; missing controls and behavior failures still fail.
+        for (attempt in 0..2) {
+            val item = device.wait(Until.findObject(selector), 5000)
+            assertNotNull("Missing $selector", item)
+            try {
+                item!!.click()
+                device.waitForIdle()
+                return
+            } catch (stale: androidx.test.uiautomator.StaleObjectException) {
+                if (attempt == 2) throw stale
+            }
+        }
+    }
     private fun clickSelection(label: String) {
         val selector = By.text(java.util.regex.Pattern.compile(label, 2))
         if (!device.wait(Until.hasObject(selector), 2000)) {

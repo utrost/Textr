@@ -1,21 +1,21 @@
 # Feature roadmap and implementation backlog
 
-Updated 20 November 2026. The five 0.2-alpha epics and 19 implementation issues are complete. Their rationale and original sequence are retained in the [completed design record](feature-roadmap-0.2.md). This document tracks the next planned batch; the reliability implementation is merged through PR #117 and included in 0.3-alpha; none of this batch is included in 0.2-alpha.
+Updated 21 November 2026. The five 0.2-alpha epics and 19 implementation issues are complete. Their rationale and original sequence are retained in the [completed design record](feature-roadmap-0.2.md). This document tracks the next planned batch; the reliability implementation is merged through PR #117 and included in 0.3-alpha; none of this batch is included in 0.2-alpha.
 
 ## Next roadmap — reliable daily use
 
-The next roadmap adds **six epics and 13 implementation issues**. These are follow-ups, separate from the five completed 0.2-alpha epics; the reliability implementation is merged through PR #117 and included in 0.3-alpha and the other tracks remain planned. No date or version is promised. Existing reliability, private-beta and distribution issues remain open and are linked from the new epics rather than duplicated.
+The next roadmap adds **six epics and 13 implementation issues**. These are follow-ups, separate from the five completed 0.2-alpha epics; the reliability implementation is merged through PR #117 and included in 0.3-alpha and #101/#109 are implemented in [quality-of-life PR #126](https://github.com/utrost/Textr/pull/126); remaining issues stay planned. No date or version is promised. Existing reliability, private-beta and distribution issues remain open and are linked from the new epics rather than duplicated.
 
 | Order | Epic | New implementation issues | State |
 | --- | --- | --- | --- |
 | 1 | [#98](https://github.com/utrost/Textr/issues/98) — Reliable daily use: recovery and acceptance | [#99](https://github.com/utrost/Textr/issues/99) | Software merged in [PR #117](https://github.com/utrost/Textr/pull/117), included in 0.3-alpha; #56/#59 remain open |
-| 2 | [#100](https://github.com/utrost/Textr/issues/100) — Copy editor polish: preview, navigation and saved copies | [#101](https://github.com/utrost/Textr/issues/101), [#102](https://github.com/utrost/Textr/issues/102), [#103](https://github.com/utrost/Textr/issues/103) | Planned |
+| 2 | [#100](https://github.com/utrost/Textr/issues/100) — Copy editor polish: preview, navigation and saved copies | [#101](https://github.com/utrost/Textr/issues/101), [#102](https://github.com/utrost/Textr/issues/102), [#103](https://github.com/utrost/Textr/issues/103) | #101 on review branch; #102/#103 planned |
 | 3 | [#104](https://github.com/utrost/Textr/issues/104) — Comparison improvements: draft review and portable diffs | [#105](https://github.com/utrost/Textr/issues/105), [#106](https://github.com/utrost/Textr/issues/106), [#107](https://github.com/utrost/Textr/issues/107) | Planned |
-| 4 | [#108](https://github.com/utrost/Textr/issues/108) — Reading organization: recents search and reference collections | [#109](https://github.com/utrost/Textr/issues/109), [#110](https://github.com/utrost/Textr/issues/110) | Planned |
+| 4 | [#108](https://github.com/utrost/Textr/issues/108) — Reading organization: recents search and reference collections | [#109](https://github.com/utrost/Textr/issues/109), [#110](https://github.com/utrost/Textr/issues/110) | #109 on review branch; #110 planned |
 | 5 | [#111](https://github.com/utrost/Textr/issues/111) — Focused formats: JSON Lines and lightweight markup | [#112](https://github.com/utrost/Textr/issues/112), [#113](https://github.com/utrost/Textr/issues/113), [#114](https://github.com/utrost/Textr/issues/114) | Planned |
 | 6 | [#115](https://github.com/utrost/Textr/issues/115) — Repeatable release preparation and channel readiness | [#116](https://github.com/utrost/Textr/issues/116) | Planned |
 
-**Delivery order:** address #97 and recovery failures first, with #59 investigation and #56 physical acceptance continuing. The first feature batch is **draft Markdown preview (#101) and compare draft with original (#105)**. Then deliver editor navigation/reopening and comparison filters/export, followed by recents/collections and the focused format batch. Release automation can proceed independently; distribution gates remain unchanged.
+**Delivery order:** address #97 and recovery failures first, with #59 investigation and #56 physical acceptance continuing. The requested quality-of-life batch implements **draft Markdown preview (#101)** and **recent-file filtering (#109)**. **Compare draft with original (#105)** remains the next proposed feature. Then deliver editor navigation/reopening and comparison filters/export, followed by recents/collections and the focused format batch. Release automation can proceed independently; distribution gates remain unchanged.
 
 Draft comparison uses the original editing snapshot, not an unannounced reread of the provider file. Preview and comparison never save the draft. Collections contain bounded metadata/references only. AsciiDoc/reStructuredText support is source highlighting; Markdown task lists are read-only. Every issue defines acceptance and validation, preserving offline operation, unchanged originals and current resource limits.
 
@@ -73,3 +73,7 @@ Retain Android 10+, no INTERNET permission, the 5 MiB input cap and tighter exis
 ## Reliability implementation follow-up
 
 The first implementation batch addresses #97 and #99: pending-position preservation during recreation, actionable opening/output errors, cancellation returning to the previous reader snapshot, explicit bookmark reconnection and private-recovery retry. See [behavior](recovery.md) and [validation](validation-reliability.md). Validation passes on `35ecbc4`: 86 JVM tests, lint and hosted 129/129 device tests per API 29/36; unchanged application source also passes full local suites and repeated position-restoration checks. [PR #117](https://github.com/utrost/Textr/pull/117) is merged and included in 0.3-alpha; #98 remains open for #56 physical acceptance and #59 WebView investigation.
+
+## Quality-of-life implementation
+
+[PR #126](https://github.com/utrost/Textr/pull/126) implements #101, #109 and #120–#125. See [behavior and limits](quality-of-life.md) and [validation](validation-quality-of-life.md). This is a review branch, not part of 0.3-alpha.

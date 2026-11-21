@@ -147,6 +147,18 @@ class ComparisonDeviceTest {
                 }
                 device.executeShellCommand("settings put system font_scale 2.0"); device.executeShellCommand("wm size 720x1280"); device.executeShellCommand("wm density 360")
                 await { var unified = false; scenario.onActivity { unified = it.findViewById<TextView>(R.id.compare_layout).text.contains(it.getString(R.string.compare_unified)) }; unified }
+                // The new layout label is installed before its first layout pass.
+                // Wait for the same full-visibility invariant asserted below.
+                await {
+                    var laidOut = false
+                    scenario.onActivity {
+                        val root = it.findViewById<android.view.ViewGroup>(android.R.id.content).getChildAt(0) as android.view.ViewGroup
+                        val back = root.getChildAt(root.childCount - 1)
+                        val rect = android.graphics.Rect()
+                        laidOut = back.height > 0 && back.getGlobalVisibleRect(rect) && back.height == rect.height()
+                    }
+                    laidOut
+                }
                 scenario.onActivity {
                     assertEquals(1, model(it).selectedChange); assertEquals(leftText, model(it).left!!.document.text)
                     val back = (it.findViewById<android.view.ViewGroup>(android.R.id.content).getChildAt(0) as android.view.ViewGroup).let { root -> root.getChildAt(root.childCount - 1) }

@@ -1,12 +1,29 @@
 # Textr feature roadmap
 
-Updated 20 November 2026. Textr is an offline Android reader that preserves originals, with explicit export and copy editing. The current testing release is **0.3-alpha**, available to repository maintainers as a draft GitHub prerelease. Public APK and store publication remain deferred.
+Updated 21 November 2026. Textr is an offline Android reader that preserves originals, with explicit export and copy editing. The current testing release is **0.3-alpha**, available to repository maintainers as a draft GitHub prerelease. Public APK and store publication remain deferred.
 
-[Live tracker #14](https://github.com/utrost/Textr/issues/14) links the work below. Individual issues hold acceptance criteria; the 0.2-alpha feature batch is complete on `main`; the next feature batch is planned, while reliability, physical acceptance and distribution gates remain separate. The phases describe delivery order, not dates or promised version numbers.
+[Live tracker #14](https://github.com/utrost/Textr/issues/14) links the work below. Individual issues hold acceptance criteria; the 0.2-alpha feature batch is complete on `main`; the eight requested quality-of-life improvements are implemented on a review branch, while reliability, physical acceptance and distribution gates remain separate. The phases describe delivery order, not dates or promised version numbers.
 
 ## Current reliability release — 0.3-alpha
 
 Version code 3 adds the recovery and reading-position fixes from merged PR #117 to the complete 0.2-alpha feature set. It remains a private draft prerelease, signed with the same development identity for in-place updates. See [release notes](release-notes-0.3-alpha.md) and [releases](https://github.com/utrost/Textr/releases). Build/lint, 86 JVM tests and 129 device tests per API 29/36 passed for the implementation; release packaging and upgrade evidence accompany the release. #97/#99 are implemented and merged; #98 stays open for #56/#59.
+
+## Quality-of-life batch — implementation branch
+
+All eight requested improvements are implemented in [PR #126](https://github.com/utrost/Textr/pull/126) (`feat/quality-of-life`), pending review/merge and a later release. This includes the existing Copy all change from PR #119. The 0.3-alpha APK remains unchanged. See [usage](quality-of-life.md) and [validation](validation-quality-of-life.md).
+
+| Issue | Improvement | State |
+| --- | --- | --- |
+| [#109](https://github.com/utrost/Textr/issues/109) | Search/filter recent files | Implemented on branch |
+| [#120](https://github.com/utrost/Textr/issues/120) | Previous reading position | Implemented on branch |
+| [#121](https://github.com/utrost/Textr/issues/121) | Copy converted Markdown | Implemented on branch |
+| [#101](https://github.com/utrost/Textr/issues/101) | Unsaved Markdown draft preview | Implemented on branch |
+| [#122](https://github.com/utrost/Textr/issues/122) | Reopen closed document | Implemented on branch |
+| [#123](https://github.com/utrost/Textr/issues/123) | Keep screen awake while reading | Implemented on branch |
+| [#124](https://github.com/utrost/Textr/issues/124) | Find selected text | Implemented on branch |
+| [#125](https://github.com/utrost/Textr/issues/125) | Last successful save-location hint | Implemented on branch |
+
+The remaining editor, comparison, collections, format and release-automation issues are still planned. Physical-provider, human TalkBack and foldable acceptance remain separate in #56/#59.
 
 ## Available in the 0.2-alpha baseline
 
@@ -48,18 +65,18 @@ Turn reproducible beta findings into focused issues with fixture, Android/WebVie
 
 ## Next roadmap — reliable daily use
 
-The next roadmap adds **six epics and 13 implementation issues**. These are follow-ups, separate from the five completed 0.2-alpha epics; the reliability implementation is merged through PR #117 and included in 0.3-alpha and the other tracks remain planned. No date or version is promised. Existing reliability, private-beta and distribution issues remain open and are linked from the new epics rather than duplicated.
+The next roadmap adds **six epics and 13 implementation issues**. These are follow-ups, separate from the five completed 0.2-alpha epics; the reliability implementation is merged through PR #117 and included in 0.3-alpha and #101/#109 are implemented in the quality-of-life review branch; remaining issues stay planned. No date or version is promised. Existing reliability, private-beta and distribution issues remain open and are linked from the new epics rather than duplicated.
 
 | Order | Epic | New implementation issues | State |
 | --- | --- | --- | --- |
 | 1 | [#98](https://github.com/utrost/Textr/issues/98) — Reliable daily use: recovery and acceptance | [#99](https://github.com/utrost/Textr/issues/99) | Software merged in [PR #117](https://github.com/utrost/Textr/pull/117), included in 0.3-alpha; #56/#59 remain open |
-| 2 | [#100](https://github.com/utrost/Textr/issues/100) — Copy editor polish: preview, navigation and saved copies | [#101](https://github.com/utrost/Textr/issues/101), [#102](https://github.com/utrost/Textr/issues/102), [#103](https://github.com/utrost/Textr/issues/103) | Planned |
+| 2 | [#100](https://github.com/utrost/Textr/issues/100) — Copy editor polish: preview, navigation and saved copies | [#101](https://github.com/utrost/Textr/issues/101), [#102](https://github.com/utrost/Textr/issues/102), [#103](https://github.com/utrost/Textr/issues/103) | #101 implemented on review branch; #102/#103 planned |
 | 3 | [#104](https://github.com/utrost/Textr/issues/104) — Comparison improvements: draft review and portable diffs | [#105](https://github.com/utrost/Textr/issues/105), [#106](https://github.com/utrost/Textr/issues/106), [#107](https://github.com/utrost/Textr/issues/107) | Planned |
-| 4 | [#108](https://github.com/utrost/Textr/issues/108) — Reading organization: recents search and reference collections | [#109](https://github.com/utrost/Textr/issues/109), [#110](https://github.com/utrost/Textr/issues/110) | Planned |
+| 4 | [#108](https://github.com/utrost/Textr/issues/108) — Reading organization: recents search and reference collections | [#109](https://github.com/utrost/Textr/issues/109), [#110](https://github.com/utrost/Textr/issues/110) | #109 implemented on review branch; #110 planned |
 | 5 | [#111](https://github.com/utrost/Textr/issues/111) — Focused formats: JSON Lines and lightweight markup | [#112](https://github.com/utrost/Textr/issues/112), [#113](https://github.com/utrost/Textr/issues/113), [#114](https://github.com/utrost/Textr/issues/114) | Planned |
 | 6 | [#115](https://github.com/utrost/Textr/issues/115) — Repeatable release preparation and channel readiness | [#116](https://github.com/utrost/Textr/issues/116) | Planned |
 
-**Delivery order:** address #97 and recovery failures first, with #59 investigation and #56 physical acceptance continuing. The first feature batch is **draft Markdown preview (#101) and compare draft with original (#105)**. Then deliver editor navigation/reopening and comparison filters/export, followed by recents/collections and the focused format batch. Release automation can proceed independently; distribution gates remain unchanged.
+**Delivery order:** address #97 and recovery failures first, with #59 investigation and #56 physical acceptance continuing. The quality-of-life batch implements **draft Markdown preview (#101)** and **recent-file filtering (#109)**. **Compare draft with original (#105)** remains the next proposed feature. Then deliver editor navigation/reopening and comparison filters/export, followed by recents/collections and the focused format batch. Release automation can proceed independently; distribution gates remain unchanged.
 
 Draft comparison uses the original editing snapshot, not an unannounced reread of the provider file. Preview and comparison never save the draft. Collections contain bounded metadata/references only. AsciiDoc/reStructuredText support is source highlighting; Markdown task lists are read-only. Every issue defines acceptance and validation, preserving offline operation, unchanged originals and current resource limits.
 

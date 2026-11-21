@@ -57,4 +57,10 @@
     <item type="id" name="editor_replace_all" />
     <item type="id" name="editor_discard" />
     <item name="retry_recovery" type="id" />
+    <item name="recent_results" type="id" />
+    <item name="recent_query" type="id" />
+    <item name="recent_format" type="id" />
+    <item name="keep_awake" type="id" />
+    <item name="draft_preview" type="id" />
+    <item name="preview_draft" type="id" />
 </resources>

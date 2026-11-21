@@ -13,7 +13,7 @@ import android.system.StructPollfd
 import java.io.FilterInputStream
 
 data class ReadingState(val mode: DisplayMode? = null, val scroll: Int = 0, val format: FileKind? = null, val encoding: TextEncoding? = null, val csv: CsvOptions = CsvOptions(), val profile: ReadingProfile? = null)
-data class RecentFile(val uri: String, val name: String, val openedAt: Long, val reading: ReadingState = ReadingState(), val pinned: Boolean = false)
+data class RecentFile(val uri: String, val name: String, val openedAt: Long, val reading: ReadingState = ReadingState(), val pinned: Boolean = false, val knownFormat: FileKind? = null)
 
 class DocumentRepository(private val context: Context) {
     private val resolver = context.contentResolver
@@ -109,14 +109,14 @@ class DocumentRepository(private val context: Context) {
                 DisplayMode.entries.find { it.name == entry.optString("mode") },
                 entry.optInt("scroll", 0).coerceAtLeast(0),
                 FileKind.entries.find { it.name == entry.optString("format") },
-                TextEncoding.entries.find { it.name == entry.optString("encoding") }, csvOptions(entry), ReadingProfile.fromJson(entry.optJSONObject("profile"))), entry.optBoolean("pinned"))
+                TextEncoding.entries.find { it.name == entry.optString("encoding") }, csvOptions(entry), ReadingProfile.fromJson(entry.optJSONObject("profile"))), entry.optBoolean("pinned"), FileKind.entries.find { it.name == entry.optString("knownFormat") })
         }
     } catch (_: org.json.JSONException) { emptyList() }
 
-    fun remember(uri: Uri, name: String) {
+    fun remember(uri: Uri, name: String, knownFormat: FileKind? = null) {
         val previous = recentFiles()
         val old = previous.find { it.uri == uri.toString() }
-        val updated = bounded(listOf(RecentFile(uri.toString(), name, System.currentTimeMillis(), old?.reading ?: ReadingState(), old?.pinned ?: false)) +
+        val updated = bounded(listOf(RecentFile(uri.toString(), name, System.currentTimeMillis(), old?.reading ?: ReadingState(), old?.pinned ?: false, knownFormat ?: old?.knownFormat)) +
             previous.filterNot { it.uri == uri.toString() })
         save(updated)
         previous.filter { old -> updated.none { it.uri == old.uri } }.forEach { release(it.uri) }
@@ -146,6 +146,7 @@ class DocumentRepository(private val context: Context) {
         files.forEach { file ->
             array.put(JSONObject().put("uri", file.uri).put("name", file.name).put("openedAt", file.openedAt).apply {
                 if (file.pinned) put("pinned", true)
+                file.knownFormat?.let { put("knownFormat", it.name) }
                 if (file.reading != ReadingState()) {
                     put("mode", file.reading.mode?.name)
                     put("scroll", file.reading.scroll)
