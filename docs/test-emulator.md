@@ -17,3 +17,7 @@ ANDROID_HOME=/path/to/test-sdk ./gradlew :app:connectedDebugAndroidTest \
 The scripts contain no signing credentials and publish no artifacts.
 
 The emulator executable is pinned to **36.4.10 / build 15004761**, matching the local API 29/36 validation runtime (the Google archive URL was verified available). Hosted build 37.2.13 exited during initial API 36 startup before instrumentation, with the emulator port disappearing; its root cause was not established. Pinning removes that runtime drift while the hosted rerun verifies the same baseline. The bootstrap also resets window size, density and font scale to avoid stale large-text settings after a guest crash.
+
+## Cold-boot readiness for the roadmap matrix
+
+The disposable guest is configured offline before framework restart; synthetic providers and monitored external intents need no network. Host SDK/Gradle downloads remain available. Preparation warms System UI at 200% and normal text, returning to the launcher. A final readiness check runs after APK compilation and before instrumentation, requiring a fresh XML hierarchy with launcher nodes and no runtime-error dialog. A null-root dump cannot reuse an earlier file. Startup failure retains fixed-name hierarchy/screenshot diagnostics and fails the job; it never dismisses an ANR or retries a failing application assertion. The current full suite contains 161 device cases per API.

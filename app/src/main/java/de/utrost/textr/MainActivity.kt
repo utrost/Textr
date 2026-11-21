@@ -1923,7 +1923,10 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        rememberReading()
+        // Framework/view callbacks can change the old WebView while super saves it.
+        // Capture once beforehand for both reading metadata and activity recovery.
+        val savedScroll = readerPosition()
+        rememberReading(savedScroll)
         super.onSaveInstanceState(outState)
         outState.putBoolean("outputPending", outputs.status.phase == OutputPhase.PICKING)
         if (outputs.status.phase == OutputPhase.PICKING) {
@@ -1934,7 +1937,7 @@ class MainActivity : ComponentActivity() {
         // While loading, remember only a mode explicitly requested for this URI,
         // never the previous document's mode. Format changes request automatic mode.
         outState.putString("mode", if (document != null) mode.name else requestedMode?.name)
-        outState.putInt("scroll", readerPosition())
+        outState.putInt("scroll", savedScroll)
         outState.putString("query", searchField.text.toString())
         outState.putString("format", formatOverride?.name)
         outState.putString("encoding", encodingOverride?.name)
@@ -1951,10 +1954,10 @@ class MainActivity : ComponentActivity() {
         outState.putBundle("structure", structureDialog?.takeIf { it.isShowing }?.readingState() ?: pendingStructure)
     }
 
-    private fun rememberReading() {
+    private fun rememberReading(position: Int = readerPosition()) {
         val view = webView ?: return
         if (document != null && view.tag == true) {
-            val reading = ReadingState(mode, view.scrollY.coerceAtLeast(0), formatOverride, encodingOverride, csvOptions, readingProfile)
+            val reading = ReadingState(mode, position.coerceAtLeast(0), formatOverride, encodingOverride, csvOptions, readingProfile)
             session.original?.let { original ->
                 session.returnState = ReaderReturnState(document!!, original, currentUri?.toString(), reading,
                     searchField.text.toString().take(1000), searchRow.visibility == View.VISIBLE, pendingGrantFlags)

@@ -130,6 +130,44 @@ class FoldableLayoutTest {
         }
     }
 
+    @Test fun stateSaveCapturesPositionBeforeFrameworkViewCallbacks() = display {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val app = context.applicationContext as android.app.Application
+        var target: MainActivity? = null
+        var injected = false
+        val callbacks = object : android.app.Application.ActivityLifecycleCallbacks {
+            override fun onActivitySaveInstanceState(activity: android.app.Activity, state: Bundle) {
+                if (activity === target && !injected) {
+                    injected = true
+                    // A resize/native state-save callback can clamp the old WebView.
+                    // The activity must already have captured its reading position.
+                    activity.findViewById<WebView>(R.id.reader).scrollTo(0, 0)
+                }
+            }
+            override fun onActivityCreated(activity: android.app.Activity, state: Bundle?) {}
+            override fun onActivityStarted(activity: android.app.Activity) {}
+            override fun onActivityResumed(activity: android.app.Activity) {}
+            override fun onActivityPaused(activity: android.app.Activity) {}
+            override fun onActivityStopped(activity: android.app.Activity) {}
+            override fun onActivityDestroyed(activity: android.app.Activity) {}
+        }
+        app.registerActivityLifecycleCallbacks(callbacks)
+        try {
+            ActivityScenario.launch<MainActivity>(intent("long.ini")).use { scenario ->
+                ready(scenario)
+                scenario.onActivity { activity ->
+                    target = activity
+                    val reader = activity.findViewById<WebView>(R.id.reader)
+                    reader.scrollTo(0, 600); assertEquals(600, reader.scrollY)
+                    val saved = Bundle()
+                    instrumentation.callActivityOnSaveInstanceState(activity, saved)
+                    assertTrue(injected); assertEquals(0, reader.scrollY)
+                    assertEquals(600, saved.getInt("scroll", -1))
+                }
+            }
+        } finally { app.unregisterActivityLifecycleCallbacks(callbacks) }
+    }
+
     @Test fun recreationDuringPageLayoutKeepsPendingPosition() = display {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val app = context.applicationContext as android.app.Application

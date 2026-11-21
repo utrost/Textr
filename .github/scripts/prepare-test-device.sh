@@ -22,6 +22,12 @@ done
 # Restart Android with both budgets set; instrumentation verifies the runtime.
 "$adb_command" -s "$device_serial" shell setprop dalvik.vm.heapgrowthlimit 256m
 "$adb_command" -s "$device_serial" shell setprop dalvik.vm.heapsize 512m
+# Fixtures and deliberate external-intent monitors need no guest network. Keep
+# first-boot Google-image background sync from competing with System UI during
+# font/rotation tests. Host SDK/Gradle downloads are unaffected.
+"$adb_command" -s "$device_serial" shell settings put global airplane_mode_on 1
+"$adb_command" -s "$device_serial" shell svc wifi disable
+"$adb_command" -s "$device_serial" shell svc data disable
 "$adb_command" -s "$device_serial" shell stop
 "$adb_command" -s "$device_serial" shell setprop sys.boot_completed 0
 "$adb_command" -s "$device_serial" shell start
@@ -43,3 +49,10 @@ done
 "$adb_command" -s "$device_serial" shell settings put system screen_off_timeout 2147483647
 "$adb_command" -s "$device_serial" shell getprop dalvik.vm.heapgrowthlimit
 "$adb_command" -s "$device_serial" shell getprop dalvik.vm.heapsize
+
+# Warm native chrome at the font sizes exercised by the first test, then restore
+# the baseline. Never dismiss ANR dialogs or retry application assertions.
+"$adb_command" -s "$device_serial" shell settings put system font_scale 2.0
+.github/scripts/check-test-device.sh "$device_serial"
+"$adb_command" -s "$device_serial" shell settings put system font_scale 1.0
+.github/scripts/check-test-device.sh "$device_serial"
