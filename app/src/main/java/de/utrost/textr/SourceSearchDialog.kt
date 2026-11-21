@@ -93,6 +93,9 @@ class SourceSearchDialog(context: Context, source: String, initial: SourceSearch
         matchCase.setOnCheckedChangeListener { _, _ -> update() }
         wholeWord.setOnCheckedChangeListener { _, _ -> update() }
         dialog.setOnShowListener {
+            // Results arrive asynchronously. Reserve the window so clearing or
+            // repopulating rows cannot move controls between a user's taps.
+            dialog.window?.setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT)
             update()
             dialog.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN or android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         }

@@ -1,6 +1,6 @@
 # Roadmap completion validation
 
-Work dated 21 November 2026 on `feat/roadmap-completion`, based on merged QoL main `7637613`. [PR #127](https://github.com/utrost/Textr/pull/127) tracks exact integration and hosted checks. Scope: #102/#103/#105–#107/#110/#112–#114/#116, distribution preparation #53/#62–#65, and a reproduced #97 follow-up. This record does not certify physical providers, spoken TalkBack, foldables or store acceptance.
+Work dated 21 November 2026 on `feat/roadmap-completion`, based on merged QoL main `7637613`. [PR #127](https://github.com/utrost/Textr/pull/127) tracks exact integration and hosted checks. Scope: #102/#103/#105–#107/#110/#112–#114/#116, distribution preparation #53/#62–#65, and reproduced #97/#128 follow-ups. This record does not certify physical providers, spoken TalkBack, foldables or store acceptance.
 
 ## Build and independent checks
 
@@ -15,7 +15,7 @@ Runtime dependencies are unchanged: AndroidX/Kotlin/coroutines (Apache-2.0), Com
 
 ## Android matrix and coverage
 
-Disposable API 29 (`emulator-5560`) and API 36 (`emulator-5562`) emulators use synthetic documents/providers. Local WebView providers are **74.0.3729.185** and **133.0.6943.137**, confirmed by `dumpsys webviewupdate`; neither is evidence about current stable WebView. There are **161 device cases** after the deterministic state-save regression was added. No application assertion is skipped or disabled.
+Disposable API 29 (`emulator-5560`) and API 36 (`emulator-5562`) emulators use synthetic documents/providers. Local WebView providers are **74.0.3729.185** and **133.0.6943.137**, confirmed by `dumpsys webviewupdate`; neither is evidence about current stable WebView. The current suite has **162 device cases**, adding deterministic state-save and asynchronous-search-layout regressions. The earlier matrices below contain 161 cases. No application assertion is skipped or disabled.
 
 The position-fixed full API 29 run passes **161/161** in **994.043 seconds**, followed by **10/10** repetitions of the unchanged window-transition test. Hosted run [44958947702](https://github.com/utrost/Textr/actions/runs/44958947702), source `1f7890fac6a245f30ff8e30d42b5d10186e0fdb9`, passes API 29 **161/161** and build/unit/lint; API 36 finishes **158/161** (no errors/skips), retaining two source-node failures and a search-option assertion. The newest cache-refresh probes and stronger option-click assertions require their own exact-head checks before packaging.
 
@@ -32,6 +32,8 @@ New coverage includes line actions/keyboard/recreation, initial original despite
 **Collection layout:** replacing the root during navigation could miss insets and clip Done. Root installation now requests insets after attachment; explicit full-visible-button checks pass at normal and 200% text. Direct screenshots were inspected.
 
 **WebView source exposure (#59):** `ReaderUxTest.nativeSelectionAndIncomingTextShareThroughAndroid` reproduces a visibly correct “Copyable Textr selection” with only native toolbar/progress labels and an empty WebView body in refreshed Android nodes. Loaded source contents are independently exact. The required probe still finds exact visible text, then performs a real long-press and selected-text Share; it does not substitute coordinates for missing source exposure. Missing-node failures retain hierarchy XML, screenshot and node diagnostics. Global cache clearing is now being evaluated, not claimed as a production bridge fix. See [investigation](csv-accessibility.md); #59 remains open.
+
+**Source-search layout (#128):** changing three matches to none deterministically moves the option touch target by **257 screen pixels** before the fix (`SourceSearchLayoutTest.asyncResultsKeepOptionTouchTargetsInPlace`, API 29). Clearing/repopulating rows changes the centered dialog height. Source search now reserves full window space, matching Structure/Accessible table, so asynchronous results cannot move controls between taps. The regression and five existing source/options/native-copy/200%-landscape cases pass on API 29 (**6/6**, 48.745 seconds). Debug/application-test builds, 102 JVM tests and lint pass afterward. This confirmed layout bug fits the differing option click heights in the failed hosted run; it is separate from WebView accessibility. API 36 and the final 162-case hosted matrix remain pending.
 
 **Emulator readiness:** API 36 in the earlier hosted run finishes **125/160** after an early System UI ANR. This is retained as failure. Preparation now keeps the guest offline through live radio services before/after restart, warms 200%/normal native chrome and requires a fresh parsed launcher hierarchy. Runtime-error dialogs fail immediately with diagnostics; transient null roots get a bounded readiness wait. No ANR is dismissed and no application assertion is retried. Host SDK/Gradle downloads remain available. The successful local API 29 matrix predates the corrected offline setup; do not describe that local run as offline.
 
