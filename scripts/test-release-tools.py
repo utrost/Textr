@@ -112,6 +112,21 @@ class ReleaseGuards(unittest.TestCase):
         with patch.object(release, 'run', side_effect=ci), self.assertRaisesRegex(ValueError, 'both Android matrix'):
             release.prepare(self.args)
 
+    def test_pull_request_ci_must_test_the_requested_source_tree(self):
+        tree = self.git('rev-parse', 'HEAD^{tree}').strip()
+        unrelated = self.git('commit-tree', tree, '-m', 'Independent base').strip()
+        ci = {'event': 'pull_request', 'pull_requests': [{'head': {'sha': self.sha}, 'base': {'sha': unrelated}}]}
+        with self.assertRaisesRegex(ValueError, 'not contained'):
+            release.verify_ci_source(ci, self.sha)
+        ci['pull_requests'] = []
+        with self.assertRaisesRegex(ValueError, 'Cannot establish'):
+            release.verify_ci_source(ci, self.sha)
+
+    def test_ci_source_accepts_known_ancestor_and_direct_commit_runs(self):
+        for event in ['push', 'workflow_dispatch']:
+            release.verify_ci_source({'event': event}, self.sha)
+        release.verify_ci_source({'event': 'pull_request', 'pull_requests': [{'head': {'sha': self.sha}, 'base': {'sha': self.sha}}]}, self.sha)
+
     def test_remote_lightweight_and_annotated_tags_must_match_source(self):
         tag = 'v0.5-alpha'
         for output in ['', self.sha + '\trefs/tags/' + tag + '\n', 'a' * 40 + '\trefs/tags/' + tag + '\n' + self.sha + '\trefs/tags/' + tag + '^{}\n']:

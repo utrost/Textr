@@ -71,7 +71,7 @@ The same private signing configuration supports `:app:bundleRelease`. Output: `a
 
 ## Verified private-draft automation
 
-Version defaults advance to **0.5-alpha / code 5**, above the immutable private 0.4-alpha QoL candidate (code 4). `scripts/prepare-release.py` packages only an explicit clean source commit/tag with a successful Android-checks CI run for that exact SHA, including build/unit/lint and successful API 29 and API 36 jobs (skips are refused). It never selects “latest”, overwrites a local/remote release tag or release, publishes a draft, or creates a key. The owner-signed path and standard [F-Droid signing](fdroid/README.md) are separate: F-Droid uses the explicit unsigned release property and its own signing identity.
+Version defaults advance to **0.5-alpha / code 5**, above the immutable private 0.4-alpha QoL candidate (code 4). `scripts/prepare-release.py` packages only an explicit clean source commit/tag with a successful Android-checks CI run for that exact SHA, including build/unit/lint and successful API 29 and API 36 jobs (skips are refused). For PR runs, the recorded CI base must already be an ancestor of the source so GitHub’s tested merge tree equals that exact head; otherwise include the base and retest or use an exact-commit push/manual run. It never selects “latest”, overwrites a local/remote release tag or release, publishes a draft, or creates a key. The owner-signed path and standard [F-Droid signing](fdroid/README.md) are separate: F-Droid uses the explicit unsigned release property and its own signing identity.
 
 ```sh
 python3 scripts/prepare-release.py --ref EXACT_COMMIT --previous-version-code 4 --dry-run

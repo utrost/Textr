@@ -139,6 +139,25 @@ def remote_tag_matches(tag, commit):
     return target is not None
 
 
+def verify_ci_source(ci, commit):
+    event = ci.get('event')
+    if event not in {'push', 'workflow_dispatch', 'pull_request'}:
+        raise ValueError('Unsupported CI trigger; use the Android push, PR or manual workflow')
+    if event == 'pull_request':
+        pulls = ci.get('pull_requests', [])
+        if not pulls:
+            raise ValueError('Cannot establish the pull-request CI source; use an exact-commit push/manual run')
+        for pull in pulls:
+            if pull['head']['sha'] != commit:
+                raise ValueError('Pull-request CI head differs from the requested source')
+            # Default PR checkout tests a merge. Its tree equals the head only when
+            # that recorded base is already contained in the requested source.
+            ancestor = subprocess.run(['git', 'merge-base', '--is-ancestor', pull['base']['sha'], commit],
+                                      cwd=REPO, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            if ancestor.returncode:
+                raise ValueError('CI merge base is not contained in source; fetch/include it and retest before packaging')
+
+
 def prepare(args):
     if run(['git', 'status', '--porcelain']).strip():
         raise ValueError('Commit or isolate working changes before release preparation')
@@ -169,6 +188,7 @@ def prepare(args):
     required_jobs = {'Build, unit tests, and lint', 'Android API 29', 'Android API 36'}
     if any(jobs.get(name) != 'success' for name in required_jobs):
         raise ValueError('Required build/unit/lint and both Android matrix jobs must pass; skipped jobs are insufficient')
+    verify_ci_source(ci, commit)
     remote_tag_matches(tag, commit)
     plan['ciRun'] = ci['html_url']
     signing = Path(args.signing_properties).resolve()
