@@ -20,10 +20,5 @@ assert data[max(0,central-16):central]!=b'APK Sig Block 42','Unexpected APK sign
 with zipfile.ZipFile(apk) as archive:
     assert not any(n.startswith('META-INF/') and n.upper().endswith(('.SF','.RSA','.DSA','.EC')) for n in archive.namelist()),'Unexpected JAR signature'
     assert 'assets/licenses/Textr-GPL-3.0.txt' in archive.namelist(),'Missing license'
-badging=release.run([tools/'aapt','dump','badging',apk])
-assert f"package: name='de.utrost.textr' versionCode='{code}' versionName='{name}'" in badging,'Version differs from source'
-assert 'application-debuggable' not in badging,'F-Droid APK is debuggable'
-assert "sdkVersion:'29'" in badging and "targetSdkVersion:'36'" in badging
-permissions=release.run([tools/'aapt','dump','permissions',apk])
-assert 'android.permission.INTERNET' not in permissions
+release.inspect_manifest(apk,code,name)
 print(f'Unsigned, non-debuggable de.utrost.textr {name} (code {code}), API 29–36 verified')

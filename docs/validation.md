@@ -1,6 +1,6 @@
 # Validation records
 
-Current testing release: **0.3-alpha**, a private draft prerelease. See [reliability validation](validation-reliability.md), [release notes](release-notes-0.3-alpha.md) and the [roadmap](roadmap.md). The immutable 0.2-alpha [implementation record](validation-roadmap-implementation.md) remains available separately.
+Current private candidate: **0.4-alpha** (QoL). The implementation branch prepares **0.5-alpha**, tracked in [roadmap completion validation](validation-roadmap-completion.md). Earlier private drafts remain immutable. See [reliability validation](validation-reliability.md), [release notes](release-notes-0.3-alpha.md) and the [roadmap](roadmap.md). The immutable 0.2-alpha [implementation record](validation-roadmap-implementation.md) remains available separately.
 
 [Quality-of-life validation](validation-quality-of-life.md) tracks the eight requested additions in [PR #126](https://github.com/utrost/Textr/pull/126), which are not included in 0.3-alpha.
 

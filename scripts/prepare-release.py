@@ -51,27 +51,41 @@ def sdk_tools():
     return tools
 
 
-def inspect(apk, code, name, certificate):
+def inspect_manifest(apk, code, name):
     tools = sdk_tools()
-    signing = run([tools / 'apksigner', 'verify', '--verbose', '--print-certs', apk])
-    if f'certificate SHA-256 digest: {certificate.lower()}' not in signing:
-        raise ValueError('APK signing certificate differs from the explicitly expected identity')
     badging = run([tools / 'aapt', 'dump', 'badging', apk])
     permissions = run([tools / 'aapt', 'dump', 'permissions', apk])
+    xml = run([tools / 'aapt', 'dump', 'xmltree', apk, 'AndroidManifest.xml'])
     expected = f"package: name='{APP_ID}' versionCode='{code}' versionName='{name}'"
     if expected not in badging or "sdkVersion:'29'" not in badging or "targetSdkVersion:'36'" not in badging:
         raise ValueError('APK ID, version or SDK differs from committed source')
     if 'application-debuggable' in badging:
         raise ValueError('Release is debuggable')
-    allowed = {APP_ID + '.permission.FIND_SELECTION'}
+    allowed = {APP_ID + '.permission.FIND_SELECTION', APP_ID + '.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION'}
     actual = set(re.findall(r"uses-permission(?:-sdk-\d+)?: name='([^']+)'", permissions))
-    if actual - allowed:
-        raise ValueError('Unexpected APK permissions: ' + ', '.join(sorted(actual - allowed)))
+    if actual != allowed:
+        raise ValueError('APK permissions differ from the two expected app signature permissions')
+    signature = set()
+    for block in re.findall(r'(?m)^    E: permission .*\n((?:      A: .*\n)*)', xml):
+        name_match = re.search(r'android:name\([^)]*\)="([^"]+)"', block)
+        if name_match and re.search(r'android:protectionLevel.*=\(type 0x11\)0x2(?:\s|$)', block):
+            signature.add(name_match[1])
+    if signature != allowed:
+        raise ValueError('App permissions must retain signature protection')
+    return badging + '\n' + permissions + '\n' + xml
+
+
+def inspect(apk, code, name, certificate):
+    tools = sdk_tools()
+    signing = run([tools / 'apksigner', 'verify', '--verbose', '--print-certs', apk])
+    if f'certificate SHA-256 digest: {certificate.lower()}' not in signing:
+        raise ValueError('APK signing certificate differs from the explicitly expected identity')
+    manifest = inspect_manifest(apk, code, name)
     with zipfile.ZipFile(apk) as archive:
         for required in ['assets/licenses/Textr-GPL-3.0.txt', 'assets/licenses/Attributions.txt']:
             if required not in archive.namelist():
                 raise ValueError('APK is missing required notices')
-    return signing + '\n' + badging + '\n' + permissions
+    return signing + '\n' + manifest
 
 
 def verify(directory, expected_certificate=None):

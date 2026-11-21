@@ -150,6 +150,11 @@ class RoadmapCompletionDeviceTest {
         try{ActivityScenario.launch<ComparisonActivity>(Intent(context,ComparisonActivity::class.java).putExtra("uri",left.toString())).use{scenario->
             await{var ready=false;scenario.onActivity{ready=comparisonModel(it).left!=null&&!comparisonModel(it).busy};ready}
             scenario.onActivity{comparisonModel(it).load(false,ComparisonRef(right.toString(),"right.txt"))};comparisonReady(scenario)
+            await{var visible=false;scenario.onActivity{
+                val back=ComparisonActivity::class.java.getDeclaredField("back").apply{isAccessible=true}.get(it) as Button
+                val rect=android.graphics.Rect();val frame=android.graphics.Rect();back.getWindowVisibleDisplayFrame(frame)
+                visible=back.height>0&&back.getGlobalVisibleRect(rect)&&rect.height()==back.height&&rect.bottom<=frame.bottom
+            };visible}
             device.waitForIdle();assertTrue(device.takeScreenshot(File(context.cacheDir,"roadmap-comparison.png")))
             scenario.onActivity{comparisonModel(it).setOptions(DiffOptions(true,true))};comparisonReady(scenario)
             scenario.onActivity{it.findViewById<Button>(R.id.compare_export).performClick()}
@@ -212,6 +217,23 @@ class RoadmapCompletionDeviceTest {
             await{var visible=false;scenario.onActivity{val back=it.findViewById<Button>(R.id.collection_done);val rect=android.graphics.Rect();visible=back.height>0&&back.getGlobalVisibleRect(rect)&&rect.height()==back.height};visible}
             device.waitForIdle();assertTrue(device.takeScreenshot(File(context.cacheDir,"roadmap-collections.png")))
         }
+    }
+    @Test fun collectionRenameAndConfirmedReselectKeepOriginalFilesIntact() {
+        val old=fixture("collection-old.txt","old source");val replacement=fixture("collection-new.txt","new source")
+        val store=ReadingCollections(context);val id=store.create("Before")!!;assertTrue(store.add(id,CollectionMember(old.toString(),"Original member")))
+        val filter=IntentFilter(Intent.ACTION_OPEN_DOCUMENT).apply{addCategory(Intent.CATEGORY_OPENABLE);addDataType("*/*")}
+        val picker=instrumentation.addMonitor(filter,Instrumentation.ActivityResult(Activity.RESULT_OK,Intent().setData(replacement).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)),true)
+        try{ActivityScenario.launch<CollectionsActivity>(Intent(context,CollectionsActivity::class.java)).use{scenario->
+            device.wait(Until.findObject(By.text("Before")),5000)!!.click();click(R.string.collection_rename)
+            instrumentation.runOnMainSync{val root=WindowInspector.getGlobalWindowViews().first{it.findViewById<EditText>(R.id.collection_name)!=null};root.findViewById<EditText>(R.id.collection_name).setText("After");root.findViewById<Button>(android.R.id.button1).performClick()}
+            await{store.entries().single().name=="After"}
+            device.wait(Until.findObject(By.text("Original member")),5000)!!.click();click(R.string.collection_reselect)
+            await{picker.hits>0};click(R.string.done)
+            await{store.entries().single().members.single().uri==replacement.toString()};scenario.recreate()
+            assertEquals("After",store.entries().single().name)
+            assertEquals("old source",context.contentResolver.openInputStream(old)!!.use{it.readBytes().toString(Charsets.UTF_8)})
+            assertEquals("new source",context.contentResolver.openInputStream(replacement)!!.use{it.readBytes().toString(Charsets.UTF_8)})
+        }}finally{instrumentation.removeMonitor(picker)}
     }
     @Test fun jsonLinesNativeNavigationIncludesInvalidAndBlankLinesWithoutLosingSource() {
         val source="{\"a\":1,\"a\":2}\r\n\r\ninvalid\nnull"

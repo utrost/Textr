@@ -1,6 +1,6 @@
 # Installing and opening files
 
-Textr supports Android 10 (API 29) and newer. Public release is deferred; no public APK is currently available. Use the [development build instructions](development.md) to build and install the candidate. CI debug artifacts are development builds. Repository maintainers can download **0.2-alpha** from the [private draft release](https://github.com/utrost/Textr/releases/tag/untagged-91b226e699ea4047e362) while signed into GitHub. See [release notes](release-notes-0.2-alpha.md).
+Textr supports Android 10 (API 29) and newer. Public release is deferred; no public APK is currently available. Use the [development build instructions](development.md) to build and install the candidate. CI debug artifacts are development builds. Repository maintainers can access the immutable private drafts through [GitHub releases](https://github.com/utrost/Textr/releases). The latest QoL candidate is 0.4-alpha/code 4; the current implementation prepares 0.5-alpha/code 5. See the [roadmap](roadmap.md) for the final tested candidate status.
 
 ## Install the private testing APK
 
@@ -89,3 +89,7 @@ See [fresh screenshots](screenshots.md) and the [privacy policy](privacy.md), li
 - Use **⋮ → Edit a copy…** for TXT/Markdown. The separate editor offers undo/redo, literal find/replace, private recovery and **Save as**; original files stay unchanged. Review [editor limits and recovery](editing-copies.md).
 
 See the [current screenshot gallery](screenshots.md) for these workflows. Images retained above show earlier development iterations.
+
+## Planned F-Droid channel
+
+The maintainer chose standard F-Droid signing. F-Droid signs its own builds; no Textr production key is supplied. Those APKs cannot replace the development-signed private alphas (or the reverse) in place. Switching requires uninstalling and reinstalling, removing local settings, references and private edit recovery. Save any needed recovery draft first. Original files and saved output remain with their document provider. There is no published F-Droid listing yet; see [preparation and eligibility](fdroid/README.md).

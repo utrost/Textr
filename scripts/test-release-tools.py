@@ -86,6 +86,25 @@ class ReleaseGuards(unittest.TestCase):
         with patch.object(release, 'run', side_effect=ci), self.assertRaisesRegex(ValueError, 'exact requested'):
             release.prepare(self.args)
 
+    def manifest_fixture(self, extra_permission=False, weak_signature=False):
+        names = [release.APP_ID + '.permission.FIND_SELECTION', release.APP_ID + '.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION']
+        badging = "package: name='de.utrost.textr' versionCode='5' versionName='0.5-alpha'\nsdkVersion:'29'\ntargetSdkVersion:'36'\n"
+        permissions = ''.join("uses-permission: name='" + name + "'\n" for name in names)
+        if extra_permission:
+            permissions += "uses-permission: name='android.permission.INTERNET'\n"
+        xml = ''.join('    E: permission (line=1)\n      A: android:name(0x01010003)="' + name + '"\n      A: android:protectionLevel(0x01010009)=(type 0x11)' + ('0x0' if weak_signature else '0x2') + '\n' for name in names)
+        return badging, permissions, xml
+
+    def test_release_cannot_add_network_or_other_permissions(self):
+        with patch.object(release, 'sdk_tools', return_value=Path('/unused')), patch.object(release, 'run', side_effect=self.manifest_fixture(extra_permission=True)):
+            with self.assertRaisesRegex(ValueError, 'permissions differ'):
+                release.inspect_manifest(Path('/unused.apk'), 5, '0.5-alpha')
+
+    def test_release_cannot_weaken_signature_permissions(self):
+        with patch.object(release, 'sdk_tools', return_value=Path('/unused')), patch.object(release, 'run', side_effect=self.manifest_fixture(weak_signature=True)):
+            with self.assertRaisesRegex(ValueError, 'signature protection'):
+                release.inspect_manifest(Path('/unused.apk'), 5, '0.5-alpha')
+
     def test_download_verification_rejects_corruption_and_unsafe_names_before_tools(self):
         package = self.root / 'package'
         package.mkdir()

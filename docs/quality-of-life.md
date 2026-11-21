@@ -1,6 +1,6 @@
 # Everyday reading conveniences
 
-Implemented on the quality-of-life branch for #101, #109 and #120–#125. These additions are not included in the immutable 0.3-alpha APK. See [validation](validation-quality-of-life.md) and the [roadmap](roadmap.md).
+Merged through PR #126 and included in the private 0.4-alpha candidate for #101, #109 and #120–#125. These additions are not included in the immutable 0.3-alpha APK. See [validation](validation-quality-of-life.md) and the [roadmap](roadmap.md).
 
 ## Find a recent file
 
