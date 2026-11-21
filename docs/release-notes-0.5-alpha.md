@@ -4,6 +4,8 @@ Version code **5**, Android 10/API 29 and newer, target API 36. This candidate c
 
 ## New behavior
 
+Reading-position recovery now captures a snapshot before Android framework state-save callbacks can reset an old WebView, fixing a deterministically reproduced 600 → 0 path.
+
 - Editor Go to line, selected-line indentation/unindentation and keyboard shortcuts, plus reliable **Open saved copy** after successful Save as.
 - Review the unsaved draft against its initial original snapshot. Display-only spaces/tabs and line-ending comparison filters remain separate from exact patch export.
 - Save a bounded standard UTF-8 unified diff through the system picker, with anonymous headers and explicit confirmation when filters hide differences.

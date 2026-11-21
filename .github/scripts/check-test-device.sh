@@ -7,7 +7,6 @@ adb_command="${ANDROID_HOME:?}/platform-tools/adb"
 "$adb_command" -s "$device_serial" shell input keyevent KEYCODE_WAKEUP
 "$adb_command" -s "$device_serial" shell wm dismiss-keyguard
 "$adb_command" -s "$device_serial" shell am start -W -a android.intent.action.MAIN -c android.intent.category.HOME
-"$adb_command" -s "$device_serial" shell cmd statusbar expand-notifications
 "$adb_command" -s "$device_serial" shell cmd statusbar collapse
 python3 - "$adb_command" "$device_serial" <<'PY'
 import subprocess
@@ -44,6 +43,7 @@ while time.monotonic() < deadline:
     if any('launcher' in node.get('package', '').lower() for node in nodes):
         print('Fresh native launcher/System UI readiness verified')
         break
+    subprocess.run(command + ['shell', 'cmd', 'statusbar', 'collapse'], check=True, capture_output=True, timeout=10)
     time.sleep(1)
 else:
     refuse('Emulator launcher is not exposed; native UI is not ready')

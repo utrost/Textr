@@ -1,1 +1,1 @@
-Editor navigation, saved-copy reopening, draft comparison, comparison filters and exact patch export. Reading collections, JSON Lines navigation, AsciiDoc/reStructuredText source colors and read-only Markdown checklists. Verified draft-release tooling.
+Editor navigation, saved-copy reopening, draft comparison, comparison filters and exact patch export. Reading collections, JSON Lines navigation, AsciiDoc/reStructuredText source colors and read-only Markdown checklists. Verified draft-release tooling. Also preserves reading position before framework state-save callbacks.
