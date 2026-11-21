@@ -18,6 +18,9 @@ class QualityOfLifeTest {
         history.push("a", search); history.clear("a"); assertNull(history.pop("a"))
         for (i in 0..5) { history.bind("$i", "same"); history.push("$i", search) }
         assertNull(history.pop("0")); assertEquals(search, history.pop("5"))
+        history.bind("1", "same") // Reopening an existing document refreshes recency.
+        history.bind("6", "same")
+        assertEquals(search, history.pop("1")); assertNull(history.pop("2"))
     }
     @Test fun recentFiltersCombineUnicodeNameAndKnownFormatWithoutChangingPinnedOrder() {
         val files = listOf(

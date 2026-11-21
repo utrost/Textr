@@ -8,7 +8,8 @@ class ReadingNavigation {
     private data class History(val fingerprint: String, val positions: ArrayDeque<NavigationPosition> = ArrayDeque())
     private val documents = linkedMapOf<String, History>()
     fun bind(key: String, fingerprint: String) {
-        if (documents[key]?.fingerprint != fingerprint) documents[key] = History(fingerprint)
+        val previous = documents.remove(key)
+        documents[key] = previous?.takeIf { it.fingerprint == fingerprint } ?: History(fingerprint)
         while (documents.size > 5) documents.remove(documents.keys.first())
     }
     fun push(key: String, position: NavigationPosition) {
