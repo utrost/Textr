@@ -20,7 +20,7 @@ Copy the proposed recipe into `metadata/de.utrost.textr.yml` in a disposable fdr
 
 ```sh
 fdroid lint --force-yamllint -f de.utrost.textr
-fdroid build --test --scan-binary --no-tarball de.utrost.textr:5
+fdroid build --test --scan-binary --no-tarball --stop de.utrost.textr:5
 fdroid scanner --exit-code path/to/app-release-unsigned.apk
 ```
 

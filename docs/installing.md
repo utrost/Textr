@@ -1,6 +1,6 @@
 # Installing and opening files
 
-Textr supports Android 10 (API 29) and newer. Public release is deferred; no public APK is currently available. Use the [development build instructions](development.md) to build and install the candidate. CI debug artifacts are development builds. Repository maintainers can access the immutable private drafts through [GitHub releases](https://github.com/utrost/Textr/releases). The latest QoL candidate is 0.4-alpha/code 4; the current implementation prepares 0.5-alpha/code 5. See the [roadmap](roadmap.md) for the final tested candidate status.
+Textr supports Android 10 (API 29) and newer. Public release is deferred; no public release APK is currently available. Use the [development build instructions](development.md) to build and install the candidate. CI debug artifacts are development builds. Repository maintainers can access the immutable private drafts through [GitHub releases](https://github.com/utrost/Textr/releases). The latest QoL candidate is 0.4-alpha/code 4; the current implementation prepares 0.5-alpha/code 5. See the [roadmap](roadmap.md) for the final tested candidate status.
 
 ## Install the private testing APK
 

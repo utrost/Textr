@@ -17,3 +17,17 @@ For each session record commit/APK checksum, device model, Android version, WebV
 - [ ] Record failures and fixes, and retest the exact final candidate.
 
 Any Play testing track or tester invitations require the owner’s account and distribution decision. Do not count emulator sessions as the account’s required tester cohort.
+
+## Roadmap-completion acceptance — awaiting physical evidence
+
+Use synthetic files and record device/Android/WebView/provider versions. These are pending checks, not emulator passes:
+
+- [ ] Save a TXT/Markdown copy with each real provider and use Open saved copy. A write-success/read-denied outcome must preserve the completed save and explain read recovery.
+- [ ] Add a picker document to two collections, clear recent history, restart, open both references, then remove the memberships separately. Reconnect a moved/revoked reference with explicit confirmation; cancel reselect without changing membership.
+- [ ] Capture original/draft comparison, change the provider’s file independently and confirm the comparison still uses the initial editing snapshot. Return to editing with unchanged undo/selection. Test outer/inner display transitions while editing and comparing.
+- [ ] Export an exact patch with each display filter active. Confirm hidden changes are included, both source documents remain unchanged, cancellation preserves the comparison and successful output reopens when readable.
+- [ ] With human TalkBack, navigate collection controls, JSONL valid/invalid/blank records, Go to line and comparison filters/export; verify names, state, focus order and actionable errors.
+- [ ] Read checked/unchecked nested Markdown tasks with human spoken feedback in light/dark themes and at 200% text. Tasks must convey state without implying editable checkboxes.
+- [ ] Recheck source/CSV virtual nodes across lifecycle transitions on a current stable WebView; retain provider/version and synthetic hierarchy evidence separately from native fallback success (#59).
+
+The original private-recovery and provider files must stay intact through cancellation or failed writes. Save needed recovery before switching signing channels: standard F-Droid signing requires reinstalling development-signed alphas and removes local app data.

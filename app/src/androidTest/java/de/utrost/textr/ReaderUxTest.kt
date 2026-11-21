@@ -328,7 +328,9 @@ class ReaderUxTest {
                     return null
                 } finally { @Suppress("DEPRECATION") node.recycle() }
             }
-            find(instrumentation.uiAutomation.rootInActiveWindow)?.let { return it }
+            val automation = instrumentation.getUiAutomation(androidx.test.uiautomator.Configurator.getInstance().uiAutomationFlags)
+            if (android.os.Build.VERSION.SDK_INT >= 33) automation.clearCache()
+            find(automation.rootInActiveWindow)?.let { return it }
             Thread.sleep(100)
         }
         return null
