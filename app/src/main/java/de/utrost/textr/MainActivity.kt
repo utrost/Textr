@@ -171,6 +171,7 @@ class MainActivity : ComponentActivity() {
         }
         setTheme(if (dark) R.style.Theme_Textr_Dark else R.style.Theme_Textr)
         super.onCreate(savedInstanceState)
+        ReadingCollections(this).reconcile()
         val barStyle = if (dark) SystemBarStyle.dark(Color.TRANSPARENT)
             else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
         enableEdgeToEdge(statusBarStyle = barStyle, navigationBarStyle = barStyle)
@@ -442,6 +443,7 @@ class MainActivity : ComponentActivity() {
             id = R.id.editor_resume; visibility = if (EditDraftStore(this@MainActivity).exists()) View.VISIBLE else View.GONE
         }
         body.addView(resumeDraftButton, LinearLayout.LayoutParams(-1, -2))
+        body.addView(button(R.string.collections) { startActivity(Intent(this, CollectionsActivity::class.java)) }.apply { id = R.id.collections })
         val recentHeader = row()
         recentHeader.addView(TextView(this).apply { text = getString(R.string.recent_files); textSize = 20f; setTextColor(foreground()) }, LinearLayout.LayoutParams(0, -2, 1f))
         val recents = repository.recentFiles().sortedWith(compareByDescending<RecentFile> { it.pinned }.thenByDescending { it.openedAt })
@@ -583,6 +585,7 @@ class MainActivity : ComponentActivity() {
             item(R.string.reopen_closed, openDocuments.hasClosed) { reopenClosed() }
             if (openDocuments.entries.isNotEmpty()) item(R.string.open_documents) { showDocuments() }
             item(R.string.bookmarks) { showBookmarks() }
+            item(R.string.collections) { startActivity(Intent(this@MainActivity, CollectionsActivity::class.java)) }
             item(R.string.settings) { showSettings() }
             if (homeShown) item(R.string.opening_help) { showOpeningHelp() }
             item(R.string.about) { showAbout() }
@@ -665,6 +668,9 @@ class MainActivity : ComponentActivity() {
         FileKind.DOCKERFILE -> "Dockerfile"
         FileKind.TYPESCRIPT -> "TypeScript"
         FileKind.TSX -> "TypeScript / TSX"
+        FileKind.JSON_LINES -> "JSON Lines / NDJSON"
+        FileKind.ASCIIDOC -> "AsciiDoc"
+        FileKind.RESTRUCTUREDTEXT -> "reStructuredText"
         else -> kind.name
     }
 
@@ -901,7 +907,7 @@ class MainActivity : ComponentActivity() {
             else -> return false
         }
         if (uri != null) {
-            openDocument(uri, intent.type, grantFlags = intent.flags)
+            openDocument(uri, intent.type, grantFlags = if (intent.getBooleanExtra(ReaderOpening.RETAIN_READ, false)) Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION else intent.flags)
         } else {
             val sharedHtml = intent.getStringExtra(Intent.EXTRA_HTML_TEXT)
             val sharedText = sharedHtml ?: intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString()

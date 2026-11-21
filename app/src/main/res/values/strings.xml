@@ -175,7 +175,9 @@ Document switching follows alphabetical filename order. Shortcuts leave text fie
         <item>time zone:</item>
         <item>floating time; no time zone supplied</item>
         <item>Column</item>
-    </string-array>
+            <item>Checked task</item>
+        <item>Unchecked task</item>
+</string-array>
     <string name="unnamed_file">Text file</string>
     <string name="csv_accessible">Accessible table…</string>
     <string name="csv_empty_cell">Empty cell</string>
@@ -342,4 +344,41 @@ Document switching follows alphabetical filename order. Shortcuts leave text fie
     <string name="find_selected">Find selected text</string>
     <string name="selection_limit">Select nonblank text up to 1,000 characters. The previous search is unchanged.</string>
     <string name="selection_unavailable">Open a document in Textr to search selected text.</string>
+    <string name="editor_indent">Indent</string>
+    <string name="editor_unindent">Unindent</string>
+    <string name="editor_compare">Compare with original snapshot</string>
+    <string name="editor_line_help">Enter a line number from 1 to %1$d.</string>
+    <string name="compare_ignore_space">Ignore spaces/tabs</string>
+    <string name="compare_ignore_endings">Ignore line endings</string>
+    <string name="compare_export">Save exact diff as…</string>
+    <string name="compare_original_snapshot">Original editing snapshot</string>
+    <string name="compare_unsaved_snapshot">Current draft snapshot</string>
+    <string name="compare_draft_lost">Draft comparison snapshots were lost after the process ended. Return to editing and compare again; the original is never reread automatically.</string>
+    <string name="compare_export_limit">Exact diff exceeds the export/comparison limits. Both snapshots are unchanged.</string>
+    <string name="compare_equivalent">Equivalent under the active filters; the original decoded texts differ.</string>
+    <string name="compare_filters_active">Display filters are active; saved diffs still include exact changes.</string>
+    <string name="compare_filter_help">Filters affect this view only. Spaces/tabs means ASCII space and tab anywhere within each line; blank lines and Unicode whitespace remain significant. Line-ending filtering also ignores a missing final terminator.</string>
+    <string name="compare_export_exact">The saved patch includes exact changes, even differences hidden by the display filters. UTF-8, three context lines, fixed anonymous filenames. Originals remain unchanged.</string>
+    <string name="jsonl_records">JSON Lines records</string>
+    <string name="jsonl_record">Valid JSON record</string>
+    <string name="jsonl_invalid">Invalid or over-limit record</string>
+    <string name="jsonl_blank">Blank line (not a record)</string>
+    <string name="jsonl_help">Each physical line is listed, including invalid records and blank lines. Select a line to jump or copy its exact source, including its terminator. No duplicate keys are collapsed.</string>
+    <string name="jsonl_limit">Record navigation exceeds its limits: 256 Ki characters, 1,000 physical lines, 16,384 characters per valid record, depth 64 and 200,000 tokens. The complete source is available.</string>
+    <string name="collections">Collections</string>
+    <string name="collection_create">Create collection</string>
+    <string name="collection_name">Collection name</string>
+    <string name="collection_rename">Rename collection</string>
+    <string name="collection_add">Add a recent document</string>
+    <string name="collection_delete">Delete collection</string>
+    <string name="collection_remove">Remove reference</string>
+    <string name="collection_reselect">Reselect reference…</string>
+    <string name="collection_open">Open document</string>
+    <string name="collection_reselect_confirm">Replace the reference to %1$s with the document you just selected? The original file is unchanged.</string>
+    <string name="collection_delete_help">Delete this collection and its references? Provider files and other collections are unchanged.</string>
+    <string name="collection_no_recent">Open a file first, or all recent documents are already in this collection.</string>
+    <string name="collection_help">References only. Clearing recent history keeps collections. Up to 20 collections, 30 references each, 200 memberships total. Removing references never deletes files.</string>
+    <string name="collection_limit">Use a unique, nonempty name up to 80 characters. Limits: 20 collections, 30 references per collection, 200 memberships total; no duplicate references.</string>
+    <string name="editor_compare_unavailable">The original editing snapshot is unavailable in this older recovery draft. Comparison is disabled; the provider is never silently reread.</string>
+    <string name="saved_copy_unavailable">Cannot open this reference here. Use Open file to select it again. Any completed save remains successful.</string>
 </resources>

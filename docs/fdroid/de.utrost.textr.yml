@@ -1,0 +1,37 @@
+Categories:
+  - Reading
+  - Text Editor
+License: GPL-3.0-only
+AuthorName: utrost
+SourceCode: https://github.com/utrost/Textr
+IssueTracker: https://github.com/utrost/Textr/issues
+Changelog: https://github.com/utrost/Textr/releases
+
+AutoName: Textr
+Summary: Read text and edit separate copies offline
+Description: |-
+  Read text, code and Markdown offline. Original files remain unchanged.
+  Explicitly edit and save separate TXT/Markdown copies, preview drafts,
+  compare snapshots and export exact unified diffs. Organize references in
+  collections. Includes JSON Lines navigation and bounded format support.
+
+  No accounts, advertisements, analytics or app network permission.
+  Android 10 or newer. English and German interface. Resource limits apply.
+
+RepoType: git
+Repo: https://github.com/utrost/Textr.git
+
+Builds:
+  - versionName: 0.5-alpha
+    versionCode: 5
+    commit: v0.5-alpha
+    subdir: app
+    gradle:
+      - yes
+    gradleprops:
+      - textrUnsignedRelease=true
+
+AutoUpdateMode: None
+UpdateCheckMode: None
+CurrentVersion: 0.5-alpha
+CurrentVersionCode: 5

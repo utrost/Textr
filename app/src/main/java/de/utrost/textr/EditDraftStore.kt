@@ -11,12 +11,13 @@ data class EditDraft(val id: String, val name: String, val sourceUri: String?, v
     val revision: Long = 0, val updatedAt: Long = System.currentTimeMillis(),
     val baselineEncoding: TextEncoding = encoding, val baselineBom: Boolean = bom,
     val selectionStart: Int = 0, val selectionEnd: Int = selectionStart,
-    val markdown: Boolean = TextDocuments.kind(name, null) == FileKind.MARKDOWN) {
+    val markdown: Boolean = TextDocuments.kind(name, null) == FileKind.MARKDOWN,
+    val originalText: String? = null, val originalEncoding: TextEncoding = baselineEncoding, val originalBom: Boolean = baselineBom) {
     companion object {
         fun new(document: TextDocument, sourceUri: String?, bom: Boolean = false) = EditDraft(
             UUID.randomUUID().toString(), document.name, sourceUri, document.text,
             TextEncoding.entries.firstOrNull { it.charsetName.equals(document.encoding, true) } ?: TextEncoding.UTF8,
-            bom, document.info.endings, textFingerprint(document.text), markdown = document.kind == FileKind.MARKDOWN)
+            bom, document.info.endings, textFingerprint(document.text), markdown = document.kind == FileKind.MARKDOWN, originalText = document.text)
     }
 }
 
@@ -43,7 +44,10 @@ class EditDraftStore(context: Context) {
             json.getLong("revision").coerceAtLeast(0), json.getLong("updatedAt"),
             TextEncoding.valueOf(json.optString("baselineEncoding", json.getString("encoding"))), json.optBoolean("baselineBom", json.getBoolean("bom")),
             json.optInt("selectionStart").coerceIn(0, text.length), json.optInt("selectionEnd").coerceIn(0, text.length),
-            json.optBoolean("markdown", TextDocuments.kind(json.getString("name"), null) == FileKind.MARKDOWN))
+            json.optBoolean("markdown", TextDocuments.kind(json.getString("name"), null) == FileKind.MARKDOWN),
+            if (json.has("originalText")) json.getString("originalText").also { require(EditBuffer.accepts(it)) } else null,
+            TextEncoding.valueOf(json.optString("originalEncoding", json.optString("baselineEncoding", json.getString("encoding")))),
+            json.optBoolean("originalBom", json.optBoolean("baselineBom", json.getBoolean("bom"))))
     }
     fun create(draft: EditDraft): Boolean = synchronized(lock) {
         if (readLocked() != null) return false
@@ -71,6 +75,7 @@ class EditDraftStore(context: Context) {
             .put("revision", draft.revision).put("updatedAt", draft.updatedAt)
             .put("baselineEncoding", draft.baselineEncoding.name).put("baselineBom", draft.baselineBom)
             .put("selectionStart", draft.selectionStart).put("selectionEnd", draft.selectionEnd).put("markdown", draft.markdown)
+        draft.originalText?.let { require(EditBuffer.accepts(it)); json.put("originalText", it).put("originalEncoding", draft.originalEncoding.name).put("originalBom", draft.originalBom) }
         val encoded = Charsets.UTF_8.newEncoder().encode(java.nio.CharBuffer.wrap(json.toString()))
         val bytes = ByteArray(encoded.remaining()).also { encoded.get(it) }; require(bytes.size <= MAX_STORED_BYTES)
         check(directory.isDirectory || directory.mkdirs())

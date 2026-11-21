@@ -23,6 +23,7 @@ object SyntaxHighlighter {
     fun highlight(text: String, kind: FileKind): String {
         if (text.length > RenderPolicy.MAX_HIGHLIGHT_CHARS) return escape(text)
         if (kind == FileKind.TEXT) return escape(text)
+        if (kind == FileKind.ASCIIDOC || kind == FileKind.RESTRUCTUREDTEXT) return MarkupHighlighter.highlight(text, kind)
         if (kind in SourceHighlighter.kinds) return SourceHighlighter.highlight(text, kind)
         return buildString(text.length) {
             var index = 0

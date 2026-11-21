@@ -10,7 +10,7 @@ import java.util.concurrent.CancellationException
 
 const val MAX_FILE_BYTES = 5 * 1024 * 1024
 
-enum class FileKind { TEXT, MARKDOWN, JSON, INI, YAML, TOML, XML, JAVA, JAVASCRIPT, CSS, HTML, KOTLIN, PYTHON, SHELL, SQL, DIFF, ICALENDAR, CSV, ENV, PROPERTIES, DOCKERFILE, TYPESCRIPT, TSX }
+enum class FileKind { TEXT, MARKDOWN, JSON, INI, YAML, TOML, XML, JAVA, JAVASCRIPT, CSS, HTML, KOTLIN, PYTHON, SHELL, SQL, DIFF, ICALENDAR, CSV, ENV, PROPERTIES, DOCKERFILE, TYPESCRIPT, TSX, JSON_LINES, ASCIIDOC, RESTRUCTUREDTEXT }
 enum class DisplayMode { PLAIN, HIGHLIGHTED, PREVIEW }
 enum class ReadFailure { TOO_LARGE, BINARY, ENCODING, ACCESS, SOURCE }
 class DocumentException(val reason: ReadFailure) : Exception(reason.name)
@@ -99,6 +99,9 @@ object TextDocuments {
         return when (extension) {
             "md", "markdown", "mdown" -> FileKind.MARKDOWN
             "json", "jsonld" -> FileKind.JSON
+            "jsonl", "ndjson" -> FileKind.JSON_LINES
+            "adoc", "asciidoc" -> FileKind.ASCIIDOC
+            "rst" -> FileKind.RESTRUCTUREDTEXT
             "ini" -> FileKind.INI
             "yaml", "yml" -> FileKind.YAML
             "toml" -> FileKind.TOML
@@ -125,6 +128,9 @@ object TextDocuments {
                 else -> when (mime?.substringBefore(';')?.trim()?.lowercase(Locale.ROOT)) {
                     "text/markdown", "text/x-markdown" -> FileKind.MARKDOWN
                     "application/json", "application/ld+json" -> FileKind.JSON
+                    "application/x-ndjson", "application/ndjson", "application/jsonl", "application/jsonlines", "text/x-jsonlines" -> FileKind.JSON_LINES
+                    "text/asciidoc", "text/x-asciidoc" -> FileKind.ASCIIDOC
+                    "text/prs.fallenstein.rst", "text/x-rst" -> FileKind.RESTRUCTUREDTEXT
                     "application/xml", "text/xml" -> FileKind.XML
                     "application/yaml", "application/x-yaml", "text/yaml", "text/x-yaml" -> FileKind.YAML
                     "application/toml", "application/x-toml", "text/toml" -> FileKind.TOML

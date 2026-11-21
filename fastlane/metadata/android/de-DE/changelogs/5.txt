@@ -1,0 +1,1 @@
+Zeilensprung und Einrückung, gespeicherte Kopien öffnen, Entwurfsvergleich, Vergleichsfilter und exakter Patch-Export. Lesesammlungen, JSON-Lines-Navigation, AsciiDoc-/reStructuredText-Farben und schreibgeschützte Markdown-Aufgabenlisten. Geprüfte Werkzeuge für Testreleases.

@@ -28,7 +28,23 @@ object ComparisonInbox {
         pending = null; return value.second
     }
 }
-enum class ComparisonFailure { READ, INPUT_LIMIT, CANCELLED, LOST_SHARED }
+/** One immutable pair, transferred only in memory; never reread a draft baseline. */
+data class DraftComparison(val first: ComparisonSnapshot, val second: ComparisonSnapshot, val sourceUri: String?)
+object DraftComparisonInbox {
+    private var pending: Pair<String, DraftComparison>? = null
+    @Synchronized fun put(name: String, original: String, draft: String, sourceUri: String? = null,
+        originalEncoding: String = "UTF-8", originalBom: Boolean = false, draftEncoding: String = originalEncoding, draftBom: Boolean = originalBom): String? {
+        fun snapshot(text: String, encoding: String, bom: Boolean) = ComparisonSnapshot(ComparisonRef(null, name, fingerprint = sourceFingerprint(text)),
+            TextDocument(name, text, FileKind.TEXT, text.toByteArray(Charsets.UTF_8).size, encoding, hasBom = bom))
+        if (original.length > LineDiff.MAX_CHARS || draft.length > LineDiff.MAX_CHARS) return null
+        val left = snapshot(original, originalEncoding, originalBom); val right = snapshot(draft, draftEncoding, draftBom)
+        if (left.document.bytes > LineDiff.MAX_BYTES || right.document.bytes > LineDiff.MAX_BYTES) return null
+        return UUID.randomUUID().toString().also { pending = it to DraftComparison(left, right, sourceUri) }
+    }
+    @Synchronized fun take(token: String?): DraftComparison? =
+        pending?.takeIf { it.first == token }?.also { pending = null }?.second
+}
+enum class ComparisonFailure { READ, INPUT_LIMIT, CANCELLED, LOST_SHARED, LOST_DRAFT, EXPORT_LIMIT }
 
 class ComparisonSession(application: Application) : AndroidViewModel(application) {
     private val repository = DocumentRepository(application)
@@ -37,6 +53,37 @@ class ComparisonSession(application: Application) : AndroidViewModel(application
     private var work: Future<*>? = null
     private var signal: CancellationSignal? = null
     private var generation = 0
+    private var draftSourceUri: String? = null
+    fun protectedSources(): Set<String> = setOfNotNull(leftRef?.uri, rightRef?.uri, draftSourceUri)
+    var draftMode = false; private set
+    var options = DiffOptions(); private set
+    private var exported: String? = null
+    fun takeExport(): String? = exported.also { exported = null }
+    fun setOptions(value: DiffOptions) {
+        if (busy || options == value) return
+        options = value; selectedChange = 0; stopWork(); compute()
+    }
+    fun initialDraft(pair: DraftComparison) {
+        stopWork(); draftMode = true; draftSourceUri = pair.sourceUri; left = pair.first; right = pair.second
+        leftRef = left!!.reference; rightRef = right!!.reference; selectedChange = 0; compute()
+    }
+    fun exportExact() {
+        if (busy) return
+        val first = left ?: return; val second = right ?: return
+        stopWork(); val request = generation
+        busy = true; failure = null; exported = null; listener?.invoke()
+        work = worker.submit {
+            try {
+                val patch = UnifiedDiff.export(first.document, second.document)
+                handler.post {
+                    if (generation == request) { busy = false; exported = patch; if (patch == null) failure = ComparisonFailure.EXPORT_LIMIT; listener?.invoke() }
+                }
+            } catch (error: Exception) {
+                if (error is java.util.concurrent.CancellationException) return@submit
+                handler.post { if (generation == request) { busy = false; failure = ComparisonFailure.EXPORT_LIMIT; listener?.invoke() } }
+            }
+        }
+    }
     var initialized = false
     var left: ComparisonSnapshot? = null; private set
     var right: ComparisonSnapshot? = null; private set
@@ -49,8 +96,9 @@ class ComparisonSession(application: Application) : AndroidViewModel(application
     var selectedChange = 0
     var listener: (() -> Unit)? = null
 
-    fun initial(snapshot: ComparisonSnapshot) { stopWork(); left = snapshot; leftRef = snapshot.reference; selectedChange = 0; compute() }
+    fun initial(snapshot: ComparisonSnapshot) { stopWork(); if (draftMode) { right = null; rightRef = null }; draftMode = false; draftSourceUri = null; left = snapshot; leftRef = snapshot.reference; selectedChange = 0; compute() }
     fun load(isLeft: Boolean, reference: ComparisonRef) {
+        if (draftMode) return
         stopWork()
         if (isLeft) { leftRef = reference; left = null } else { rightRef = reference; right = null }
         selectedChange = 0
@@ -68,6 +116,7 @@ class ComparisonSession(application: Application) : AndroidViewModel(application
         val request = generation
         val cancellation = CancellationSignal().also { signal = it }
         val oldLeft = left; val oldRight = right
+        val filters = options
         val firstRef = leftRef; val secondRef = rightRef
         busy = true; failure = null; changedSources = false; result = null; listener?.invoke()
         work = worker.submit {
@@ -83,7 +132,7 @@ class ComparisonSession(application: Application) : AndroidViewModel(application
                 cancellation.throwIfCanceled()
                 val changed = (firstRef?.fingerprint != null && first?.reference?.fingerprint != firstRef.fingerprint) ||
                     (secondRef?.fingerprint != null && second?.reference?.fingerprint != secondRef.fingerprint)
-                val diff = if (first != null && second != null) LineDiff.compare(first!!.document, second!!.document) else null
+                val diff = if (first != null && second != null) LineDiff.compare(first!!.document, second!!.document, filters) else null
                 val firstValue = first; val secondValue = second
                 handler.post {
                     if (request != generation) return@post
@@ -91,7 +140,7 @@ class ComparisonSession(application: Application) : AndroidViewModel(application
                     firstValue?.let { leftRef = it.reference }; secondValue?.let { rightRef = it.reference }
                     result = diff; changedSources = changed
                     if (changed) selectedChange = 0
-                    if (restoring && (firstRef?.uri == null && firstRef != null || secondRef?.uri == null && secondRef != null)) failure = ComparisonFailure.LOST_SHARED
+                    if (restoring && (firstRef?.uri == null && firstRef != null || secondRef?.uri == null && secondRef != null)) failure = if (draftMode) ComparisonFailure.LOST_DRAFT else ComparisonFailure.LOST_SHARED
                     busy = false; listener?.invoke()
                 }
             } catch (error: Exception) {
@@ -115,11 +164,14 @@ class ComparisonSession(application: Application) : AndroidViewModel(application
         }
         reference("left", leftRef); reference("right", rightRef)
         bundle.putInt("change", selectedChange)
+        bundle.putString("draftSourceUri", draftSourceUri); bundle.putBoolean("draftMode", draftMode); bundle.putBoolean("ignoreWhitespace", options.ignoreWhitespace); bundle.putBoolean("ignoreEndings", options.ignoreLineEndings)
     }
     fun restore(bundle: Bundle) {
         fun reference(prefix: String) = if (!bundle.getBoolean(prefix + "Present")) null else ComparisonRef(
             bundle.getString(prefix + "Uri"), bundle.getString(prefix + "Name").orEmpty(),
             TextEncoding.entries.find { it.name == bundle.getString(prefix + "Encoding") }, bundle.getString(prefix + "Fingerprint"))
+        draftMode = bundle.getBoolean("draftMode"); draftSourceUri = bundle.getString("draftSourceUri")
+        options = DiffOptions(bundle.getBoolean("ignoreWhitespace"), bundle.getBoolean("ignoreEndings"))
         leftRef = reference("left"); rightRef = reference("right"); selectedChange = bundle.getInt("change")
         stopWork(); compute(restoring = true)
     }

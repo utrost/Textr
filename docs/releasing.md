@@ -68,3 +68,21 @@ Complete the [roadmap](roadmap.md) release gates and record emulator evidence in
 ## Optional Play bundle preparation
 
 The same private signing configuration supports `:app:bundleRelease`. Output: `app/build/outputs/bundle/release/app-release.aab`; verify with JDK `jarsigner -verify -verbose -certs`. Use an owner-approved upload/signing identity only. AAB files are not directly installable APKs. See [Play preparation](store/readiness.md) for key compatibility, listing drafts and the remaining account-dependent gates. Preparation does not authorize key creation, upload or publication.
+
+## Verified private-draft automation
+
+Version defaults advance to **0.5-alpha / code 5**, above the immutable private 0.4-alpha QoL candidate (code 4). `scripts/prepare-release.py` packages only an explicit clean source commit/tag with a successful CI run for that exact SHA. It never selects “latest”, overwrites a release/tag, publishes a draft, or creates a key. The owner-signed path and standard [F-Droid signing](fdroid/README.md) are separate: F-Droid uses the explicit unsigned release property and its own signing identity.
+
+```sh
+python3 scripts/prepare-release.py --ref EXACT_COMMIT --previous-version-code 4 --dry-run
+ANDROID_HOME=/path/to/sdk python3 scripts/prepare-release.py \
+  --ref EXACT_COMMIT --previous-version-code 4 --ci-run SUCCESSFUL_RUN_ID \
+  --signing-properties /secure/path/textr-signing.properties \
+  --expected-certificate APPROVED_SHA256 --output /private/path/Textr-0.5-alpha
+python3 scripts/prepare-release.py --verify-dir /private/path/Textr-0.5-alpha \
+  --expected-certificate APPROVED_SHA256
+```
+
+Check `--help` for the complete interface. Packaging builds a temporary archive of that commit using the committed version defaults, verifies package/version/non-debuggable manifest/permissions/notices and the explicitly anchored signing certificate, then includes exact source, build metadata, public fingerprint, notes and complete SHA-256 coverage. Output must be new and outside the checkout. Signing properties must be outside the checkout; retain keys and build logs privately. No credentials enter the package.
+
+Only add `--upload-draft` when private-draft upload is authorized. It creates a new draft prerelease, downloads its assets again, verifies them and compares every downloaded byte with the local package. A failure leaves existing versions unchanged; inspect any newly created draft before retrying. This is not public publication. Version monotonicity compares against the explicit prior release code, so verify that input against existing releases before use. Physical-device acceptance and public/store publication gates remain separate.

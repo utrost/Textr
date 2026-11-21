@@ -15,6 +15,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.ViewModelProvider
 
 class ComparisonActivity : ReadingScreen() {
+    private val outputs by lazy { ViewModelProvider(this)[OutputSession::class.java] }
     private val model by lazy { ViewModelProvider(this)[ComparisonSession::class.java] }
     private lateinit var leftButton: Button
     private lateinit var rightButton: Button
@@ -23,6 +24,16 @@ class ComparisonActivity : ReadingScreen() {
     private lateinit var next: Button
     private lateinit var previous: Button
     private lateinit var cancel: Button
+    private lateinit var export: Button
+    private lateinit var back: Button
+    private lateinit var whitespace: CheckBox
+    private lateinit var endings: CheckBox
+    private var updatingFilters = false
+    private var outputDialog: AlertDialog? = null
+    private var displayedOutput: OutputStatus? = null
+    private val outputPicker = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        outputs.pickerResult(if (result.resultCode == RESULT_OK) result.data?.data else null)
+    }
     private lateinit var list: ListView
     private var wide = false
     private var rows = emptyList<DiffDisplayRow>()
@@ -43,12 +54,15 @@ class ComparisonActivity : ReadingScreen() {
         restoreRight = savedInstanceState?.getInt("scrollRight", -1) ?: -1
         restoreTop = savedInstanceState?.getInt("scrollTop", 0) ?: 0
         build()
+        if (savedInstanceState?.getBoolean("outputPending") == true) outputs.restorePending("changes.patch", null)
         if (!model.initialized) {
             model.initialized = true
             if (savedInstanceState != null) model.restore(savedInstanceState)
             else {
+                val draft = DraftComparisonInbox.take(intent.getStringExtra("draftToken"))
                 val snapshot = ComparisonInbox.take(intent.getStringExtra("token"))
-                if (snapshot != null) model.initial(snapshot)
+                if (draft != null) model.initialDraft(draft)
+                else if (snapshot != null) model.initial(snapshot)
                 else intent.getStringExtra("uri")?.let { uri ->
                     model.load(true, ComparisonRef(uri, intent.getStringExtra("name").orEmpty(),
                         TextEncoding.entries.find { it.name == intent.getStringExtra("encoding") }, intent.getStringExtra("fingerprint")))
@@ -58,8 +72,10 @@ class ComparisonActivity : ReadingScreen() {
     }
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent); setIntent(intent)
+        val draft = DraftComparisonInbox.take(intent.getStringExtra("draftToken"))
         val snapshot = ComparisonInbox.take(intent.getStringExtra("token"))
-        if (snapshot != null) model.initial(snapshot)
+        if (draft != null) model.initialDraft(draft)
+        else if (snapshot != null) model.initial(snapshot)
         else intent.getStringExtra("uri")?.let { model.load(true, ComparisonRef(it, intent.getStringExtra("name").orEmpty(),
             TextEncoding.entries.find { value -> value.name == intent.getStringExtra("encoding") }, intent.getStringExtra("fingerprint"))) }
     }
@@ -85,6 +101,13 @@ class ComparisonActivity : ReadingScreen() {
         next = button(R.string.compare_next) { navigate(1) }.apply { id = R.id.compare_next }
         navigation.addView(previous, LinearLayout.LayoutParams(0, -2, 1f)); navigation.addView(next, LinearLayout.LayoutParams(0, -2, 1f))
         controls.addView(navigation)
+        val filterRow = LinearLayout(this)
+        whitespace = CheckBox(this).apply { id = R.id.compare_ignore_space; setText(R.string.compare_ignore_space); tooltipText = getString(R.string.compare_filter_help); setOnCheckedChangeListener { _, checked -> if (!updatingFilters) model.setOptions(model.options.copy(ignoreWhitespace = checked)) } }
+        endings = CheckBox(this).apply { id = R.id.compare_ignore_endings; setText(R.string.compare_ignore_endings); tooltipText = getString(R.string.compare_filter_help); setOnCheckedChangeListener { _, checked -> if (!updatingFilters) model.setOptions(model.options.copy(ignoreLineEndings = checked)) } }
+        filterRow.addView(whitespace, LinearLayout.LayoutParams(0, -2, 1f)); filterRow.addView(endings, LinearLayout.LayoutParams(0, -2, 1f))
+        controls.addView(filterRow)
+        export = button(R.string.compare_export) { exportPatch() }.apply { id = R.id.compare_export }
+        controls.addView(export)
         cancel = button(R.string.cancel_loading) { model.cancel() }.apply { id = R.id.compare_cancel }
         controls.addView(cancel)
         list = ListView(this).apply { id = R.id.compare_rows; adapter = diffAdapter; isSaveEnabled = false }
@@ -95,7 +118,8 @@ class ComparisonActivity : ReadingScreen() {
             root.addView(controls)
             root.addView(list, LinearLayout.LayoutParams(-1, 0, 1f))
         }
-        root.addView(button(R.string.back_to_files) { finish() }, LinearLayout.LayoutParams(-1, -2))
+        back = button(R.string.back_to_files) { finish() }
+        root.addView(back, LinearLayout.LayoutParams(-1, -2))
         install(root)
     }
     private fun label(left: Boolean): String {
@@ -104,12 +128,13 @@ class ComparisonActivity : ReadingScreen() {
         val name = snapshot?.document?.name ?: reference?.name ?: getString(R.string.compare_not_selected)
         val version = snapshot?.let { getString(R.string.compare_snapshot, it.document.encoding + " · " + getString(if (it.document.hasBom) R.string.editor_with_bom else R.string.editor_no_bom),
             java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT).format(java.util.Date(it.capturedAt))) }.orEmpty()
-        return getString(R.string.compare_input, getString(if (left) R.string.compare_left_name else R.string.compare_right_name), name) + if (version.isNotEmpty()) "\n$version" else ""
+        val heading = if (model.draftMode) getString(if (left) R.string.compare_original_snapshot else R.string.compare_unsaved_snapshot) else null
+        return (heading?.plus("\n") ?: "") + getString(R.string.compare_input, getString(if (left) R.string.compare_left_name else R.string.compare_right_name), name) + if (version.isNotEmpty()) "\n$version" else ""
     }
     private fun showDialog(dialog: AlertDialog) {
         activeDialog?.dismiss(); activeDialog = dialog
         dialog.setOnDismissListener { if (activeDialog === dialog) activeDialog = null }
-        dialog.show(); dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.isAllCaps = false
+        dialog.show(); for (which in listOf(AlertDialog.BUTTON_POSITIVE, AlertDialog.BUTTON_NEGATIVE, AlertDialog.BUTTON_NEUTRAL)) dialog.getButton(which)?.isAllCaps = false
     }
     private fun choose(isLeft: Boolean) {
         if (model.busy) return
@@ -123,8 +148,7 @@ class ComparisonActivity : ReadingScreen() {
         if (reference?.uri != null) {
             options.add(getString(R.string.reload) to { model.load(isLeft, reference) })
             options.add(getString(R.string.compare_open_reader) to {
-                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(reference.uri), this, MainActivity::class.java)
-                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_GRANT_READ_URI_PERMISSION))
+                ReaderOpening.open(this, Uri.parse(reference.uri))
             })
         }
         OpenDocuments(this).entries.filter { it.uri != null }.forEach { entry ->
@@ -137,7 +161,11 @@ class ComparisonActivity : ReadingScreen() {
     private fun refresh() {
         if (isDestroyed || isFinishing) return
         leftButton.text = label(true); rightButton.text = label(false)
-        leftButton.isEnabled = !model.busy; rightButton.isEnabled = !model.busy
+        leftButton.isEnabled = !model.busy && !model.draftMode && !outputs.busy; rightButton.isEnabled = leftButton.isEnabled
+        back.setText(if (model.draftMode) R.string.preview_back else R.string.back_to_files)
+        updatingFilters = true; whitespace.isChecked = model.options.ignoreWhitespace; endings.isChecked = model.options.ignoreLineEndings; updatingFilters = false
+        whitespace.isEnabled = !model.busy && !outputs.busy; endings.isEnabled = whitespace.isEnabled
+        export.isEnabled = !model.busy && !outputs.busy && model.left != null && model.right != null
         cancel.visibility = if (model.busy) View.VISIBLE else View.GONE
         val result = model.result
         if (result !== displayed) {
@@ -160,11 +188,42 @@ class ComparisonActivity : ReadingScreen() {
             model.failure == ComparisonFailure.READ -> getString(R.string.compare_read_error)
             model.failure == ComparisonFailure.CANCELLED -> getString(R.string.compare_cancelled)
             model.failure == ComparisonFailure.LOST_SHARED -> getString(R.string.compare_shared_lost)
+            model.failure == ComparisonFailure.LOST_DRAFT -> getString(R.string.compare_draft_lost)
+            model.failure == ComparisonFailure.EXPORT_LIMIT -> getString(R.string.compare_export_limit)
+            result?.identical == true && model.options.active && model.left?.document?.text != model.right?.document?.text -> getString(R.string.compare_equivalent)
             result?.identical == true -> getString(R.string.compare_identical)
             result != null -> getString(R.string.compare_change_count, model.selectedChange + 1, changes)
             else -> getString(R.string.compare_choose_help)
         }
-        status.text = (if (model.changedSources) getString(R.string.compare_changed) + "\n" else "") + message
+        status.text = (if (model.changedSources) getString(R.string.compare_changed) + "\n" else "") + message + if (model.options.active) "\n" + getString(R.string.compare_filters_active) else ""
+        model.takeExport()?.let { patch ->
+            try { outputPicker.launch(outputs.begin(OutputRequest("changes.patch", "text/x-diff", patch, model.leftRef?.uri,
+                protectedSources = model.protectedSources()))) }
+            catch (_: android.content.ActivityNotFoundException) { outputs.pickerUnavailable() }
+            catch (_: SecurityException) { outputs.pickerUnavailable() }
+        }
+        showOutput()
+    }
+    private fun exportPatch() {
+        if (model.busy || outputs.busy) return
+        if (model.options.active) showDialog(AlertDialog.Builder(this).setTitle(R.string.compare_export)
+            .setMessage(R.string.compare_export_exact).setNegativeButton(R.string.cancel, null)
+            .setPositiveButton(R.string.done) { _, _ -> model.exportExact() }.create())
+        else model.exportExact()
+    }
+    private fun showOutput() {
+        val value = outputs.status
+        if (displayedOutput == value) return
+        displayedOutput = value; outputDialog?.dismiss()
+        outputDialog = OutputDialogs.create(this, value, outputs::cancel, retry = { outputs.acknowledge(); exportPatch() }) { outputs.acknowledge() }?.also { dialog ->
+            if (value.result == OutputResult.SAVED && value.target != null) {
+                dialog.setButton(AlertDialog.BUTTON_NEUTRAL, getString(R.string.editor_open_saved)) { _, _ ->
+                    if (ReaderOpening.open(this, value.target)) outputs.acknowledge()
+                }
+            }
+            dialog.show()
+            for (which in listOf(AlertDialog.BUTTON_POSITIVE, AlertDialog.BUTTON_NEGATIVE, AlertDialog.BUTTON_NEUTRAL)) dialog.getButton(which)?.isAllCaps = false
+        }
     }
     private fun navigate(delta: Int) {
         val count = rows.mapNotNull { it.change }.distinct().size
@@ -241,13 +300,14 @@ class ComparisonActivity : ReadingScreen() {
         }
         return super.dispatchKeyEvent(event)
     }
-    override fun onStart() { super.onStart(); model.listener = ::refresh; refresh() }
-    override fun onStop() { model.listener = null; super.onStop() }
+    override fun onStart() { super.onStart(); model.listener = ::refresh; outputs.listener = { refresh() }; refresh() }
+    override fun onStop() { model.listener = null; outputs.listener = null; super.onStop() }
     override fun onSaveInstanceState(outState: Bundle) {
+        if (outputs.status.phase == OutputPhase.PICKING) outState.putBoolean("outputPending", true)
         model.save(outState); outState.putBoolean("pickingLeft", pickingLeft)
         rows.getOrNull(list.firstVisiblePosition)?.let { outState.putInt("scrollLeft", it.left ?: -1); outState.putInt("scrollRight", it.right ?: -1) }
         outState.putInt("scrollTop", list.getChildAt(0)?.top ?: 0)
         super.onSaveInstanceState(outState)
     }
-    override fun onDestroy() { activeDialog?.dismiss(); super.onDestroy() }
+    override fun onDestroy() { activeDialog?.dismiss(); outputDialog?.dismiss(); super.onDestroy() }
 }

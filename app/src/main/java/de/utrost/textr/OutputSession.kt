@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit
 /** A single explicit output snapshot. Content stays in this retained model, never in history/Bundle. */
 data class OutputRequest(val name: String, val mime: String, val text: String, val sourceUri: String?,
     val encoding: TextEncoding = TextEncoding.UTF8, val bom: Boolean = false,
-    val draftId: String? = null, val revision: Long = 0)
+    val draftId: String? = null, val revision: Long = 0, val protectedSources: Set<String> = emptySet())
 enum class OutputPhase { IDLE, PICKING, WRITING, COMPLETE }
 enum class OutputFailure { ACCESS, UNAVAILABLE, ENCODING, UNKNOWN }
 enum class OutputResult { SAVED, CANCELLED, FAILED, REFUSED, INTERRUPTED }
@@ -89,7 +89,7 @@ class OutputSession(application: Application) : AndroidViewModel(application) {
             var partial = false
             var failure: OutputFailure? = null
             try {
-                if (!safeTarget(target, snapshot.sourceUri)) {
+                if (!(snapshot.protectedSources + listOfNotNull(snapshot.sourceUri)).all { safeTarget(target, it) } || !safeTarget(target, null)) {
                     result = OutputResult.REFUSED
                 } else {
                     mayDelete = true

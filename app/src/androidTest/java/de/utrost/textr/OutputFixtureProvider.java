@@ -61,7 +61,10 @@ public class OutputFixtureProvider extends DocumentsProvider {
         if (file(id).exists() && !file(id).delete()) throw new FileNotFoundException();
     }
     @Override public ParcelFileDescriptor openDocument(String id, String mode, CancellationSignal cancellation) throws FileNotFoundException {
-        if (mode.equals("r")) return ParcelFileDescriptor.open(file(id), ParcelFileDescriptor.MODE_READ_ONLY);
+        if (mode.equals("r")) {
+            if (modes.getOrDefault(id, "normal").equals("read-denied")) throw new SecurityException("Synthetic saved file read denied");
+            return ParcelFileDescriptor.open(file(id), ParcelFileDescriptor.MODE_READ_ONLY);
+        }
         if (id.equals("source")) throw new AssertionError("Original must never be opened for writing");
         String behavior = modes.getOrDefault(id, "normal");
         if (behavior.startsWith("denied")) throw new SecurityException("Synthetic denied output");

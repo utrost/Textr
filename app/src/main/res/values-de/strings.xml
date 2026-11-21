@@ -169,7 +169,9 @@
         <item>Zeitzone:</item>
         <item>Ortszeit; keine Zeitzone angegeben</item>
         <item>Spalte</item>
-    </string-array>
+            <item>Erledigte Aufgabe</item>
+        <item>Offene Aufgabe</item>
+</string-array>
     <string name="unnamed_file">Textdatei</string>
     <string name="csv_accessible">Barrierefreie Tabelle…</string>
     <string name="csv_empty_cell">Leere Zelle</string>
@@ -336,4 +338,41 @@
     <string name="find_selected">Ausgewählten Text suchen</string>
     <string name="selection_limit">Bitte nichtleeren Text mit höchstens 1.000 Zeichen auswählen. Die bisherige Suche ist unverändert.</string>
     <string name="selection_unavailable">Zum Suchen des ausgewählten Textes bitte ein Dokument in Textr öffnen.</string>
+    <string name="editor_indent">Einrücken</string>
+    <string name="editor_unindent">Ausrücken</string>
+    <string name="editor_compare">Mit Ausgangstext vergleichen</string>
+    <string name="editor_line_help">Zeilennummer von 1 bis %1$d eingeben.</string>
+    <string name="compare_ignore_space">Leerzeichen/Tabulatoren ignorieren</string>
+    <string name="compare_ignore_endings">Zeilenenden ignorieren</string>
+    <string name="compare_export">Exakten Diff speichern unter…</string>
+    <string name="compare_original_snapshot">Ausgangstext beim Bearbeitungsbeginn</string>
+    <string name="compare_unsaved_snapshot">Momentaufnahme des aktuellen Entwurfs</string>
+    <string name="compare_draft_lost">Die Vergleichstexte gingen beim Prozessende verloren. Zur Bearbeitung zurückkehren und erneut vergleichen. Der Ausgangstext wird nicht automatisch neu eingelesen.</string>
+    <string name="compare_export_limit">Der exakte Diff überschreitet die Export-/Vergleichsgrenzen. Beide Texte bleiben unverändert.</string>
+    <string name="compare_equivalent">Unter den aktiven Filtern gleichwertig; die ursprünglichen Texte unterscheiden sich.</string>
+    <string name="compare_filters_active">Ansichtsfilter sind aktiv; gespeicherte Diffs enthalten weiterhin exakte Änderungen.</string>
+    <string name="compare_filter_help">Filter gelten nur für diese Ansicht. Leerzeichen/Tabulatoren meint ASCII-Leerzeichen und Tabulatoren innerhalb jeder Zeile. Leerzeilen und Unicode-Leerraum bleiben relevant. Der Zeilenendenfilter ignoriert auch ein fehlendes abschließendes Zeilenende.</string>
+    <string name="compare_export_exact">Der gespeicherte Patch enthält exakte Änderungen, auch durch Ansichtsfilter verborgene Unterschiede. UTF-8, drei Kontextzeilen und feste anonyme Dateinamen. Originale bleiben unverändert.</string>
+    <string name="jsonl_records">JSON-Lines-Datensätze</string>
+    <string name="jsonl_record">Gültiger JSON-Datensatz</string>
+    <string name="jsonl_invalid">Ungültiger oder zu großer Datensatz</string>
+    <string name="jsonl_blank">Leerzeile (kein Datensatz)</string>
+    <string name="jsonl_help">Jede physische Zeile wird aufgeführt, auch ungültige Datensätze und Leerzeilen. Zeile zum Springen oder exakten Kopieren einschließlich Zeilenende wählen. Doppelte Schlüssel werden nicht zusammengefasst.</string>
+    <string name="jsonl_limit">Die Datensatznavigation überschreitet ihre Grenzen: 256 Ki Zeichen, 1.000 physische Zeilen, 16.384 Zeichen pro gültigem Datensatz, Tiefe 64 und 200.000 Tokens. Der vollständige Quelltext ist verfügbar.</string>
+    <string name="collections">Sammlungen</string>
+    <string name="collection_create">Sammlung erstellen</string>
+    <string name="collection_name">Name der Sammlung</string>
+    <string name="collection_rename">Sammlung umbenennen</string>
+    <string name="collection_add">Zuletzt geöffnetes Dokument hinzufügen</string>
+    <string name="collection_delete">Sammlung löschen</string>
+    <string name="collection_remove">Verweis entfernen</string>
+    <string name="collection_reselect">Verweis neu auswählen…</string>
+    <string name="collection_open">Dokument öffnen</string>
+    <string name="collection_reselect_confirm">Den Verweis auf %1$s durch das gerade ausgewählte Dokument ersetzen? Die Originaldatei bleibt unverändert.</string>
+    <string name="collection_delete_help">Diese Sammlung und ihre Verweise löschen? Provider-Dateien und andere Sammlungen bleiben unverändert.</string>
+    <string name="collection_no_recent">Zuerst eine Datei öffnen, oder alle zuletzt geöffneten Dokumente sind bereits in dieser Sammlung.</string>
+    <string name="collection_help">Nur Verweise. Das Leeren des Verlaufs behält Sammlungen bei. Bis zu 20 Sammlungen, je 30 Verweise, insgesamt 200 Zuordnungen. Das Entfernen von Verweisen löscht keine Dateien.</string>
+    <string name="collection_limit">Einen eindeutigen, nicht leeren Namen mit höchstens 80 Zeichen verwenden. Grenzen: 20 Sammlungen, 30 Verweise pro Sammlung, insgesamt 200 Zuordnungen; keine doppelten Verweise.</string>
+    <string name="editor_compare_unavailable">Die Ausgangsmomentaufnahme fehlt in diesem älteren Wiederherstellungsentwurf. Der Vergleich ist deaktiviert; der Provider wird nicht still neu eingelesen.</string>
+    <string name="saved_copy_unavailable">Dieser Verweis kann hier nicht geöffnet werden. Mit Datei öffnen erneut auswählen. Ein abgeschlossener Speichervorgang bleibt erfolgreich.</string>
 </resources>

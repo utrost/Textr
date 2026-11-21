@@ -1,0 +1,13 @@
+Textr reads original text documents offline and lets you explicitly edit and save separate TXT/Markdown copies. Android 10 or newer. No accounts, ads, analytics or app Internet permission.
+
+Open through Android’s picker, Open with or Share. Read plain text, bounded source highlighting, Markdown checklists, JSON, calendar and CSV previews, or a safe Markdown conversion of local HTML. JSON Lines lists valid, invalid and blank lines with exact source navigation; AsciiDoc and reStructuredText offer source highlighting only.
+
+Find in source or start from a text selection. Copy source or converted Markdown, return after navigation, reopen closed documents, bookmark positions, filter recent filenames/formats and organize references into named collections. Up to five documents can be open. Choose typography, wrapping, theme and optional screen-awake reading. English and German controls.
+
+Edit bounded TXT/Markdown copies with undo/redo, literal find/replace, Go to line and indentation. Preview unsaved Markdown, compare it with the original editing snapshot, and save a new file. One private recovery file retains the draft and original snapshot until matching save or explicit discard. Originals are never overwritten.
+
+Compare two read-only snapshots, optionally ignore ASCII spaces/tabs or line endings, and export an exact UTF-8 unified diff. Display filters never normalize saved text.
+
+Files are limited to 5 MiB; tighter editor, preview, structure and diff budgets apply. Complete source remains available when optional rendering is unavailable. Markdown images, embedded HTML and remote resources are blocked. External providers and tapped links have their own network/privacy behavior. Textr does not manage, delete or edit original files in place.
+
+GPL-3.0-only. Source, policy and support: https://github.com/utrost/Textr

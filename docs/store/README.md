@@ -16,4 +16,4 @@ convert -background none -depth 8 docs/store/icon.svg PNG24:docs/store/icon.png
 convert -background none -depth 8 docs/store/feature-graphic.svg PNG24:docs/store/feature-graphic.png
 ```
 
-Artwork is part of this GPL-3.0-only repository. These assets do not imply store acceptance or physical-device certification. Developer identity, support contact, account declarations, final screenshots/assets and signing choices remain subject to owner review.
+Artwork is part of this GPL-3.0-only repository. These assets do not imply store acceptance or physical-device certification. The maintainer confirmed developer **utrost** and the [public Textr issue tracker](https://github.com/utrost/Textr/issues) as privacy/support contact. Standard F-Droid signing is selected; see [F-Droid preparation](../fdroid/README.md). Play account declarations, Play signing choices, final assets and publication remain owner-dependent.

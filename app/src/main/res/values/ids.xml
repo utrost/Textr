@@ -63,4 +63,17 @@
     <item name="keep_awake" type="id" />
     <item name="draft_preview" type="id" />
     <item name="preview_draft" type="id" />
+    <item name="editor_go_line" type="id" />
+    <item name="editor_indent" type="id" />
+    <item name="editor_unindent" type="id" />
+    <item name="editor_compare" type="id" />
+    <item name="editor_line_input" type="id" />
+    <item name="compare_ignore_space" type="id" />
+    <item name="compare_ignore_endings" type="id" />
+    <item name="compare_export" type="id" />
+    <item name="collections" type="id" />
+    <item name="collection_name" type="id" />
+    <item name="collection_create" type="id" />
+    <item name="collection_add" type="id" />
+    <item name="collection_done" type="id" />
 </resources>
