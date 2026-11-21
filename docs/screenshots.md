@@ -48,3 +48,12 @@ Reproduce with `RoadmapCompletionDeviceTest` on a disposable emulator. It writes
 ![Exact comparison with independent display filters and explicit patch export](images/roadmap-comparison.png)
 
 The comparison capture waits for the bottom action to be fully visible within the window frame before saving the screenshot; the same check passes in instrumentation. Filenames and sample text are synthetic.
+
+
+## Source-search follow-up (API 29)
+
+Direct synthetic captures after the source-search layout/keyboard fixes (#128/#129), on the disposable API 29 emulator with WebView 74.0.3729.185. Portrait uses 1080×1920 at 420 dpi and normal system text, with the software keyboard connected to the source query and Done operable. Landscape uses 1920×1080 at 420 dpi and **200% system text**, after returning from Android's fullscreen keyboard editor with Back. Query/options and Done remain available; result rows scroll below the header. Both flows preserve the synthetic provider bytes. These are current implementation captures without pixel edits, separate from the API 36 primary set.
+
+| Query and connected keyboard | 200% landscape after keyboard input |
+| --- | --- |
+| ![Source query, match options, results and Done above the software keyboard](images/roadmap-source-search-keyboard.png) | ![Large-text source query and options with Done in landscape](images/roadmap-source-search-large.png) |

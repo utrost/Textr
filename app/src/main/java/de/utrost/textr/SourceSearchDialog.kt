@@ -93,6 +93,9 @@ class SourceSearchDialog(context: Context, source: String, initial: SourceSearch
         matchCase.setOnCheckedChangeListener { _, _ -> update() }
         wholeWord.setOnCheckedChangeListener { _, _ -> update() }
         dialog.setOnShowListener {
+            // AlertDialog checks children before ListView has attached its editable
+            // header. Explicitly allow this window to connect its query to the IME.
+            dialog.window?.clearFlags(android.view.WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
             // Results arrive asynchronously. Reserve the window so clearing or
             // repopulating rows cannot move controls between a user's taps.
             dialog.window?.setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT)
