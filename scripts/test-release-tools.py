@@ -106,7 +106,7 @@ class ReleaseGuards(unittest.TestCase):
         def ci(args, **kwargs):
             if args[0] != 'gh':
                 return original(args, **kwargs)
-            if str(args[2]).endswith('/jobs'):
+            if any(str(argument).endswith('/jobs') for argument in args):
                 return 'Build, unit tests, and lint\tsuccess\nAndroid API 29\tsuccess\nAndroid API 36\tskipped\n'
             return json.dumps({'head_sha': self.sha, 'conclusion': 'success', 'status': 'completed', 'path': '.github/workflows/ci.yml'})
         with patch.object(release, 'run', side_effect=ci), self.assertRaisesRegex(ValueError, 'both Android matrix'):
