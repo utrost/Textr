@@ -309,7 +309,15 @@ class BacklogTest {
         fail("Expected scroll $expected: $state")
     }
     private fun ready(scenario: ActivityScenario<MainActivity>) = await { var value = false; scenario.onActivity { value = it.findViewById<WebView>(R.id.reader)?.tag == true }; value }
-    private fun menu(label: String) { click(By.desc("More options")); click(label) }
+    private fun menu(label: String) {
+        click(By.desc("More options"))
+        val popup = device.wait(Until.findObject(By.clazz(android.widget.ListView::class.java)), 5000)
+        assertNotNull("Native options menu", popup)
+        val selector = By.text(java.util.regex.Pattern.compile(java.util.regex.Pattern.quote(label), 2))
+        val item = popup!!.findObject(selector) ?: popup.scrollUntil(androidx.test.uiautomator.Direction.DOWN, Until.findObject(selector))
+        assertNotNull("Menu item: $label", item)
+        item!!.click(); device.waitForIdle()
+    }
     private fun click(label: String) = click(By.text(java.util.regex.Pattern.compile(java.util.regex.Pattern.quote(label), 2)))
     private fun click(selector: BySelector) { val item = device.wait(Until.findObject(selector), 5000); assertNotNull("Missing $selector", item); item!!.click(); device.waitForIdle() }
     private fun clickSelection(label: String) {

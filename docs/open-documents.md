@@ -1,5 +1,7 @@
 # Open documents and navigation
 
+The quality-of-life review branch adds [everyday reading conveniences](quality-of-life.md), including draft preview, navigation/closed history, selection search and save-location hints. These additions are not in 0.3-alpha.
+
 The owner authorized backlog issues #28–#33 on 2026-11-13. This extends the original single-document v1 scope while preserving read-only operation, Android 10+, the 5 MiB source limit, and no network permission. Public release remains deferred.
 
 ## Document switcher

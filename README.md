@@ -43,6 +43,10 @@ The reliability follow-up implements clearer [opening/save recovery](docs/recove
 
 Opening a format does not guarantee highlighting. Generic configuration files use plain text unless their syntax is recognized. HTML opens as source and offers an optional offline [Markdown reading view](docs/html-reading.md) for saved/shared HTML. CSV starts as text; table preview requires explicit delimiter/header choices. See [formats and limits](docs/formats.md) and [everyday format rules](docs/everyday-formats.md).
 
+## Quality-of-life additions
+
+The implementation branch adds recent-file search/filtering, previous reading positions, Copy Markdown for HTML, unsaved Markdown preview, reopening closed documents, optional screen-awake reading, Find selected text and a last-save-location suggestion. See the [usage guide](docs/quality-of-life.md) and [validation](docs/validation-quality-of-life.md). These changes are not in the immutable 0.3-alpha APK.
+
 ## Open a file
 
 Use **Open file** on the home screen, or choose Textr from another app’s **Open with** or **Share** action. Tap the display-mode button to change views; **⋮** contains file actions, reading settings, bookmarks and About.

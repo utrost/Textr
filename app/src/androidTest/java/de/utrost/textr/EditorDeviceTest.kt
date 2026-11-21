@@ -61,6 +61,57 @@ class EditorDeviceTest {
     private fun ready(scenario: ActivityScenario<EditorActivity>) = await { var ready = false; scenario.onActivity { ready = model(it).buffer != null && !model(it).loading }; ready }
     private fun editor(scenario: ActivityScenario<EditorActivity>, action: (EditText) -> Unit) = scenario.onActivity { action(it.findViewById(R.id.editor_text)) }
     private fun checkpoint(text: String) = await { try { store.read()?.text == text } catch (_: Exception) { false } }
+    @Test fun markdownPreviewUsesUnsavedSnapshotAndPreservesEditorThroughRecreation() {
+        launch().use { scenario ->
+            ready(scenario)
+            val addition = "\n\n## Unsaved heading\n" + "Preview body\n\n".repeat(100)
+            editor(scenario) { it.text.append(addition); it.setSelection(4, 9) }
+            val expected = source + addition.replace("\n", "\r\n")
+            checkpoint(expected)
+            scenario.onActivity { it.findViewById<Button>(R.id.preview_draft).performClick() }
+            fun previewReady() {
+                try { await {
+                var found = false
+                instrumentation.runOnMainSync { found = WindowInspector.getGlobalWindowViews().any { it.findViewById<android.webkit.WebView>(R.id.draft_preview)?.let { web -> web.tag == true && web.height > 100 } == true } }
+                found
+                } } catch (error: AssertionError) {
+                    var diagnostic = ""
+                    instrumentation.runOnMainSync {
+                        for (root in WindowInspector.getGlobalWindowViews()) {
+                            fun visit(view: View) {
+                                if (view is android.webkit.WebView) diagnostic += "web tag=${view.tag},height=${view.height},content=${view.contentHeight},visible=${view.visibility},url=${view.url} "
+                                if (view is TextView && view !is EditText) diagnostic += "label=${view.text} "
+                                if (view is android.view.ViewGroup) for (i in 0 until view.childCount) visit(view.getChildAt(i))
+                            }
+                            visit(root)
+                        }
+                    }
+                    throw AssertionError("Preview failed: $diagnostic", error)
+                }
+            }
+            previewReady()
+            assertTrue(device.wait(Until.hasObject(By.text("Unsaved heading")), 5000))
+            scenario.onActivity {
+                assertEquals(expected, model(it).buffer!!.text); assertTrue(model(it).dirty)
+                assertTrue(model(it).previewOpen)
+            }
+            instrumentation.runOnMainSync {
+                WindowInspector.getGlobalWindowViews().mapNotNull { it.findViewById<android.webkit.WebView>(R.id.draft_preview) }.single().scrollTo(0, 700)
+            }
+            scenario.recreate(); ready(scenario); previewReady()
+            instrumentation.runOnMainSync {
+                val web = WindowInspector.getGlobalWindowViews().mapNotNull { it.findViewById<android.webkit.WebView>(R.id.draft_preview) }.single()
+                assertTrue("Preview scroll survived recreation: ${web.scrollY}", kotlin.math.abs(web.scrollY - 700) <= 3)
+                assertFalse(web.settings.javaScriptEnabled); assertFalse(web.settings.allowFileAccess); assertTrue(web.settings.blockNetworkLoads)
+            }
+            click(R.string.preview_back)
+            editor(scenario) { assertEquals(expected, it.text.toString()); assertEquals(4, it.selectionStart); assertEquals(9, it.selectionEnd) }
+            scenario.onActivity { assertFalse(model(it).previewOpen); it.findViewById<Button>(R.id.editor_undo).performClick() }
+            editor(scenario) { assertEquals(source, it.text.toString()) }
+            assertArrayEquals(source.toByteArray(), context.contentResolver.openInputStream(sourceUri)!!.use { it.readBytes() })
+        }
+    }
+
     @Test fun nativeEditsUndoRedoNewlinesAndRotationDoNotSerializeContents() {
         launch().use { scenario ->
             ready(scenario)

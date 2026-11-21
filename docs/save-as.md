@@ -1,5 +1,7 @@
 # Save as a new document
 
+The quality-of-life review branch adds [everyday reading conveniences](quality-of-life.md), including draft preview, navigation/closed history, selection search and save-location hints. These additions are not in 0.3-alpha.
+
 The reliability follow-up distinguishes denied permission, unavailable destinations and encoding failures where evidence allows, and offers **Save a new copy** to choose a destination again. Failure categories are stored with existing operation metadata; exception messages and contents are not stored. See [opening and recovery](recovery.md). These additions are not in the immutable 0.2-alpha APK.
 
 **Save Markdown as…** exports the converter's actual Markdown reading content through Android's Create document picker. It writes UTF-8 without a BOM, suggests a sanitized `.md` name, and uses `text/markdown`. Local and shared HTML are eligible when conversion completes within its existing budgets. An unavailable-conversion action explains why export cannot proceed. Images, scripts, forms, hidden content and unsupported structures follow the same omission/link policy as the reading view; inspect the result before reusing it. The generated WebView HTML is never converted back into Markdown.

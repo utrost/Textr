@@ -314,4 +314,26 @@
     <string name="copy_all">Alles kopieren</string>
     <string name="copy_all_limit">Dieses Dokument ist zu groß, um es auf einmal zu kopieren (Grenze: 256 Ki Zeichen). Bitte Datei teilen oder einen kleineren Abschnitt auswählen. Es wurde nichts kopiert.</string>
     <string name="copy_all_failed">Das Dokument konnte nicht kopiert werden. Bitte erneut versuchen oder Datei teilen verwenden.</string>
+    <string name="previous_position">Vorherige Leseposition</string>
+    <string name="copy_markdown">Markdown kopieren</string>
+    <string name="copy_markdown_limit">Das konvertierte Markdown ist zu groß für die Zwischenablage. Bitte Markdown speichern unter verwenden. Es wurde nichts kopiert.</string>
+    <string name="reopen_closed">Geschlossenes Dokument wieder öffnen</string>
+    <string name="recent_search">Zuletzt geöffnete Dateinamen durchsuchen</string>
+    <string name="recent_format">Letzte Dateien nach Format filtern</string>
+    <string name="all_formats">Alle Formate</string>
+    <string name="recent_no_matches">Keine zuletzt geöffneten Dateien entsprechen diesen Filtern.</string>
+    <string name="clear_filters">Filter zurücksetzen</string>
+    <string name="keep_awake">Bildschirm beim Lesen eingeschaltet lassen</string>
+    <string name="keep_awake_help">Nur wenn ein Dokument bereit ist und Textr im Vordergrund ist. Verbraucht mehr Akku.</string>
+    <string name="forget_save_location">Letzten Speicherort vergessen</string>
+    <string name="save_location_forgotten">Letzter Speicherort vergessen</string>
+    <string name="draft_preview">Markdown-Entwurf ansehen</string>
+    <string name="preview_loading">Vorschau des ungespeicherten Entwurfs wird vorbereitet…</string>
+    <string name="preview_back">Zurück zum Bearbeiten</string>
+    <string name="preview_unsaved">Vorschau des ungespeicherten Entwurfs – es wurde nichts gespeichert.</string>
+    <string name="preview_stale">Der Entwurf wurde geändert. Bitte zum Bearbeiten zurückkehren und die Vorschau erneut öffnen.</string>
+    <string name="draft_preview_unavailable">Vorschau nicht verfügbar oder Darstellungsgrenze erreicht. Der Entwurf ist unverändert; bitte zum Bearbeiten zurückkehren.</string>
+    <string name="find_selected">Ausgewählten Text suchen</string>
+    <string name="selection_limit">Bitte nichtleeren Text mit höchstens 1.000 Zeichen auswählen. Die bisherige Suche ist unverändert.</string>
+    <string name="selection_unavailable">Zum Suchen des ausgewählten Textes bitte ein Dokument in Textr öffnen.</string>
 </resources>

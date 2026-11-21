@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+    <!-- WebView discovers PROCESS_TEXT only on exported activities. Signature protection
+         restricts this destination to Textr's signing identity; no runtime grant is requested. -->
+    <permission android:name="${applicationId}.permission.FIND_SELECTION" android:protectionLevel="signature" />
+    <uses-permission android:name="${applicationId}.permission.FIND_SELECTION" />
     <queries>
         <intent>
             <action android:name="android.intent.action.VIEW" />
@@ -27,6 +31,14 @@
             android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/shared_paths" />
         </provider>
+        <activity android:name=".SelectionSearchActivity" android:exported="true" android:permission="${applicationId}.permission.FIND_SELECTION"
+            android:label="@string/find_selected" android:theme="@android:style/Theme.NoDisplay">
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
         <activity android:name=".EditorActivity" android:launchMode="singleTask" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <activity android:name=".ComparisonActivity" android:launchMode="singleTask" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <activity

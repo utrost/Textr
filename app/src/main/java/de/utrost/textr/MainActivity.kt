@@ -41,6 +41,9 @@ data class ReaderReturnState(val document: PreparedDocument, val original: TextD
     val uri: String?, val reading: ReadingState, val query: String, val searching: Boolean, val grantFlags: Int)
 
 class ReaderSession : ViewModel() {
+    val navigation = ReadingNavigation()
+    var recentQuery = ""
+    var recentKind: FileKind? = null
     var returnState: ReaderReturnState? = null
     // In-memory only: survive rotation without retaining document contents on disk.
     var document: PreparedDocument? = null
@@ -110,9 +113,11 @@ class MainActivity : ComponentActivity() {
         lineSpacing = effective.lineSpacing
     }
     private var pendingScroll = 0
+    private var restoreSearchScroll: Int? = null
     private var formatOverride: FileKind? = null
     private var requestedMode: DisplayMode? = null
     private var homeShown = false
+    private var resumed = false
     private var sharing = false
     private val dialogs = mutableSetOf<android.app.Dialog>()
     private var activeMenu: PopupMenu? = null
@@ -305,11 +310,12 @@ class MainActivity : ComponentActivity() {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                     if (s.isNullOrEmpty()) searchCount.text = ""
+                    if (searchField.hasFocus() && !s.isNullOrEmpty()) rememberPosition()
                     webView?.findAllAsync(s?.toString().orEmpty())
                 }
                 override fun afterTextChanged(s: Editable?) = Unit
             })
-            setOnEditorActionListener { _, _, _ -> webView?.findNext(true); true }
+            setOnEditorActionListener { _, _, _ -> findNext(true); true }
         }
         searchRow.addView(searchField, if (wide) LinearLayout.LayoutParams(0, -2, 1f) else LinearLayout.LayoutParams(-1, -2))
         val searchActions = row()
@@ -319,8 +325,8 @@ class MainActivity : ComponentActivity() {
             accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
         }
         searchActions.addView(searchCount, if (wide) LinearLayout.LayoutParams(-2, -2) else LinearLayout.LayoutParams(0, -2, 1f))
-        searchActions.addView(button(R.string.previous_match, "↑") { webView?.findNext(false) })
-        searchActions.addView(button(R.string.next_match, "↓") { webView?.findNext(true) })
+        searchActions.addView(button(R.string.previous_match, "↑") { findNext(false) })
+        searchActions.addView(button(R.string.next_match, "↓") { findNext(true) })
         searchActions.addView(button(R.string.search_source, "⋯") { showSourceSearch() })
         searchActions.addView(button(R.string.close_search, "×") { closeSearch() })
         searchRow.addView(searchActions, LinearLayout.LayoutParams(if (wide) -2 else -1, -2))
@@ -396,6 +402,7 @@ class MainActivity : ComponentActivity() {
             view.destroy()
         }
         webView = null
+        updateScreenAwake()
         content.removeAllViews()
     }
 
@@ -460,36 +467,67 @@ class MainActivity : ComponentActivity() {
             undoHandler.removeCallbacks(finishUndo)
             undoHandler.postDelayed(finishUndo, repository.undoRemainingMillis() + 1)
         }
-        recents.forEach { recent ->
-            val entry = row()
-            val details = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-            details.addView(Button(this).apply {
-                text = recent.name; isAllCaps = false; gravity = Gravity.START or Gravity.CENTER_VERTICAL
-                maxLines = 2; ellipsize = android.text.TextUtils.TruncateAt.END
-                val value = android.util.TypedValue()
-                theme.resolveAttribute(android.R.attr.selectableItemBackground, value, true)
-                setBackgroundResource(value.resourceId)
-                minimumHeight = dp(56)
-                setOnClickListener { openDocument(Uri.parse(recent.uri)) }
-            }, LinearLayout.LayoutParams(-1, -2))
-            details.addView(TextView(this).apply {
-                val uri = Uri.parse(recent.uri)
-                val location = if (uri.scheme == "file") uri.path?.substringBeforeLast('/') else uri.authority
-                text = android.text.format.DateUtils.getRelativeTimeSpanString(recent.openedAt).toString() +
-                    (location?.let { " · $it" } ?: "")
-                textSize = 12f; setTextColor(foreground()); maxLines = 2
-                setPadding(dp(8), 0, dp(8), dp(8))
-            })
-            entry.addView(details, LinearLayout.LayoutParams(0, -2, 1f))
-            entry.addView(button(if (recent.pinned) R.string.unpin else R.string.pin, if (recent.pinned) "★" else "☆") {
-                if (!repository.togglePin(recent.uri)) Toast.makeText(this, R.string.pin_limit, Toast.LENGTH_SHORT).show()
-                showHome()
-            }.apply { contentDescription = getString(if (recent.pinned) R.string.unpin_named else R.string.pin_named, recent.name) })
-            entry.addView(button(R.string.clear_history, "×") { repository.removeWithUndo(recent.uri); showHome() }.apply {
-                contentDescription = getString(R.string.remove_recent, recent.name)
-            })
-            body.addView(entry)
+        val recentList = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; id = R.id.recent_results }
+        val query = EditText(this).apply {
+            id = R.id.recent_query; hint = getString(R.string.recent_search); contentDescription = hint
+            isSingleLine = true; isSaveEnabled = false
+            filters = arrayOf(android.text.InputFilter.LengthFilter(256)); setText(session.recentQuery)
         }
+        val kinds = listOf<FileKind?>(null) + FileKind.entries
+        val format = Spinner(this).apply {
+            id = R.id.recent_format; contentDescription = getString(R.string.recent_format)
+            adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, kinds.map { if (it == null) getString(R.string.all_formats) else formatName(it) })
+            setSelection(kinds.indexOf(session.recentKind).coerceAtLeast(0))
+        }
+        fun filterRecents() {
+            recentList.removeAllViews()
+            val filtered = RecentFiltering.filter(recents, session.recentQuery, session.recentKind)
+            if (filtered.isEmpty() && recents.isNotEmpty()) recentList.addView(TextView(this).apply { setText(R.string.recent_no_matches) })
+            filtered.forEach { recent ->
+                val entry = row()
+                val details = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+                details.addView(Button(this).apply {
+                    text = recent.name; isAllCaps = false; gravity = Gravity.START or Gravity.CENTER_VERTICAL
+                    maxLines = 2; ellipsize = android.text.TextUtils.TruncateAt.END
+                    val value = android.util.TypedValue()
+                    theme.resolveAttribute(android.R.attr.selectableItemBackground, value, true)
+                    setBackgroundResource(value.resourceId)
+                    minimumHeight = dp(56)
+                    setOnClickListener { openDocument(Uri.parse(recent.uri)) }
+                }, LinearLayout.LayoutParams(-1, -2))
+                details.addView(TextView(this).apply {
+                    val uri = Uri.parse(recent.uri)
+                    val location = if (uri.scheme == "file") uri.path?.substringBeforeLast('/') else uri.authority
+                    text = android.text.format.DateUtils.getRelativeTimeSpanString(recent.openedAt).toString() +
+                        (location?.let { " · $it" } ?: "")
+                    textSize = 12f; setTextColor(foreground()); maxLines = 2
+                    setPadding(dp(8), 0, dp(8), dp(8))
+                })
+                entry.addView(details, LinearLayout.LayoutParams(0, -2, 1f))
+                entry.addView(button(if (recent.pinned) R.string.unpin else R.string.pin, if (recent.pinned) "★" else "☆") {
+                    if (!repository.togglePin(recent.uri)) Toast.makeText(this, R.string.pin_limit, Toast.LENGTH_SHORT).show()
+                    showHome()
+                }.apply { contentDescription = getString(if (recent.pinned) R.string.unpin_named else R.string.pin_named, recent.name) })
+                entry.addView(button(R.string.clear_history, "×") { repository.removeWithUndo(recent.uri); openDocuments.forgetClosed(recent.uri); showHome() }.apply {
+                    contentDescription = getString(R.string.remove_recent, recent.name)
+                })
+                recentList.addView(entry)
+            }
+        }
+        query.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { session.recentQuery = s.toString(); filterRecents() }
+            override fun afterTextChanged(s: Editable?) = Unit
+        })
+        format.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) { session.recentKind = kinds[position]; filterRecents() }
+        }
+        if (recents.isNotEmpty()) {
+            body.addView(query); body.addView(format)
+            body.addView(button(R.string.clear_filters) { session.recentKind = null; session.recentQuery = ""; query.setText(""); format.setSelection(0); filterRecents() })
+        }
+        body.addView(recentList); filterRecents()
         scroll.addView(body)
         content.addView(scroll)
     }
@@ -506,6 +544,10 @@ class MainActivity : ComponentActivity() {
                 item(R.string.open_file) { openPicker() }
                 val ready = document != null && webView?.tag == true
                 item(R.string.copy_all, ready) { copyAll() }
+                item(R.string.previous_position, ready && session.navigation.hasPrevious(documentKey())) { previousPosition() }
+                if (document?.source?.kind == FileKind.HTML) item(R.string.copy_markdown, ready && document?.convertedMarkdown != null) {
+                    document?.convertedMarkdown?.let { copyText(it, R.string.copy_markdown) }
+                }
                 item(if (currentUri == null && (session.original?.bytes ?: 0) < 100_000) R.string.share_text else R.string.share_file,
                     ready && !sharing) { shareDocument() }
                 item(R.string.open_with, ready && !sharing) { shareDocument(openWith = true) }
@@ -533,10 +575,11 @@ class MainActivity : ComponentActivity() {
                 item(R.string.clear_history) {
                     AlertDialog.Builder(this@MainActivity).setTitle(R.string.clear_history).setMessage(R.string.clear_history_message)
                         .setNegativeButton(R.string.cancel, null).setPositiveButton(R.string.done) { _, _ ->
-                            if (canInteract()) { repository.clear(); showHome() }
+                            if (canInteract()) { repository.clear(); openDocuments.clearClosed(); session.recentQuery = ""; session.recentKind = null; showHome() }
                         }.create().present()
                 }
             }
+            item(R.string.reopen_closed, openDocuments.hasClosed) { reopenClosed() }
             if (openDocuments.entries.isNotEmpty()) item(R.string.open_documents) { showDocuments() }
             item(R.string.bookmarks) { showBookmarks() }
             item(R.string.settings) { showSettings() }
@@ -549,15 +592,19 @@ class MainActivity : ComponentActivity() {
     private fun copyAll() {
         if (!canInteract() || webView?.tag != true) return
         val source = session.original ?: return
+        copyText(source.text, R.string.copy_all)
+    }
+
+    private fun copyText(text: String, label: Int) {
         // Bound the UTF-16 clipboard payload below Android's shared Binder transaction budget.
         // Never truncate: a rejected copy leaves the existing clipboard untouched.
-        if (source.text.length > 256 * 1024) {
-            AlertDialog.Builder(this).setTitle(R.string.copy_all).setMessage(R.string.copy_all_limit)
+        if (text.length > 256 * 1024) {
+            AlertDialog.Builder(this).setTitle(label).setMessage(if (label == R.string.copy_markdown) R.string.copy_markdown_limit else R.string.copy_all_limit)
                 .setPositiveButton(R.string.done, null).create().present()
             return
         }
         try {
-            val clip = ClipData.newPlainText(getString(R.string.app_name), source.text)
+            val clip = ClipData.newPlainText(getString(R.string.app_name), text)
             if (Build.VERSION.SDK_INT >= 33) clip.description.extras = android.os.PersistableBundle().apply {
                 putBoolean("android.content.extra.IS_SENSITIVE", true)
             }
@@ -657,13 +704,26 @@ class MainActivity : ComponentActivity() {
             }.setNegativeButton(R.string.cancel, null).create().present()
     }
 
-    private fun showSourceSearch() {
+    internal fun findSelectedText(selection: CharSequence?, expected: TextDocument? = document?.source) {
+        if (selection.isNullOrBlank() || selection.length > SourceSearch.MAX_QUERY) {
+            Toast.makeText(this, R.string.selection_limit, Toast.LENGTH_LONG).show(); return
+        }
+        val source = document
+        if (source == null || source.source !== expected || webView?.tag != true) {
+            Toast.makeText(this, R.string.selection_unavailable, Toast.LENGTH_LONG).show(); return
+        }
+        val selected = selection.toString()
+        root.post { if (canInteract() && document === source && webView?.tag == true) showSourceSearch(selected) }
+    }
+
+    private fun showSourceSearch(selected: String? = null) {
         val source = document?.source ?: return
         if (webView?.tag != true) return
         val entry = openDocuments.entries.find { it.key == (currentUri?.toString() ?: "shared-text") } ?: return
-        val initial = entry.sourceSearch.let { if (it.query.isEmpty()) it.copy(query = searchField.text.toString().take(SourceSearch.MAX_QUERY)) else it }
+        val initial = entry.sourceSearch.let { if (selected != null) it.copy(query = selected) else if (it.query.isEmpty()) it.copy(query = searchField.text.toString().take(SourceSearch.MAX_QUERY)) else it }
         val search = SourceSearchDialog(this, source.text, initial, { entry.sourceSearch = it }) { match ->
             if (canInteract() && document?.source === source) {
+                rememberPosition()
                 closeSearch()
                 mode = DisplayMode.PLAIN
                 sourceMatch = match
@@ -922,6 +982,7 @@ class MainActivity : ComponentActivity() {
                     openDocuments.opened(uri?.toString(), original)
                     if (evicted != null) Toast.makeText(this, getString(R.string.session_evicted, evicted.name), Toast.LENGTH_LONG).show()
                     updateDocumentsButton()
+                    session.navigation.bind(key, prepared.fingerprint)
                     document = prepared
                     mode = restoredMode?.takeIf { it in prepared.modes } ?: prepared.defaultMode
                     if (uri != null) {
@@ -959,6 +1020,7 @@ class MainActivity : ComponentActivity() {
         readingProgress.visibility = View.GONE
         titleView.text = getString(message)
         updateDocumentsButton()
+        updateScreenAwake()
         showLoadingControls(message)
     }
 
@@ -1117,7 +1179,25 @@ class MainActivity : ComponentActivity() {
         content.addView(body, FrameLayout.LayoutParams(-1, -1))
     }
 
-    private class ReaderWebView(context: android.content.Context) : WebView(context) {
+    private inner class ReaderWebView(context: android.content.Context) : WebView(context) {
+        override fun startActionMode(callback: android.view.ActionMode.Callback, type: Int): android.view.ActionMode? {
+            val wrapped = object : android.view.ActionMode.Callback2() {
+                override fun onCreateActionMode(mode: android.view.ActionMode, menu: android.view.Menu) = callback.onCreateActionMode(mode, menu)
+                override fun onPrepareActionMode(mode: android.view.ActionMode, menu: android.view.Menu) = callback.onPrepareActionMode(mode, menu)
+                override fun onActionItemClicked(mode: android.view.ActionMode, item: android.view.MenuItem): Boolean {
+                    if (item.intent?.component?.className == SelectionSearchActivity::class.java.name) {
+                        SelectionSearchActivity.reader = java.lang.ref.WeakReference(this@MainActivity)
+                        SelectionSearchActivity.source = java.lang.ref.WeakReference(document?.source)
+                    }
+                    return callback.onActionItemClicked(mode, item)
+                }
+                override fun onDestroyActionMode(mode: android.view.ActionMode) = callback.onDestroyActionMode(mode)
+                override fun onGetContentRect(mode: android.view.ActionMode, view: View, rect: android.graphics.Rect) {
+                    if (callback is android.view.ActionMode.Callback2) callback.onGetContentRect(mode, view, rect) else super.onGetContentRect(mode, view, rect)
+                }
+            }
+            return super.startActionMode(wrapped, type)
+        }
         var documentUrl = DOCUMENT_URL
         var afterNextDraw: (() -> Unit)? = null
         var onViewportDraw: (() -> Unit)? = null
@@ -1165,7 +1245,11 @@ class MainActivity : ComponentActivity() {
         setOnScrollChangeListener { _, _, _, _, _ -> updateProgress() }
         addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> updateProgress() }
         setFindListener { active, total, done ->
-            if (done) {
+            if (done && current() && tag == true) {
+                restoreSearchScroll?.let { position ->
+                    restoreSearchScroll = null
+                    postOnAnimation { if (current()) scrollTo(0, position) }
+                }
                 searchCount.text = if (searchField.text.isEmpty()) "" else if (total == 0) getString(R.string.no_matches) else getString(R.string.matches, active + 1, total)
                 searchCount.contentDescription = if (searchField.text.isEmpty()) "" else if (total == 0) getString(R.string.no_matches) else getString(R.string.matches_spoken, active + 1, total)
             }
@@ -1227,6 +1311,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                         pendingScroll = view.scrollY
                                         view.tag = true
+                                        updateScreenAwake()
                                         updateProgress()
                                         modeButton.isEnabled = (document?.modes?.size ?: 0) > 1
                                         findButton.isEnabled = true
@@ -1327,6 +1412,7 @@ class MainActivity : ComponentActivity() {
                 .apply { isSelected = active }, LinearLayout.LayoutParams(0, -2, 1f))
             entryRow.addView(button(R.string.close_document, "×") {
                 if (active) showHome()
+                session.navigation.clear(entry.key)
                 openDocuments.close(entry.key)
                 updateDocumentsButton()
             }.apply { contentDescription = getString(R.string.close_named, entry.name) }, LinearLayout.LayoutParams(dp(48), -2))
@@ -1374,6 +1460,7 @@ class MainActivity : ComponentActivity() {
             row.addView(button(R.string.close_document, "×") {
                 dialog.dismiss()
                 if (entry.key == (currentUri?.toString() ?: if (document != null) "shared-text" else null)) showHome()
+                session.navigation.clear(entry.key)
                 openDocuments.close(entry.key)
                 updateDocumentsButton()
                 if (openDocuments.entries.isNotEmpty()) showDocuments()
@@ -1567,7 +1654,7 @@ class MainActivity : ComponentActivity() {
             val line = field.text.toString().toIntOrNull()
             if (line == null || line !in 1..total) field.error = getString(R.string.line_range, total)
             else {
-                dialog.dismiss(); closeSearch(); sourceMatch = null; targetLine = line; anchor = "line-$line"; render()
+                rememberPosition(); dialog.dismiss(); closeSearch(); sourceMatch = null; targetLine = line; anchor = "line-$line"; render()
             }
         }
     }
@@ -1577,6 +1664,7 @@ class MainActivity : ComponentActivity() {
         if (prepared.structure == null || webView?.tag != true) return
         val dialog = StructureDialog(this, prepared, restored, dark) { node ->
             if (canInteract() && document === prepared) {
+                rememberPosition()
                 closeSearch()
                 mode = DisplayMode.PLAIN
                 // Jump to the original line; huge container values are never duplicated into a highlight.
@@ -1602,7 +1690,7 @@ class MainActivity : ComponentActivity() {
         }
         AlertDialog.Builder(this).setTitle(R.string.outline)
             .setAdapter(adapter) { _, index ->
-                if (canInteract()) { closeSearch(); (webView as? ReaderWebView)?.let { it.loadUrl("${it.documentUrl}#${headings[index].id}") } }
+                if (canInteract()) { rememberPosition(); closeSearch(); (webView as? ReaderWebView)?.let { it.loadUrl("${it.documentUrl}#${headings[index].id}") } }
             }.create().present()
     }
 
@@ -1653,6 +1741,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun closeSearch() {
+        restoreSearchScroll = null
         searchRow.visibility = View.GONE
         searchField.setText("")
         searchField.clearFocus()
@@ -1737,6 +1826,10 @@ class MainActivity : ComponentActivity() {
         }.apply { id = R.id.reset_document_reading })
         val numbers = CheckBox(this).apply { text = getString(R.string.line_numbers); isChecked = lineNumbers; minimumHeight = dp(48) }
         body.addView(numbers)
+        val awake = CheckBox(this).apply { id = R.id.keep_awake; setText(R.string.keep_awake); isChecked = preferences.getBoolean("keepAwake", false) }
+        body.addView(awake)
+        body.addView(TextView(this).apply { setText(R.string.keep_awake_help) })
+        body.addView(button(R.string.forget_save_location) { SaveLocation(this).clear(); Toast.makeText(this, R.string.save_location_forgotten, Toast.LENGTH_SHORT).show() })
         body.addView(TextView(this).apply { text = getString(R.string.theme) })
         val themeValues = listOf("system", "light", "dark")
         val themes = Spinner(this).apply {
@@ -1768,7 +1861,7 @@ class MainActivity : ComponentActivity() {
                 lineNumbers = numbers.isChecked
                 if (lineNumbers && (document?.source?.text?.let(DocumentRenderer::logicalLines) ?: 0) > DocumentRenderer.MAX_NUMBERED_LINES)
                     Toast.makeText(this, R.string.line_number_limit, Toast.LENGTH_LONG).show()
-                preferences.edit().putBoolean("fileSidebar", sidebar.isChecked).putBoolean("lineNumbers", lineNumbers).putString("theme", theme).apply()
+                preferences.edit().putBoolean("keepAwake", awake.isChecked).putBoolean("fileSidebar", sidebar.isChecked).putBoolean("lineNumbers", lineNumbers).putString("theme", theme).apply()
                 rememberReading()
                 if (themeChanged) recreate() else {
                     updateDocumentsButton()
@@ -1836,6 +1929,40 @@ class MainActivity : ComponentActivity() {
         rememberReading()
         super.onStop()
     }
+
+    private fun documentKey() = currentUri?.toString() ?: "shared-text"
+    private fun rememberPosition() {
+        if (document == null || webView?.tag != true) return
+        session.navigation.push(documentKey(), NavigationPosition(mode, readerPosition(), searchField.text.toString().take(SourceSearch.MAX_QUERY),
+            searchRow.visibility == View.VISIBLE, openDocuments.entries.find { it.key == documentKey() }?.sourceSearch ?: SourceSearchOptions()))
+    }
+    private fun findNext(forward: Boolean) { rememberPosition(); webView?.findNext(forward) }
+    private fun previousPosition() {
+        val prepared = document ?: return
+        val position = session.navigation.pop(documentKey()) ?: return
+        mode = position.mode.takeIf { it in prepared.modes } ?: prepared.defaultMode
+        anchor = null; sourceMatch = null; targetLine = 0
+        pendingScroll = position.scroll
+        searchField.clearFocus()
+        searchField.setText(position.query)
+        searchRow.visibility = if (position.searching) View.VISIBLE else View.GONE
+        openDocuments.entries.find { it.key == documentKey() }?.sourceSearch = position.sourceSearch
+        restoreSearchScroll = if (position.searching) position.scroll else null
+        // Do not sample the outgoing WebView when rendering the restored location.
+        webView?.tag = false
+        render()
+    }
+    private fun reopenClosed() {
+        val entry = openDocuments.reopen() ?: return
+        switchDocument(entry)
+    }
+    private fun updateScreenAwake() {
+        val flag = android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+        if (resumed && document != null && webView?.tag == true && !homeShown && preferences.getBoolean("keepAwake", false)) window.addFlags(flag)
+        else window.clearFlags(flag)
+    }
+    override fun onResume() { super.onResume(); resumed = true; updateScreenAwake() }
+    override fun onPause() { resumed = false; updateScreenAwake(); super.onPause() }
 
     // An unfinished WebView reports transient zero coordinates during recreation.
     private fun readerPosition() = webView?.takeIf { it.tag == true }?.scrollY ?: pendingScroll

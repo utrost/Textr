@@ -27,6 +27,9 @@ class EditorActivity : ReadingScreen() {
     private lateinit var discard: Button
     private lateinit var find: Button
     private lateinit var resume: Button
+    private lateinit var preview: Button
+    private var draftPreview: DraftPreview? = null
+    private var destroying = false
     private lateinit var retryRecovery: Button
     private var replacing = false
     private var exitAfterSave = false
@@ -67,12 +70,13 @@ class EditorActivity : ReadingScreen() {
         undo = button(R.string.editor_undo) { model.buffer?.undo(); renderBuffer(); model.changed() }.apply { id = R.id.editor_undo }
         redo = button(R.string.editor_redo) { model.buffer?.redo(); renderBuffer(); model.changed() }.apply { id = R.id.editor_redo }
         find = button(R.string.editor_find) { showFind() }.apply { id = R.id.editor_find }
+        preview = button(R.string.draft_preview) { showPreview() }.apply { id = R.id.preview_draft }
         save = button(R.string.save_copy) { saveCopy() }.apply { id = R.id.editor_save }
         discard = button(R.string.editor_discard) {
             present(AlertDialog.Builder(this).setTitle(R.string.editor_discard).setMessage(R.string.editor_discard_help)
                 .setNegativeButton(R.string.cancel, null).setPositiveButton(R.string.editor_discard) { _, _ -> model.discard { if (it) finish() } }.create())
         }.apply { id = R.id.editor_discard }
-        for (button in listOf(undo, redo, find, save, discard)) tools.addView(button, LinearLayout.LayoutParams(-2, -2))
+        for (button in listOf(undo, redo, find, preview, save, discard)) tools.addView(button, LinearLayout.LayoutParams(-2, -2))
         body.addView(HorizontalScrollView(this).apply { addView(tools) }, LinearLayout.LayoutParams(-1, -2))
         status = TextView(this).apply { id = R.id.editor_status; textSize = 13f; accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE; setPadding(0, dp(6), 0, dp(6)) }
         body.addView(status)
@@ -131,13 +135,17 @@ class EditorActivity : ReadingScreen() {
         val selection = pendingSelection ?: buffer.selection
         editor.setSelection(selection.start.coerceIn(0, buffer.text.length), selection.end.coerceIn(0, buffer.text.length))
         buffer.select(selection); pendingSelection = null; replacing = false
+        editor.post { editor.scrollTo(0, model.editorScroll) }
     }
     private fun refresh() {
         if (isDestroyed || isFinishing) return
         val buffer = model.buffer; val draft = model.draft
+        draftPreview?.checkCurrent()
         if (buffer != null && editor.text.toString() != buffer.text) renderBuffer()
         val enabled = buffer != null && !model.loading && !outputs.busy
         editor.isEnabled = enabled; save.isEnabled = enabled; find.isEnabled = enabled; discard.isEnabled = enabled || (model.unavailable && model.recoveryFailed && !model.loading && !outputs.busy)
+        preview.visibility = if (draft?.name?.let { TextDocuments.kind(it, null) } == FileKind.MARKDOWN) View.VISIBLE else View.GONE
+        preview.isEnabled = enabled
         undo.isEnabled = enabled && buffer?.canUndo == true; redo.isEnabled = enabled && buffer?.canRedo == true
         retryRecovery.visibility = if (model.recoveryFailed) View.VISIBLE else View.GONE
         retryRecovery.isEnabled = !model.loading && !outputs.busy
@@ -153,8 +161,9 @@ class EditorActivity : ReadingScreen() {
             else -> getString(R.string.editor_loading)
         }
         status.text = message
+        if (model.previewOpen && draftPreview == null && enabled && !destroying) showPreview()
         handleOutput(outputs.status)
-        if (buffer != null && model.findState.open && dialog == null && !outputs.busy && !model.loading) showFind()
+        if (buffer != null && model.findState.open && draftPreview == null && dialog == null && !outputs.busy && !model.loading) showFind()
     }
     private fun present(value: AlertDialog, dismissed: () -> Unit = {}) {
         dialog?.dismiss(); dialog = value
@@ -162,6 +171,21 @@ class EditorActivity : ReadingScreen() {
         value.show()
         for (which in listOf(AlertDialog.BUTTON_POSITIVE, AlertDialog.BUTTON_NEGATIVE, AlertDialog.BUTTON_NEUTRAL)) value.getButton(which)?.isAllCaps = false
     }
+    private fun showPreview() {
+        val buffer = model.buffer ?: return
+        if (model.loading || outputs.busy || draftPreview != null) return
+        if (model.draft?.name?.let { TextDocuments.kind(it, null) } != FileKind.MARKDOWN) return
+        buffer.select(EditSelection(editor.selectionStart.coerceAtLeast(0), editor.selectionEnd.coerceAtLeast(0)))
+        if (!model.previewOpen) model.editorScroll = editor.scrollY
+        val revision = buffer.revision
+        model.previewOpen = true
+        draftPreview = DraftPreview(this, buffer.text, dark, model.previewScroll,
+            { model.buffer === buffer && buffer.revision == revision }) { scroll ->
+            model.previewScroll = scroll; draftPreview = null
+            if (!destroying) model.previewOpen = false
+        }.also { it.dialog.show() }
+    }
+
     private fun saveCopy() {
         val draft = model.draft ?: return
         if (model.buffer == null || model.loading || outputs.busy) return
@@ -314,7 +338,7 @@ class EditorActivity : ReadingScreen() {
     }
     @android.annotation.SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.action == KeyEvent.ACTION_DOWN && event.isCtrlPressed && dialog == null && !outputs.busy && !model.loading) {
+        if (event.action == KeyEvent.ACTION_DOWN && event.isCtrlPressed && draftPreview == null && dialog == null && !outputs.busy && !model.loading) {
             val action = when (event.keyCode) {
                 KeyEvent.KEYCODE_Z -> if (event.isShiftPressed) redo else undo
                 KeyEvent.KEYCODE_Y -> redo
@@ -327,11 +351,11 @@ class EditorActivity : ReadingScreen() {
         return super.dispatchKeyEvent(event)
     }
     override fun onStart() { super.onStart(); model.listener = ::refresh; outputs.listener = { refresh() }; refresh() }
-    override fun onStop() { model.saveSelection(EditSelection(editor.selectionStart.coerceAtLeast(0), editor.selectionEnd.coerceAtLeast(0))); model.listener = null; outputs.listener = null; super.onStop() }
+    override fun onStop() { model.editorScroll = editor.scrollY; model.saveSelection(EditSelection(editor.selectionStart.coerceAtLeast(0), editor.selectionEnd.coerceAtLeast(0))); model.listener = null; outputs.listener = null; super.onStop() }
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putBoolean("exitAfterSave", exitAfterSave); outState.putInt("selectionStart", editor.selectionStart.coerceAtLeast(0)); outState.putInt("selectionEnd", editor.selectionEnd.coerceAtLeast(0))
         if (outputs.status.phase == OutputPhase.PICKING) { outState.putBoolean("outputPending", true); outState.putString("outputName", outputs.status.name); outState.putString("outputSource", outputs.pendingSource()) }
         super.onSaveInstanceState(outState)
     }
-    override fun onDestroy() { confirmation?.dismiss(); dialog?.dismiss(); outputDialog?.dismiss(); super.onDestroy() }
+    override fun onDestroy() { destroying = true; draftPreview?.dismiss(); confirmation?.dismiss(); dialog?.dismiss(); outputDialog?.dismiss(); super.onDestroy() }
 }

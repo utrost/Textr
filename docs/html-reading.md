@@ -1,5 +1,7 @@
 # HTML Markdown reading view
 
+The quality-of-life review branch adds [everyday reading conveniences](quality-of-life.md), including draft preview, navigation/closed history, selection search and save-location hints. These additions are not in 0.3-alpha.
+
 The implementation for [#68](https://github.com/utrost/Textr/issues/68) and [#69](https://github.com/utrost/Textr/issues/69) adds an offline reading view for saved HTML. It is included in 0.2-alpha; the immutable 0.1-alpha APK predates this feature.
 
 ## Open and read

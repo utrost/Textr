@@ -320,4 +320,26 @@ Document switching follows alphabetical filename order. Shortcuts leave text fie
     <string name="copy_all">Copy all</string>
     <string name="copy_all_limit">This document is too large to copy all at once (limit: 256 Ki characters). Use Share file or select a smaller part. Nothing was copied.</string>
     <string name="copy_all_failed">Could not copy the document. Try again or use Share file.</string>
+    <string name="previous_position">Previous reading position</string>
+    <string name="copy_markdown">Copy Markdown</string>
+    <string name="copy_markdown_limit">The converted Markdown is too large for the clipboard. Use Save Markdown as instead. Nothing was copied.</string>
+    <string name="reopen_closed">Reopen closed document</string>
+    <string name="recent_search">Search recent filenames</string>
+    <string name="recent_format">Filter recent files by format</string>
+    <string name="all_formats">All formats</string>
+    <string name="recent_no_matches">No recent files match these filters.</string>
+    <string name="clear_filters">Clear filters</string>
+    <string name="keep_awake">Keep screen awake while reading</string>
+    <string name="keep_awake_help">Only while a document is ready and Textr is in the foreground. Uses more battery.</string>
+    <string name="forget_save_location">Forget last save location</string>
+    <string name="save_location_forgotten">Last save location forgotten</string>
+    <string name="draft_preview">Preview Markdown draft</string>
+    <string name="preview_loading">Preparing unsaved draft preview…</string>
+    <string name="preview_back">Back to editing</string>
+    <string name="preview_unsaved">Unsaved draft preview — nothing has been saved.</string>
+    <string name="preview_stale">The draft changed. Return to editing and reopen the preview.</string>
+    <string name="draft_preview_unavailable">Preview unavailable or rendering limit reached. Your draft is unchanged; return to editing.</string>
+    <string name="find_selected">Find selected text</string>
+    <string name="selection_limit">Select nonblank text up to 1,000 characters. The previous search is unchanged.</string>
+    <string name="selection_unavailable">Open a document in Textr to search selected text.</string>
 </resources>

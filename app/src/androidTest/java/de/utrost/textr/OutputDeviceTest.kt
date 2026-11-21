@@ -31,6 +31,32 @@ class OutputDeviceTest {
     }
     @Before fun reset() { context.getSharedPreferences("output_operation", 0).edit().clear().commit(); fixture("reset", "root") }
     @After fun cleanup() { instrumentation.runOnMainSync { models.forEach { it.clear() } }; fixture("reset", "root"); context.getSharedPreferences("output_operation", 0).edit().clear().commit() }
+    @Test fun saveLocationChangesOnlyAfterSuccessfulOutputAndCanBeForgotten() {
+        val location = SaveLocation(context)
+        location.clear()
+        val session = model()
+        val request = OutputRequest("copy.md", "text/markdown", "# saved", null)
+        fun hint(intent: Intent): Uri? = intent.getParcelableExtra(DocumentsContract.EXTRA_INITIAL_URI)
+        instrumentation.runOnMainSync {
+            assertNull(hint(session.begin(request))); session.pickerResult(null)
+        }
+        fixture("configure", "location.md")
+        instrumentation.runOnMainSync { session.begin(request); session.pickerResult(uri("location.md")) }
+        await { session.status.phase == OutputPhase.COMPLETE }
+        assertEquals(OutputResult.SAVED, session.status.result)
+        instrumentation.runOnMainSync {
+            session.acknowledge()
+            assertEquals(uri("location.md"), hint(session.begin(request))); session.pickerResult(null)
+        }
+        fixture("configure", "denied-location.md", "denied")
+        instrumentation.runOnMainSync { session.begin(request); session.pickerResult(uri("denied-location.md")) }
+        await { session.status.phase == OutputPhase.COMPLETE }
+        assertEquals(OutputResult.FAILED, session.status.result)
+        assertEquals(uri("location.md"), hint(SaveLocation(context).apply(Intent())))
+        location.clear(); assertNull(hint(location.apply(Intent())))
+        assertFalse(context.contentResolver.persistedUriPermissions.any { it.uri == uri("location.md") && it.isWritePermission })
+    }
+
     @Test fun successfulSaveReopensWithBomAndDoesNotWriteOrDeleteTheSource() {
         val source = "original\r\n🚀".toByteArray()
         fixture("configure", "source", bytes = source); fixture("configure", "copy.md")
