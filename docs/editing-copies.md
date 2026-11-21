@@ -30,7 +30,7 @@ Verify edit/undo/redo, selection, dirty navigation, unchanged original bytes, sa
 
 **Go to line** moves only the caret, counts CR/LF/CRLF consistently and validates the requested logical line. A trailing terminator creates an empty last editor line. **Indent** adds two ASCII spaces to each selected line; **Unindent** removes one leading tab or up to two spaces. A selection ending exactly at the next line start excludes that line. Reverse selections, original endings and a single undo step are preserved; edits exceeding the existing budget are refused atomically.
 
-Keyboard shortcuts: Ctrl+Alt+G (Go to line), Ctrl+Alt+] (Indent), Ctrl+Alt+[ (Unindent), Ctrl+Alt+D (Compare original). **Compare original** reviews a captured draft without saving or changing undo history; see [comparison](comparison.md).
+The editor toolbar scrolls horizontally to reach its additional actions. Keyboard shortcuts: Ctrl+Alt+G (Go to line), Ctrl+Alt+] (Indent), Ctrl+Alt+[ (Unindent), Ctrl+Alt+D (Compare original). **Compare original** reviews a captured draft without saving or changing undo history; see [comparison](comparison.md).
 
 After a matching save succeeds, **Open saved copy** opens the destination in the ordinary reader. It survives activity recreation and retains available read permission only after a successful read. A write-only provider can save successfully but refuse opening; the reader then explains access recovery. The original reference is never substituted for the saved destination.
 

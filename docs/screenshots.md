@@ -1,6 +1,6 @@
 # Screenshots
 
-Baseline set refreshed 20 November 2026 from the 0.2-alpha source (`e4d3ce7`), using its debug build and test fixture provider. Captured on an Android 16/API 36 emulator with WebView 133.0.6943.137, using synthetic documents only. Phone captures use 1080×1920 at 420 dpi; the wide capture uses 1600×1200 at 240 dpi. System font scale is 1.0. These are emulator screenshots, not photographs or physical Magic V6 validation. Pixels are not retouched; Android’s demo clock is used where supported.
+Refreshed 21 November 2026 from the 0.5-alpha app source (`a410407`, application tree unchanged from `d9a3e42`), using its debug build and test fixture provider. Captured on an Android 16/API 36 emulator with WebView 133.0.6943.137, using synthetic documents only. Phone captures use 1080×1920 at 420 dpi; the wide capture uses 1600×1200 at 240 dpi. System font scale is 1.0. These are emulator screenshots, not photographs or physical Magic V6 validation. Pixels are not retouched; Android’s demo clock is used where supported.
 
 | Home | Markdown | Source |
 | --- | --- | --- |
@@ -33,7 +33,7 @@ python3 scripts/capture-screenshots.py --serial EMULATOR_SERIAL --reset-app-data
 
 The explicit flag acknowledges that the script clears **Textr’s emulator app data**, sets demo display/language/theme state and installs synthetic reading preferences. It requires no release signing key and publishes nothing. Do not run it on a personal device or concurrently with instrumentation. The script restores default display size/density, app-language selection and font scale, but leaves development preferences and animations configured for capture; use a disposable emulator.
 
-The older images elsewhere in this directory remain historical documentation of earlier iterations. The `reading-*` images above are the current 0.2-alpha documentation set, including HTML reading, JSON navigation, copy editing and wide comparison. [Store artwork](store/) derives from the existing vector launcher icon and includes editable SVG sources.
+The older images elsewhere in this directory remain historical documentation of earlier iterations. The `reading-*` images above are the current 0.5-alpha documentation set, including HTML reading, JSON navigation, copy editing and wide comparison. [Store artwork](store/) derives from the existing vector launcher icon and includes editable SVG sources.
 
 ## Roadmap completion captures
 
@@ -43,7 +43,7 @@ Captured 21 November 2026 from the 0.5-alpha implementation branch on the dispos
 | --- | --- | --- |
 | ![Named collection with separate reference actions and visible Done](images/roadmap-collections.png) | ![Every JSONL line, including blank and invalid records](images/roadmap-json-lines.png) | ![Dark Markdown tasks with checked and unchecked text labels at 200%](images/roadmap-tasks-dark-large.png) |
 
-Reproduce with `RoadmapCompletionDeviceTest` on a disposable emulator. It writes `roadmap-*.png` to the target app cache using UiDevice screenshots; extract with `adb exec-out run-as de.utrost.textr cat cache/NAME.png > NAME.png`. Do not run concurrently with other instrumentation. The existing comparison image above remains the earlier side-by-side mode; the current filter/export controls are shown below.
+Reproduce with `RoadmapCompletionDeviceTest` on a disposable emulator. It writes `roadmap-*.png` to the target app cache using UiDevice screenshots; extract with `adb exec-out run-as de.utrost.textr cat cache/NAME.png > NAME.png`. Do not run concurrently with other instrumentation. The comparison image above shows the current side-by-side mode; unified filter/export controls are shown below.
 
 ![Exact comparison with independent display filters and explicit patch export](images/roadmap-comparison.png)
 
