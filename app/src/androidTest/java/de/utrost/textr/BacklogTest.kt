@@ -319,7 +319,21 @@ class BacklogTest {
         item!!.click(); device.waitForIdle()
     }
     private fun click(label: String) = click(By.text(java.util.regex.Pattern.compile(java.util.regex.Pattern.quote(label), 2)))
-    private fun click(selector: BySelector) { val item = device.wait(Until.findObject(selector), 5000); assertNotNull("Missing $selector", item); item!!.click(); device.waitForIdle() }
+    private fun click(selector: BySelector) {
+        // Activity transitions can replace a node between lookup and click.
+        // Retry only stale references; missing controls and behavior failures still fail.
+        for (attempt in 0..2) {
+            val item = device.wait(Until.findObject(selector), 5000)
+            assertNotNull("Missing $selector", item)
+            try {
+                item!!.click()
+                device.waitForIdle()
+                return
+            } catch (stale: androidx.test.uiautomator.StaleObjectException) {
+                if (attempt == 2) throw stale
+            }
+        }
+    }
     private fun clickSelection(label: String) {
         val selector = By.text(java.util.regex.Pattern.compile(label, 2))
         if (!device.wait(Until.hasObject(selector), 2000)) {
