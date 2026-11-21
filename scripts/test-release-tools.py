@@ -86,6 +86,32 @@ class ReleaseGuards(unittest.TestCase):
         with patch.object(release, 'run', side_effect=ci), self.assertRaisesRegex(ValueError, 'exact requested'):
             release.prepare(self.args)
 
+    def test_unrelated_successful_workflow_cannot_authorize_packaging(self):
+        self.args.dry_run = False
+        self.args.signing_properties = '/not/read'
+        self.args.expected_certificate = 'a' * 64
+        self.args.output = '/not/written'
+        original = release.run
+        def ci(args, **kwargs):
+            return json.dumps({'head_sha': self.sha, 'conclusion': 'success', 'status': 'completed', 'path': '.github/workflows/unrelated.yml'}) if args[0] == 'gh' else original(args, **kwargs)
+        with patch.object(release, 'run', side_effect=ci), self.assertRaisesRegex(ValueError, 'Android workflow'):
+            release.prepare(self.args)
+
+    def test_skipped_or_missing_android_matrix_cannot_authorize_packaging(self):
+        self.args.dry_run = False
+        self.args.signing_properties = '/not/read'
+        self.args.expected_certificate = 'a' * 64
+        self.args.output = '/not/written'
+        original = release.run
+        def ci(args, **kwargs):
+            if args[0] != 'gh':
+                return original(args, **kwargs)
+            if str(args[2]).endswith('/jobs'):
+                return 'Build, unit tests, and lint\tsuccess\nAndroid API 29\tsuccess\nAndroid API 36\tskipped\n'
+            return json.dumps({'head_sha': self.sha, 'conclusion': 'success', 'status': 'completed', 'path': '.github/workflows/ci.yml'})
+        with patch.object(release, 'run', side_effect=ci), self.assertRaisesRegex(ValueError, 'both Android matrix'):
+            release.prepare(self.args)
+
     def test_remote_lightweight_and_annotated_tags_must_match_source(self):
         tag = 'v0.5-alpha'
         for output in ['', self.sha + '\trefs/tags/' + tag + '\n', 'a' * 40 + '\trefs/tags/' + tag + '\n' + self.sha + '\trefs/tags/' + tag + '^{}\n']:

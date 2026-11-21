@@ -162,8 +162,13 @@ def prepare(args):
     if not re.fullmatch(r'[a-fA-F0-9]{64}', args.expected_certificate):
         raise ValueError('Expected certificate must be a SHA-256 fingerprint without colons')
     ci = json.loads(run(['gh', 'api', f'repos/utrost/Textr/actions/runs/{args.ci_run}']))
-    if ci['head_sha'] != commit or ci['conclusion'] != 'success':
-        raise ValueError('CI must have passed on the exact requested source commit')
+    if ci['head_sha'] != commit or ci['conclusion'] != 'success' or ci.get('status') != 'completed' or ci.get('path') != '.github/workflows/ci.yml':
+        raise ValueError('CI must have passed the Android workflow on the exact requested source commit')
+    jobs = dict(line.rsplit('\t', 1) for line in run(['gh', 'api', '--paginate', f'repos/utrost/Textr/actions/runs/{args.ci_run}/jobs',
+                '--jq', '.jobs[] | [.name, .conclusion] | @tsv']).splitlines())
+    required_jobs = {'Build, unit tests, and lint', 'Android API 29', 'Android API 36'}
+    if any(jobs.get(name) != 'success' for name in required_jobs):
+        raise ValueError('Required build/unit/lint and both Android matrix jobs must pass; skipped jobs are insufficient')
     remote_tag_matches(tag, commit)
     plan['ciRun'] = ci['html_url']
     signing = Path(args.signing_properties).resolve()
