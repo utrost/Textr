@@ -47,6 +47,8 @@ jobs:
           python3 -c "from pathlib import Path; assert 'Release signing requires TEXTR_SIGNING_PROPERTIES' in Path('owner-signing-check.log').read_text()"
           env -u TEXTR_SIGNING_PROPERTIES ./gradlew :app:assembleRelease -PtextrUnsignedRelease=true
           python3 scripts/verify-unsigned-apk.py
+      - name: Compile standalone WebView bridge probe
+        run: ./gradlew --project-dir tools/webview-probe :app:assembleDebug :app:assembleDebugAndroidTest
       - name: Retain test and lint reports
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

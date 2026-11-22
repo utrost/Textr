@@ -2,7 +2,7 @@
 
 The maintainer selected **standard F-Droid signing** on 21 November 2026. F-Droid builds the app from source and signs its distributed APK with F-Droid’s key. Textr supplies no production key, `Binaries` entry or developer-signature reproducibility promise. F-Droid builds cannot update the development-signed private alphas in place. Switching channel requires uninstalling/reinstalling; this removes Textr’s local settings, references and private edit recovery. Save needed drafts first; original/provider files remain with their provider.
 
-The proposed recipe is [de.utrost.textr.yml](de.utrost.textr.yml). It targets version code 5 / 0.5-alpha and tag `v0.5-alpha`; do not submit it until that tag exists at the tested source. `AutoUpdateMode` and `UpdateCheckMode` are intentionally disabled for initial review. Runtime/build dependencies and licenses are documented in [Attributions.txt](../../app/src/main/assets/licenses/Attributions.txt). There are no proprietary SDKs, network permission or required external service accounts.
+The proposed recipe is [de.utrost.textr.yml](de.utrost.textr.yml). It targets version code 5 / 0.5-alpha and the public immutable tag `v0.5-alpha` (`bedea968d6c8f641489813ee9e64c16986b4b5f0`). Recipe lint, a clean tagged-source fdroidserver build/source/binary scan and unsigned APK inspection pass; see the [validation record](../validation-roadmap-completion.md). External submission remains #66. `AutoUpdateMode` and `UpdateCheckMode` are intentionally disabled for initial review. Runtime/build dependencies and licenses are documented in [Attributions.txt](../../app/src/main/assets/licenses/Attributions.txt). There are no proprietary SDKs, network permission or required external service accounts.
 
 ## Secret-free release build
 

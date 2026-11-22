@@ -1,10 +1,10 @@
 # Feature roadmap and implementation backlog
 
-Updated 21 November 2026. The five 0.2-alpha epics and 19 implementation issues are complete. Their rationale and original sequence are retained in the [completed design record](feature-roadmap-0.2.md). This document records the current batch and its acceptance; the reliability implementation is merged through PR #117 and included in 0.3-alpha; none of this batch is included in 0.2-alpha.
+Updated 22 November 2026. The five 0.2-alpha epics and 19 implementation issues are complete. Their rationale and original sequence are retained in the [completed design record](feature-roadmap-0.2.md). This document records the current batch and its acceptance; the reliability implementation is merged through PR #117 and included in 0.3-alpha; none of this batch is included in 0.2-alpha.
 
 ## Next roadmap — reliable daily use
 
-The next roadmap adds **six epics and 13 implementation issues**. These are follow-ups, separate from the five completed 0.2-alpha epics; the reliability implementation is merged through PR #117 and included in 0.3-alpha and #101/#109 are merged in [quality-of-life PR #126](https://github.com/utrost/Textr/pull/126). The ten remaining feature/automation implementations are delivered in [PR #127](https://github.com/utrost/Textr/pull/127); see its checks and the current validation record. No date or version is promised. Existing reliability, private-beta and distribution issues remain open and are linked from the new epics rather than duplicated.
+The next roadmap adds **six epics and 13 implementation issues**. These are follow-ups, separate from the five completed 0.2-alpha epics; the reliability implementation is merged through PR #117 and included in 0.3-alpha and #101/#109 are merged in [quality-of-life PR #126](https://github.com/utrost/Textr/pull/126). The ten remaining feature/automation implementations are delivered in [PR #127](https://github.com/utrost/Textr/pull/127) and private 0.5-alpha; see its exact-source checks and the current validation record. No date or version is promised. Existing reliability, private-beta and distribution issues remain open and are linked from the new epics rather than duplicated.
 
 | Order | Epic | New implementation issues | State |
 | --- | --- | --- | --- |
