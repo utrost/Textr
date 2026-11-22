@@ -1927,7 +1927,7 @@ class MainActivity : ComponentActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         // Framework/view callbacks can change the old WebView while super saves it.
         // Capture once beforehand for both reading metadata and activity recovery.
-        val savedScroll = pausedReadingPosition?.takeIf { it.first == generation }?.second ?: readerPosition()
+        val savedScroll = checkpointPosition()
         rememberReading(savedScroll)
         super.onSaveInstanceState(outState)
         outState.putBoolean("outputPending", outputs.status.phase == OutputPhase.PICKING)
@@ -1956,7 +1956,9 @@ class MainActivity : ComponentActivity() {
         outState.putBundle("structure", structureDialog?.takeIf { it.isShowing }?.readingState() ?: pendingStructure)
     }
 
-    private fun rememberReading(position: Int = readerPosition()) {
+    private fun checkpointPosition() = pausedReadingPosition?.takeIf { it.first == generation }?.second ?: readerPosition()
+
+    private fun rememberReading(position: Int = checkpointPosition()) {
         val view = webView ?: return
         if (document != null && view.tag == true) {
             val reading = ReadingState(mode, position.coerceAtLeast(0), formatOverride, encodingOverride, csvOptions, readingProfile)

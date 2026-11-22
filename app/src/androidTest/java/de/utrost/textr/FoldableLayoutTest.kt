@@ -160,6 +160,7 @@ class FoldableLayoutTest {
         val app = context.applicationContext as android.app.Application
         var target: MainActivity? = null
         var injected = false
+        var stoppedPosition = -1
         val callbacks = object : android.app.Application.ActivityLifecycleCallbacks {
             override fun onActivityPaused(activity: android.app.Activity) {
                 if (activity === target && !injected) {
@@ -170,7 +171,9 @@ class FoldableLayoutTest {
             override fun onActivityCreated(activity: android.app.Activity, state: Bundle?) {}
             override fun onActivityStarted(activity: android.app.Activity) {}
             override fun onActivityResumed(activity: android.app.Activity) {}
-            override fun onActivityStopped(activity: android.app.Activity) {}
+            override fun onActivityStopped(activity: android.app.Activity) {
+                if (activity === target) stoppedPosition = DocumentRepository(activity).readingState(uri("long.ini")).scroll
+            }
             override fun onActivitySaveInstanceState(activity: android.app.Activity, state: Bundle) {}
             override fun onActivityDestroyed(activity: android.app.Activity) {}
         }
@@ -186,6 +189,7 @@ class FoldableLayoutTest {
                 scenario.recreate(); ready(scenario)
                 scenario.onActivity {
                     assertTrue("Injected a clamp during framework pause callbacks", injected)
+                    assertEquals("Stop-time checkpoint keeps the last visible position", 600, stoppedPosition)
                     assertEquals("Keep the last visible position through pause and save", 600, it.findViewById<WebView>(R.id.reader).scrollY)
                 }
             }
