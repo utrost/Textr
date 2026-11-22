@@ -62,7 +62,7 @@
     <string name="automatic">Automatic</string>
     <string name="source_code">Source code</string>
     <string name="report_issue">Report an issue</string>
-    <string name="about_privacy">Offline text reading, comparison and editing of separate copies. No accounts, ads, analytics, or network permission.\n\nHistory, open documents and bookmarks store references and reading metadata, not document contents. Bookmarks also keep names you enter and a source fingerprint to detect changes. Clear bookmarks separately from history. Sharing or opening a file with another app creates a temporary copy. Old copies are cleaned on the next app start or share after 24 hours; only the latest 20 are kept.\n\nEdit a copy explicitly retains one private content-bearing recovery checkpoint, excluded from backup. Resume it from home. Discard or a successful save of the matching revision removes it; failed or cancelled saves keep recovery. Very recent typing may be lost on process termination. Original files stay unchanged.\n\nLicensed under GPL-3.0-only.</string>
+    <string name="about_privacy">Offline text reading, comparison and editing of separate copies. No accounts, ads, analytics, or network permission.\n\nHistory, open documents, collections and bookmarks store references and reading metadata, not document contents. Bookmarks also keep names you enter and a source fingerprint to detect changes. Clear bookmarks and collections separately from history. Sharing or opening a file with another app creates a temporary copy. Old copies are cleaned on the next app start or share after 24 hours; only the latest 20 are kept.\n\nEdit a copy explicitly retains one private content-bearing recovery checkpoint with the draft and its initial original text/encoding snapshot, excluded from backup. Resume it from home. Discard or a successful save of the matching revision removes it; failed or cancelled saves keep recovery. Very recent typing may be lost on process termination. Original files stay unchanged.\n\nLicensed under GPL-3.0-only.</string>
     <string name="about_details">Textr %1$s\n\n%2$s</string>
     <string name="reload">Reload</string>
     <string name="open_documents">Open documents</string>
@@ -103,7 +103,7 @@
     <string name="source_results_count">%1$d matches in source</string>
     <string name="source_result_line">Line %1$d</string>
     <string name="opening_help">Opening files and defaults</string>
-    <string name="opening_help_text">Open file\nChoose a document through Android’s system picker. This is also the fallback when another app does not offer Textr.\n\nOpen with and Share\nIn a file manager or another app, select a file, choose Open with or Share, then choose Textr. Shared text can also be viewed. Textr’s own Share file and Open with actions send a read-only copy to another app.\n\nChoosing a default\nWhen Android offers Always, you can select Textr as the default. The available choices depend on the sending app and the reported file type (MIME type), not just the filename extension. Some apps always use their own viewer. Textr cannot force an association for every extension.\n\nUnavailable recent files\nRecent files and open documents store references, not contents. A moved or deleted file, or an expired temporary permission, may require you to select it again using Open file. Clearing history does not delete your files.\n\nOlder text files\nIf text cannot be decoded or looks wrong, try Reopen with encoding. Your choice only changes how Textr reads the bytes; it does not convert the file.\n\nOffline viewing\nTextr has no network permission. A document provider selected in the system picker may independently use the network to retrieve your file.\n\nSaved HTML\nOpen a local HTML file, then choose Markdown reading view from the display-mode button. The original source stays available. HTML shared as content can also be read; a shared website URL stays text. Scripts and remote images are not loaded.\n\nReading settings\nSize, wrapping, font and spacing can follow global defaults or use Only this document. Source stays monospace.\n\nStructure and formats\nJSON/XML Structure offers navigation and explicit copy actions while keeping original source. Source colors include .env, .properties, Dockerfile and TypeScript/TSX. TSV uses the CSV table with Tab as its initial delimiter; explicit table choices are remembered.\n\nExport, comparison and copy editing\nSave Markdown as creates a new file from HTML reading output. Compare source uses two read-only snapshots; Ctrl+Up/Down navigates changes, and compact/large-text windows use unified view. Edit a copy opens original TXT/Markdown source in a separate editor, up to 256 Ki characters. Undo/redo uses Ctrl+Z/Y; Ctrl+F finds/replaces literal text and Ctrl+S saves a new copy. A private recovery copy persists until discarded or its matching revision is saved. Resume it from home; process recovery restores the last completed checkpoint. Originals are never overwritten.</string>
+    <string name="opening_help_text">Open file\nChoose a document through Android’s system picker. This is also the fallback when another app does not offer Textr.\n\nOpen with and Share\nIn a file manager or another app, select a file, choose Open with or Share, then choose Textr. Shared text can also be viewed. Textr’s own Share file and Open with actions send a read-only copy to another app.\n\nChoosing a default\nWhen Android offers Always, you can select Textr as the default. The available choices depend on the sending app and the reported file type (MIME type), not just the filename extension. Some apps always use their own viewer. Textr cannot force an association for every extension.\n\nUnavailable recent files\nRecent files and open documents store references, not contents. A moved or deleted file, or an expired temporary permission, may require you to select it again using Open file. Clearing history does not delete your files.\n\nOlder text files\nIf text cannot be decoded or looks wrong, try Reopen with encoding. Your choice only changes how Textr reads the bytes; it does not convert the file.\n\nOffline viewing\nTextr has no network permission. A document provider selected in the system picker may independently use the network to retrieve your file.\n\nSaved HTML\nOpen a local HTML file, then choose Markdown reading view from the display-mode button. The original source stays available. HTML shared as content can also be read; a shared website URL stays text. Scripts and remote images are not loaded.\n\nReading settings\nSize, wrapping, font and spacing can follow global defaults or use Only this document. Source stays monospace.\n\nStructure and formats\nJSON/XML Structure offers navigation and explicit copy actions while keeping original source. JSONL/NDJSON lists every physical record, including invalid and blank lines. AsciiDoc/reStructuredText offer source colors only; Markdown task states are read-only. Source colors include .env, .properties, Dockerfile and TypeScript/TSX. TSV uses the CSV table with Tab as its initial delimiter; explicit table choices are remembered.\n\nExport, comparison and copy editing\nSave Markdown as creates a new file from HTML reading output. Compare source uses two read-only snapshots; Ctrl+Up/Down navigates changes, and compact/large-text windows use unified view. Edit a copy opens original TXT/Markdown source in a separate editor, up to 256 Ki characters. Undo/redo uses Ctrl+Z/Y; Ctrl+F finds/replaces literal text and Ctrl+S saves a new copy. Scroll the editor toolbar horizontally for additional actions. Ctrl+Alt+G goes to a line; Ctrl+Alt+] adds two spaces; Ctrl+Alt+[ removes up to two spaces or one leading tab from selected lines. Compare original reviews the current draft against its initial snapshot without saving. A private recovery file contains the draft and initial original snapshot until discarded or its matching revision is saved. Resume it from home; process recovery restores the last completed checkpoint. Originals are never overwritten.\n\nComparison filters and patch export\nIgnore spaces/tabs affects ASCII space and tab within lines; blank lines and Unicode whitespace remain significant. Ignore line endings also ignores a missing final terminator. Both filters affect only the display. Save exact diff as exports all exact changes to a new UTF-8 patch with anonymous filenames; hidden differences are included. Textr does not apply patches.\n\nCollections\nOpen Collections from home or the reader menu to group references, rename or delete collections, and open/remove/reselect members. Limits: 20 collections, 30 references each, 200 memberships total. Clearing recent history keeps collections. Removing references never deletes provider files.</string>
     <string name="sidebar_setting">File sidebar on wide screens</string>
     <string name="sidebar_help">Keep open and recent files beside the reader on an unfolded phone or tablet. The sidebar hides when space is limited or system text is enlarged.</string>
     <string name="open_recent">Open recent file: %1$s</string>
@@ -175,7 +175,9 @@ Document switching follows alphabetical filename order. Shortcuts leave text fie
         <item>time zone:</item>
         <item>floating time; no time zone supplied</item>
         <item>Column</item>
-    </string-array>
+            <item>Checked task</item>
+        <item>Unchecked task</item>
+</string-array>
     <string name="unnamed_file">Text file</string>
     <string name="csv_accessible">Accessible table…</string>
     <string name="csv_empty_cell">Empty cell</string>
@@ -269,7 +271,7 @@ Document switching follows alphabetical filename order. Shortcuts leave text fie
     <string name="editor_replace_all">Replace all</string>
     <string name="editor_find_replace">Find and replace · literal text</string>
     <string name="editor_limit">Copy editing accepts TXT and Markdown up to 256 Ki characters, 10,000 lines and 4,096 characters per line. The requested input or change exceeds an editor limit; existing text is unchanged.</string>
-    <string name="editor_recovery_notice">This edits a separate source copy. Textr stores one private recovery copy containing the text, excluded from backup. It remains until you discard it or successfully save that revision to a new file. Process recovery restores the last completed checkpoint; very recent typing may be lost. Clearing app data or uninstalling removes recovery. The original file is never overwritten.</string>
+    <string name="editor_recovery_notice">This edits a separate source copy. Textr stores one private recovery file containing both the current draft and the initial original text/encoding snapshot for comparison, excluded from backup. It remains until you discard it or successfully save that revision to a new file. Process recovery restores the last completed checkpoint; very recent typing may be lost. Clearing app data or uninstalling removes recovery. The original file is never overwritten.</string>
     <string name="editor_existing">A recovery copy already exists. Resume it and save or discard it before starting a different copy.</string>
     <string name="editor_loading">Preparing private recovery…</string>
     <string name="editor_unavailable">No recovery copy can be opened. Return to the reader to start a new copy. If private storage is unavailable, restore storage access first.</string>
@@ -342,4 +344,41 @@ Document switching follows alphabetical filename order. Shortcuts leave text fie
     <string name="find_selected">Find selected text</string>
     <string name="selection_limit">Select nonblank text up to 1,000 characters. The previous search is unchanged.</string>
     <string name="selection_unavailable">Open a document in Textr to search selected text.</string>
+    <string name="editor_indent">Indent</string>
+    <string name="editor_unindent">Unindent</string>
+    <string name="editor_compare">Compare with original snapshot</string>
+    <string name="editor_line_help">Enter a line number from 1 to %1$d.</string>
+    <string name="compare_ignore_space">Ignore spaces/tabs</string>
+    <string name="compare_ignore_endings">Ignore line endings</string>
+    <string name="compare_export">Save exact diff as…</string>
+    <string name="compare_original_snapshot">Original editing snapshot</string>
+    <string name="compare_unsaved_snapshot">Current draft snapshot</string>
+    <string name="compare_draft_lost">Draft comparison snapshots were lost after the process ended. Return to editing and compare again; the original is never reread automatically.</string>
+    <string name="compare_export_limit">Exact diff exceeds the export/comparison limits. Both snapshots are unchanged.</string>
+    <string name="compare_equivalent">Equivalent under the active filters; the original decoded texts differ.</string>
+    <string name="compare_filters_active">Display filters are active; saved diffs still include exact changes.</string>
+    <string name="compare_filter_help">Filters affect this view only. Spaces/tabs means ASCII space and tab anywhere within each line; blank lines and Unicode whitespace remain significant. Line-ending filtering also ignores a missing final terminator.</string>
+    <string name="compare_export_exact">The saved patch includes exact changes, even differences hidden by the display filters. UTF-8, three context lines, fixed anonymous filenames. Originals remain unchanged.</string>
+    <string name="jsonl_records">JSON Lines records</string>
+    <string name="jsonl_record">Valid JSON record</string>
+    <string name="jsonl_invalid">Invalid or over-limit record</string>
+    <string name="jsonl_blank">Blank line (not a record)</string>
+    <string name="jsonl_help">Each physical line is listed, including invalid records and blank lines. Select a line to jump or copy its exact source, including its terminator. No duplicate keys are collapsed.</string>
+    <string name="jsonl_limit">Record navigation exceeds its limits: 256 Ki characters, 1,000 physical lines, 16,384 characters per valid record, depth 64 and 200,000 tokens. The complete source is available.</string>
+    <string name="collections">Collections</string>
+    <string name="collection_create">Create collection</string>
+    <string name="collection_name">Collection name</string>
+    <string name="collection_rename">Rename collection</string>
+    <string name="collection_add">Add a recent document</string>
+    <string name="collection_delete">Delete collection</string>
+    <string name="collection_remove">Remove reference</string>
+    <string name="collection_reselect">Reselect reference…</string>
+    <string name="collection_open">Open document</string>
+    <string name="collection_reselect_confirm">Replace the reference to %1$s with the document you just selected? The original file is unchanged.</string>
+    <string name="collection_delete_help">Delete this collection and its references? Provider files and other collections are unchanged.</string>
+    <string name="collection_no_recent">Open a file first, or all recent documents are already in this collection.</string>
+    <string name="collection_help">References only. Clearing recent history keeps collections. Up to 20 collections, 30 references each, 200 memberships total. Removing references never deletes files.</string>
+    <string name="collection_limit">Use a unique, nonempty name up to 80 characters. Limits: 20 collections, 30 references per collection, 200 memberships total; no duplicate references.</string>
+    <string name="editor_compare_unavailable">The original editing snapshot is unavailable in this older recovery draft. Comparison is disabled; the provider is never silently reread.</string>
+    <string name="saved_copy_unavailable">Cannot open this reference here. Use Open file to select it again. Any completed save remains successful.</string>
 </resources>

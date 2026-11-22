@@ -40,7 +40,7 @@ object DocumentRenderer {
 
     fun prepare(document: TextDocument, csv: CsvOptions = CsvOptions(), translate: (String) -> String = { it }): PreparedDocument {
         RenderPolicy.checkCancellation()
-        val structure = if (document.kind in setOf(FileKind.JSON, FileKind.XML)) StructureParser.parse(document.text, document.kind) else null
+        val structure = if (document.kind == FileKind.JSON_LINES) JsonLines.parse(document.text) else if (document.kind in setOf(FileKind.JSON, FileKind.XML)) StructureParser.parse(document.text, document.kind) else null
         if (document.kind == FileKind.JSON && document.bytes > RenderPolicy.MAX_JSON_PREVIEW_BYTES) {
             return PreparedDocument(document, null, PreviewNotice.JSON_LIMIT, structure = structure)
         }
@@ -154,6 +154,16 @@ object DocumentRenderer {
                 val id = "heading-${headings.size + 1}"
                 headingIds[current] = id
                 headings.add(OutlineHeading(id, label.toString().take(160).ifBlank { translate("Untitled heading") }, current.level))
+            }
+            if (current is org.commonmark.node.Paragraph && current.parent is org.commonmark.node.ListItem && current.parent.firstChild === current) {
+                val first = current.firstChild as? Text
+                first?.literal?.let { literal ->
+                    val marker = Regex("^\\[([ xX])\\](?:[ \\t]+|$)").find(literal)
+                    if (marker != null) {
+                        val checked = marker.groupValues[1] != " "
+                        first.literal = (if (checked) "☑ " else "☐ ") + translate(if (checked) "Checked task" else "Unchecked task") + ": " + literal.substring(marker.value.length)
+                    }
+                }
             }
             when (current) {
                 is Image -> { current.insertBefore(Text(translate("[image omitted]"))); current.unlink() }

@@ -22,6 +22,12 @@ done
 # Restart Android with both budgets set; instrumentation verifies the runtime.
 "$adb_command" -s "$device_serial" shell setprop dalvik.vm.heapgrowthlimit 256m
 "$adb_command" -s "$device_serial" shell setprop dalvik.vm.heapsize 512m
+# Fixtures and deliberate external-intent monitors need no guest network. Keep
+# first-boot Google-image background sync from competing with System UI during
+# font/rotation tests. Host SDK/Gradle downloads are unaffected.
+"$adb_command" -s "$device_serial" shell cmd connectivity airplane-mode enable
+"$adb_command" -s "$device_serial" shell svc wifi disable
+"$adb_command" -s "$device_serial" shell svc data disable
 "$adb_command" -s "$device_serial" shell stop
 "$adb_command" -s "$device_serial" shell setprop sys.boot_completed 0
 "$adb_command" -s "$device_serial" shell start
@@ -34,6 +40,21 @@ for attempt in $(seq 1 120); do
   sleep 1
 done
 [[ "$boot_ready" == true ]]
+# Reapply through live services after restart; raw settings can be overwritten
+# by cached radio state during framework shutdown.
+"$adb_command" -s "$device_serial" shell cmd connectivity airplane-mode enable
+"$adb_command" -s "$device_serial" shell svc wifi disable
+"$adb_command" -s "$device_serial" shell svc data disable
+radio_ready=false
+for attempt in $(seq 1 20); do
+  if [[ "$("$adb_command" -s "$device_serial" shell cmd connectivity airplane-mode | tr -d '\r')" == enabled &&
+        "$("$adb_command" -s "$device_serial" shell settings get global wifi_on | tr -d '\r')" == 0 ]]; then
+    radio_ready=true
+    break
+  fi
+  sleep 1
+done
+[[ "$radio_ready" == true ]]
 "$adb_command" -s "$device_serial" shell wm size reset
 "$adb_command" -s "$device_serial" shell wm density reset
 "$adb_command" -s "$device_serial" shell settings put system font_scale 1.0
@@ -43,3 +64,10 @@ done
 "$adb_command" -s "$device_serial" shell settings put system screen_off_timeout 2147483647
 "$adb_command" -s "$device_serial" shell getprop dalvik.vm.heapgrowthlimit
 "$adb_command" -s "$device_serial" shell getprop dalvik.vm.heapsize
+
+# Warm native chrome at the font sizes exercised by the first test, then restore
+# the baseline. Never dismiss ANR dialogs or retry application assertions.
+"$adb_command" -s "$device_serial" shell settings put system font_scale 2.0
+.github/scripts/check-test-device.sh "$device_serial"
+"$adb_command" -s "$device_serial" shell settings put system font_scale 1.0
+.github/scripts/check-test-device.sh "$device_serial"

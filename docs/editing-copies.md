@@ -25,3 +25,13 @@ Find and replacement are literal, with optional case sensitivity and whole-word 
 ## Acceptance
 
 Verify edit/undo/redo, selection, dirty navigation, unchanged original bytes, save cancellation/failure/encoding errors, matching-revision cleanup, private recovery after model/process loss, atomic-write failure, missing original grants, explicit discard, format/size rejection, bounded find/replace, keyboard operation, compact windows and 200% system text in English/German. Physical foldable and speech-quality acceptance remain tracked separately in #56.
+
+## Line actions and saved copies
+
+**Go to line** moves only the caret, counts CR/LF/CRLF consistently and validates the requested logical line. A trailing terminator creates an empty last editor line. **Indent** adds two ASCII spaces to each selected line; **Unindent** removes one leading tab or up to two spaces. A selection ending exactly at the next line start excludes that line. Reverse selections, original endings and a single undo step are preserved; edits exceeding the existing budget are refused atomically.
+
+The editor toolbar scrolls horizontally to reach its additional actions. Keyboard shortcuts: Ctrl+Alt+G (Go to line), Ctrl+Alt+] (Indent), Ctrl+Alt+[ (Unindent), Ctrl+Alt+D (Compare original). **Compare original** reviews a captured draft without saving or changing undo history; see [comparison](comparison.md).
+
+After a matching save succeeds, **Open saved copy** opens the destination in the ordinary reader. It survives activity recreation and retains available read permission only after a successful read. A write-only provider can save successfully but refuse opening; the reader then explains access recovery. The original reference is never substituted for the saved destination.
+
+The same private recovery file now also stores the initial original text and its encoding/BOM for draft review. It remains limited to 2 MiB, has no automatic expiry and is removed by the existing matching-save/discard rules. Legacy recovery without the original remains editable but cannot compare against an invented baseline.

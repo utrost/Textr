@@ -31,6 +31,7 @@
             android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/shared_paths" />
         </provider>
+        <activity android:name=".CollectionsActivity" android:exported="false" />
         <activity android:name=".SelectionSearchActivity" android:exported="true" android:permission="${applicationId}.permission.FIND_SELECTION"
             android:label="@string/find_selected" android:theme="@android:style/Theme.NoDisplay">
             <intent-filter>
@@ -55,6 +56,9 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/*" />
                 <data android:mimeType="application/json" />
+                <data android:mimeType="application/x-ndjson" />
+                <data android:mimeType="application/ndjson" />
+                <data android:mimeType="application/jsonl" />
                 <data android:mimeType="application/ld+json" />
                 <data android:mimeType="application/xml" />
                 <data android:mimeType="application/yaml" />
@@ -88,6 +92,9 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/*" />
                 <data android:mimeType="application/json" />
+                <data android:mimeType="application/x-ndjson" />
+                <data android:mimeType="application/ndjson" />
+                <data android:mimeType="application/jsonl" />
                 <data android:mimeType="application/ld+json" />
                 <data android:mimeType="application/xml" />
                 <data android:mimeType="application/yaml" />

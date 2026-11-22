@@ -1,0 +1,1 @@
+Initial Textr release: open and search text files; read Markdown, JSON and calendar previews; highlight source; revisit recent files and bookmarks; use an optional wide-screen sidebar. Read-only and offline, with English and German controls.

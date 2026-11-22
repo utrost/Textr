@@ -192,8 +192,25 @@ class ReaderUxTest {
     @Test fun nativeSelectionAndIncomingTextShareThroughAndroid() {
         ActivityScenario.launch<MainActivity>(intent("copy.txt")).use { scenario ->
             ready(scenario)
+            scenario.onActivity {
+                assertEquals("Copyable Textr selection", androidx.lifecycle.ViewModelProvider(it)[ReaderSession::class.java].document!!.source.text)
+            }
             val outgoing = captureShare {
-                device.wait(Until.findObject(By.text("Copyable Textr selection")), 10000)!!.longClick()
+                val sourceBounds = freshSourceBounds("Copyable Textr selection")
+                if (sourceBounds == null) {
+                    device.dumpWindowHierarchy(java.io.File(context.cacheDir, "selection-node-missing.xml"))
+                    device.takeScreenshot(java.io.File(context.cacheDir, "selection-node-missing.png"))
+                    val observed = mutableListOf<String>()
+                    fun inspect(node: android.view.accessibility.AccessibilityNodeInfo?) {
+                        if (node == null || observed.size >= 1000) return
+                        node.refresh()
+                        observed.add("${node.className}:${node.text}:${node.contentDescription}")
+                        for (index in 0 until node.childCount) inspect(node.getChild(index))
+                    }
+                    inspect(instrumentation.uiAutomation.rootInActiveWindow)
+                    assertNotNull("Selectable source missing; fresh platform nodes: $observed", sourceBounds)
+                }
+                assertTrue(device.swipe(sourceBounds!!.centerX(), sourceBounds.centerY(), sourceBounds.centerX(), sourceBounds.centerY(), 150))
                 var share = device.wait(Until.findObject(By.text(java.util.regex.Pattern.compile("Share", 2))), 2000)
                 if (share == null) {
                     (device.findObject(By.res("android", "floating_toolbar_overflow_button"))
@@ -295,6 +312,30 @@ class ReaderUxTest {
         scenario.onActivity { scroll = it.findViewById<WebView>(R.id.reader).scrollY }
         kotlin.math.abs(scroll - position) <= 2
     }
+    private fun freshSourceBounds(expected: String): android.graphics.Rect? {
+        val deadline = System.nanoTime() + 10_000_000_000L
+        while (System.nanoTime() < deadline) {
+            var visited = 0
+            fun find(node: android.view.accessibility.AccessibilityNodeInfo?): android.graphics.Rect? {
+                if (node == null) return null
+                try {
+                    if (++visited > 1000 || !node.refresh()) return null
+                    if (node.isVisibleToUser && node.text?.toString() == expected) {
+                        val bounds = android.graphics.Rect(); node.getBoundsInScreen(bounds)
+                        if (!bounds.isEmpty) return bounds
+                    }
+                    for (index in 0 until node.childCount) find(node.getChild(index))?.let { return it }
+                    return null
+                } finally { @Suppress("DEPRECATION") node.recycle() }
+            }
+            val automation = instrumentation.getUiAutomation(androidx.test.uiautomator.Configurator.getInstance().uiAutomationFlags)
+            if (android.os.Build.VERSION.SDK_INT >= 33) automation.clearCache()
+            find(automation.rootInActiveWindow)?.let { return it }
+            Thread.sleep(100)
+        }
+        return null
+    }
+
     private fun captureShare(action: () -> Unit): Intent {
         val captured = AtomicReference<Intent>()
         val monitor = object : Instrumentation.ActivityMonitor() {

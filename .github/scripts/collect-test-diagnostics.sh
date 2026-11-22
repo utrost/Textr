@@ -5,7 +5,7 @@ device_serial="${1:-emulator-5554}"
 adb_command="${ANDROID_HOME:?}/platform-tools/adb"
 destination="app/build/outputs/device-diagnostics"
 mkdir -p "$destination"
-for prefix in reader-test-failure reader-polish-timeout foldable-close extras-control; do
+for prefix in reader-test-failure reader-polish-timeout foldable-close extras-control selection-node-missing source-node-missing copy-node-missing; do
   for extension in xml png; do
     name="$prefix.$extension"
     # exec-out can return zero while forwarding a remote cat error on stdout.

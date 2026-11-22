@@ -110,7 +110,7 @@ class BacklogTest {
             scenario.onActivity {
                 (it.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager).clearPrimaryClip()
             }
-            val source = device.wait(Until.findObject(By.textContains("Alpha source line")), 30000)
+            val source = SourceNodeProbe.find(By.textContains("Alpha source line"), 30_000, "source-node-missing")
             assertNotNull("Source text is exposed for selection", source)
             source!!.longClick()
             clickSelection("Select all"); clickSelection("Copy")

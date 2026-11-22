@@ -1,6 +1,6 @@
 # Screenshots
 
-Refreshed 20 November 2026 from the 0.2-alpha source (`e4d3ce7`), using its debug build and test fixture provider. Captured on an Android 16/API 36 emulator with WebView 133.0.6943.137, using synthetic documents only. Phone captures use 1080×1920 at 420 dpi; the wide capture uses 1600×1200 at 240 dpi. System font scale is 1.0. These are emulator screenshots, not photographs or physical Magic V6 validation. Pixels are not retouched; Android’s demo clock is used where supported.
+Refreshed 21 November 2026 from the 0.5-alpha app source (`a410407`, application tree unchanged from `d9a3e42`), using its debug build and test fixture provider. Captured on an Android 16/API 36 emulator with WebView 133.0.6943.137, using synthetic documents only. Phone captures use 1080×1920 at 420 dpi; the wide capture uses 1600×1200 at 240 dpi. System font scale is 1.0. These are emulator screenshots, not photographs or physical Magic V6 validation. Later source changes update About/offline help/recovery disclosure; the pictured screens are unchanged. Pixels are not retouched; Android’s demo clock is used where supported.
 
 | Home | Markdown | Source |
 | --- | --- | --- |
@@ -33,4 +33,27 @@ python3 scripts/capture-screenshots.py --serial EMULATOR_SERIAL --reset-app-data
 
 The explicit flag acknowledges that the script clears **Textr’s emulator app data**, sets demo display/language/theme state and installs synthetic reading preferences. It requires no release signing key and publishes nothing. Do not run it on a personal device or concurrently with instrumentation. The script restores default display size/density, app-language selection and font scale, but leaves development preferences and animations configured for capture; use a disposable emulator.
 
-The older images elsewhere in this directory remain historical documentation of earlier iterations. The `reading-*` images above are the current 0.2-alpha documentation set, including HTML reading, JSON navigation, copy editing and wide comparison. [Store artwork](store/) derives from the existing vector launcher icon and includes editable SVG sources.
+The older images elsewhere in this directory remain historical documentation of earlier iterations. The `reading-*` images above are the current 0.5-alpha documentation set, including HTML reading, JSON navigation, copy editing and wide comparison. [Store artwork](store/) derives from the existing vector launcher icon and includes editable SVG sources.
+
+## Roadmap completion captures
+
+Captured 21 November 2026 from the 0.5-alpha implementation branch on the disposable API 36 emulator (1080×1920, synthetic fixtures). The collection and JSONL captures use normal system text; the task-list capture uses dark theme and **200% system text**. These PNGs are direct device screenshots without retouching. They demonstrate native collection controls, explicit invalid/blank JSONL records and visible read-only checked/unchecked labels; they do not establish human TalkBack or physical-provider acceptance.
+
+| Reference collections | JSONL navigation | Tasks at 200% text |
+| --- | --- | --- |
+| ![Named collection with separate reference actions and visible Done](images/roadmap-collections.png) | ![Every JSONL line, including blank and invalid records](images/roadmap-json-lines.png) | ![Dark Markdown tasks with checked and unchecked text labels at 200%](images/roadmap-tasks-dark-large.png) |
+
+Reproduce with `RoadmapCompletionDeviceTest` on a disposable emulator. It writes `roadmap-*.png` to the target app cache using UiDevice screenshots; extract with `adb exec-out run-as de.utrost.textr cat cache/NAME.png > NAME.png`. Do not run concurrently with other instrumentation. The comparison image above shows the current side-by-side mode; unified filter/export controls are shown below.
+
+![Exact comparison with independent display filters and explicit patch export](images/roadmap-comparison.png)
+
+The comparison capture waits for the bottom action to be fully visible within the window frame before saving the screenshot; the same check passes in instrumentation. Filenames and sample text are synthetic.
+
+
+## Source-search follow-up (API 29)
+
+Direct synthetic captures after the source-search layout/keyboard fixes (#128/#129), on the disposable API 29 emulator with WebView 74.0.3729.185. Portrait uses 1080×1920 at 420 dpi and normal system text, with the software keyboard connected to the source query and Done operable. Landscape uses 1920×1080 at 420 dpi and **200% system text**, after returning from Android's fullscreen keyboard editor with Back. Query/options and Done remain available; result rows scroll below the header. Both flows preserve the synthetic provider bytes. These are current implementation captures without pixel edits, separate from the API 36 primary set.
+
+| Query and connected keyboard | 200% landscape after keyboard input |
+| --- | --- |
+| ![Source query, match options, results and Done above the software keyboard](images/roadmap-source-search-keyboard.png) | ![Large-text source query and options with Done in landscape](images/roadmap-source-search-large.png) |

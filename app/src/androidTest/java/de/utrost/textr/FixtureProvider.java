@@ -41,6 +41,9 @@ public class FixtureProvider extends ContentProvider {
             return result;
         }
         if ("reset-shared".equals(method)) {
+            // A cancelled no-handler test may never reach its finally block.
+            // Reset the owned fixture's component override as well as its result.
+            call("receiver-enabled", "true", null);
             getContext().getSharedPreferences("receiver", 0).edit().clear().commit();
             return Bundle.EMPTY;
         }

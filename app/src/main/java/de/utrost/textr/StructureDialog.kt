@@ -48,7 +48,7 @@ class StructureDialog(context: Context, private val document: PreparedDocument, 
                 setPadding(dp(16), dp(12), dp(16), dp(8))
             })
             addView(TextView(context).apply {
-                text = context.getString(if (outline.available) R.string.structure_help else R.string.structure_unavailable)
+                text = if (document.source.kind == FileKind.JSON_LINES) context.getString(if (outline.available) R.string.jsonl_help else R.string.jsonl_limit) else context.getString(if (outline.available) R.string.structure_help else R.string.structure_unavailable)
                 setPadding(dp(16), 0, dp(16), dp(8))
             })
             addView(list, LinearLayout.LayoutParams(-1, 0, 1f))
@@ -107,6 +107,7 @@ class StructureDialog(context: Context, private val document: PreparedDocument, 
     private fun typeName(type: String) = context.getString(when (type) {
         "object" -> R.string.structure_object; "array" -> R.string.structure_array; "string" -> R.string.structure_string
         "number" -> R.string.structure_number; "boolean" -> R.string.structure_boolean; "null" -> R.string.structure_null
+        "records" -> R.string.jsonl_records; "record" -> R.string.jsonl_record; "invalid_record" -> R.string.jsonl_invalid; "blank_record" -> R.string.jsonl_blank
         "attribute" -> R.string.structure_attribute; else -> R.string.structure_element
     })
     private fun isDark() = dark

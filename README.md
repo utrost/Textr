@@ -4,9 +4,9 @@ Textr is an offline text reader and inspector for Android, with explicit editing
 
 **Android 10+ · Offline · English and German · GPL-3.0-only**
 
-**Current testing release:** [0.3-alpha](https://github.com/utrost/Textr/releases) (version code 3), a private draft prerelease for repository maintainers. It adds reading-position preservation and actionable file/save recovery to the 0.2-alpha features. It updates either previous alpha in place with the same development signing identity. See [release notes](docs/release-notes-0.3-alpha.md).
+**Private testing:** the verified private draft is **[0.5-alpha (code 5)](https://github.com/utrost/Textr/releases/tag/untagged-403cd7772a9feb20b00d)**, adding editor line actions, original/draft review, comparison filters and exact patch export, collections, JSONL navigation, markup highlighting, read-only Markdown tasks and verified draft-release tools. Earlier private drafts, including 0.4-alpha, remain immutable. See [release notes](docs/release-notes-0.5-alpha.md), [releases](https://github.com/utrost/Textr/releases) and the [roadmap](docs/roadmap.md); draft APK assets require repository write access.
 
-**Integration status:** the implementation is merged into `main` through [PR #96](https://github.com/utrost/Textr/pull/96). All five 0.2-alpha feature epics and 19 implementation issues are complete. The [next roadmap](docs/roadmap.md#next-roadmap--reliable-daily-use) plans six epics and 13 new implementation issues around reliability, copy editing, comparison, reading organization, formats and release preparation. The implementation passed build/lint, 86 JVM tests and 123 device tests per API 29/36. The subsequent [main run](https://github.com/utrost/Textr/actions/runs/44716759569) passed build/unit/lint and API 36, but API 29 passed 122/123 with a foldable-position failure tracked in [#97](https://github.com/utrost/Textr/issues/97). [Validation](docs/validation-roadmap-implementation.md) retains exact-source evidence. Physical-device/human TalkBack review and [WebView accessibility #59](https://github.com/utrost/Textr/issues/59) remain open.
+**Roadmap completion:** [PR #127](https://github.com/utrost/Textr/pull/127) contains the ten remaining feature/automation implementations, distribution preparation and updated documentation. See [validation](docs/validation-roadmap-completion.md) and the PR checks for exact-source evidence. The earlier eight QoL improvements are merged through [PR #126](https://github.com/utrost/Textr/pull/126). Physical-provider, human TalkBack and foldable acceptance remain open in [#56](https://github.com/utrost/Textr/issues/56), with the underlying [WebView accessibility investigation #59](https://github.com/utrost/Textr/issues/59).
 
 The source is public. Public APK distribution, production signing and store publication remain deferred. Draft release assets require repository write access; everyone can [build locally](#build-and-install).
 
@@ -18,9 +18,11 @@ The source is public. Public APK distribution, production signing and store publ
 | --- | --- | --- |
 | ![Saved HTML in the offline Markdown reading view](docs/images/reading-html.png) | ![Native JSON structure navigation](docs/images/reading-structure.png) | ![Native copy editor with Save as and undo controls](docs/images/reading-editor.png) |
 
-![Read-only comparison with linked side-by-side source views](docs/images/reading-comparison.png)
+![Exact comparison with display filters and unified patch export](docs/images/roadmap-comparison.png)
 
-The reliability follow-up implements clearer [opening/save recovery](docs/recovery.md) and preserves pending reading position during recreation. It is merged through [PR #117](https://github.com/utrost/Textr/pull/117) and included in 0.3-alpha. Build/lint, 86 JVM tests and 129 device tests per API 29/36 pass; see [evidence and remaining acceptance](docs/validation-reliability.md).
+| Collections | JSONL records | Read-only tasks at 200% text |
+| --- | --- | --- |
+| ![Bounded reference collection](docs/images/roadmap-collections.png) | ![Native JSONL navigation with invalid and blank lines](docs/images/roadmap-json-lines.png) | ![Checked and unchecked Markdown tasks in dark theme](docs/images/roadmap-tasks-dark-large.png) |
 
 [More screenshots and capture details](docs/screenshots.md) · [Feature roadmap](docs/roadmap.md)
 
@@ -28,15 +30,15 @@ The reliability follow-up implements clearer [opening/save recovery](docs/recove
 ## What it does
 
 - Opens text files up to **5 MiB** through Android’s file picker, **Open with**, or **Share**.
-- Reads TXT, LOG, CONF/CFG, INI, JSON, Markdown, YAML, TOML, XML, CSV/TSV, .env, .properties, Dockerfile, Java, JavaScript, TypeScript/TSX, CSS, HTML, Kotlin, Python, shell, SQL, diff/patch, and iCalendar. Other text files can be opened through the picker.
+- Reads TXT, LOG, CONF/CFG, INI, JSON, JSONL/NDJSON, AsciiDoc, reStructuredText, Markdown, YAML, TOML, XML, CSV/TSV, .env, .properties, Dockerfile, Java, JavaScript, TypeScript/TSX, CSS, HTML, Kotlin, Python, shell, SQL, diff/patch, and iCalendar. Other text files can be opened through the picker.
 - Offers plain text, lightweight syntax highlighting, and supported Markdown, JSON, calendar and optional CSV previews. Plain text remains the baseline.
-- Searches the displayed view or the complete source, with case/whole-word matching, line numbers and snippets. Includes Go to line, a Markdown heading outline, and bounded JSON/XML [structure navigation](docs/structured-navigation.md).
+- Searches the displayed view or the complete source, with case/whole-word matching, line numbers and snippets. Includes Go to line, a Markdown heading outline, and bounded JSON/XML and per-record JSONL [structure navigation](docs/structured-navigation.md).
 - Offers **Copy all** in the reader menu for the complete source text, including original line breaks and excluding displayed line numbers. Up to 256 Ki UTF-16 characters can be copied at once; larger documents show an explanation without truncating or replacing the clipboard. Preview modes also copy source text.
 - Supports selection/copy, original-file sharing, read-only **Open with…**, [global/per-document reading settings](docs/reading-preferences.md) for size, wrapping, fonts and spacing, and system/light/dark themes.
-- Compares bounded source snapshots with exact line-ending-aware changes, keyboard/copy actions and linked side-by-side views; compact/large-text windows use unified comparison.
-- Offers **Edit a copy…** for TXT/Markdown, with bounded undo/redo, literal find/replace, private recovery and explicit Save as. See [editor limits and fidelity](docs/editing-copies.md).
+- Compares bounded source snapshots with exact changes, optional whitespace/ending display filters, exact unified patch export, keyboard/copy actions and linked side-by-side views; compact/large-text windows use unified comparison.
+- Offers **Edit a copy…** for TXT/Markdown, with bounded undo/redo, literal find/replace, line/indentation actions, original/draft review, private recovery and explicit Save as with Open saved copy. See [editor limits and fidelity](docs/editing-copies.md).
 - Exports converted HTML reading content to a new UTF-8 Markdown file through [Save Markdown as](docs/save-as.md).
-- Remembers recent files and approximate reading positions. Pin recents, keep up to five documents open, and save up to 100 named bookmarks.
+- Remembers recent files and approximate reading positions. Pin recents, keep up to five documents open, and save up to 100 named bookmarks, and organize references in bounded [reading collections](docs/collections.md).
 - Offers an optional file sidebar on sufficiently large windows, plus keyboard shortcuts. The sidebar stays off until you enable it.
 - Provides English and German controls, errors, preview labels and offline help, following the device/app language. Document contents are never translated.
 - Shows reading, preparation and layout stages, with cancellation and explanations when loading takes longer.
@@ -45,7 +47,7 @@ Opening a format does not guarantee highlighting. Generic configuration files us
 
 ## Quality-of-life additions
 
-The implementation branch adds recent-file search/filtering, previous reading positions, Copy Markdown for HTML, unsaved Markdown preview, reopening closed documents, optional screen-awake reading, Find selected text and a last-save-location suggestion. See the [usage guide](docs/quality-of-life.md) and [validation](docs/validation-quality-of-life.md). These changes are not in the immutable 0.3-alpha APK.
+The merged quality-of-life batch adds recent-file search/filtering, previous reading positions, Copy Markdown for HTML, unsaved Markdown preview, reopening closed documents, optional screen-awake reading, Find selected text and a last-save-location suggestion. See the [usage guide](docs/quality-of-life.md) and [validation](docs/validation-quality-of-life.md). These changes are in the private 0.4-alpha candidate; the ten roadmap additions require the 0.5-alpha source/candidate.
 
 ## Open a file
 
@@ -61,7 +63,7 @@ The empty home screen links to opening help. On eligible windows, a dismissible 
 
 No accounts, ads, analytics, or app network permission. Original files remain unchanged. Documents are processed locally. External document providers may independently use the network, and links open externally only when tapped.
 
-History, sessions and bookmarks store local references and reading metadata, not document contents. Explicit sharing creates temporary copies, bounded to 20 and cleaned after 24 hours on the next app start/share. These copies are separate from history. Explicit copy editing retains one private content-bearing recovery checkpoint until discarded or its matching revision is saved. App backup and device-transfer rules exclude private state. JavaScript, remote resources and WebView file/content access are disabled.
+History, sessions, collections and bookmarks store local references and reading metadata, not document contents. Explicit sharing creates temporary copies, bounded to 20 and cleaned after 24 hours on the next app start/share. These copies are separate from history. Explicit copy editing retains one private content-bearing recovery checkpoint (current draft and initial original snapshot) until discarded or its matching revision is saved. App backup and device-transfer rules exclude private state. JavaScript, remote resources and WebView file/content access are disabled.
 
 Read the [privacy policy](docs/privacy.md), also linked from **About Textr**. Moving a file or losing its provider permission can make a stored reference unavailable; choose the file again. Clearing history or bookmarks never deletes the original files.
 

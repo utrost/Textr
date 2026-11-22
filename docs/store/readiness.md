@@ -1,6 +1,6 @@
 # Optional Google Play preparation
 
-Checked against public documentation on 15 November 2026. This is preparation only: no Play account has been accessed, no production/upload key created, and no bundle uploaded. [#57](https://github.com/utrost/Textr/issues/57) remains open for owner/account-dependent work. APK publication remains separately deferred under #13.
+Checked against public documentation on 21 November 2026. This is preparation only: no Play account has been accessed, no production/upload key created, and no bundle uploaded. [#57](https://github.com/utrost/Textr/issues/57) remains open for owner/account-dependent work. APK publication remains separately deferred under #13.
 
 ## Build path
 
@@ -20,6 +20,8 @@ A bundle is an upload artifact, not an APK you can install with `adb install`. D
 - Textr targets API 36. Google’s current [target API policy](https://support.google.com/googleplay/android-developer/answer/11926878?hl=en) requires Android 16/API 36 for new phone apps and updates from 31 August 2026. Recheck at submission.
 - Some personal developer accounts require a closed test with at least 12 continuously opted-in testers for 14 days before applying for production access. See [account-specific testing requirements](https://support.google.com/googleplay/android-developer/answer/14151465?hl=en). The owner’s account type and status are unknown.
 - Review the final privacy URL, developer identity/contact, Data safety form, app access, ads, content rating, target audience and distribution choices in the console. Drafts here do not replace those declarations.
+
+Developer identity is **utrost** and the [public Textr issue tracker](https://github.com/utrost/Textr/issues) is the confirmed privacy/support contact. About links to the public HTML-rendered [privacy policy](https://github.com/utrost/Textr/blob/main/docs/privacy.md), which identifies the app, developer, contact, local retention and removal. Confirm the final live URL and consistency in the console before submission. Standard F-Droid signing is a separate selected channel; see [F-Droid preparation](../fdroid/README.md).
 
 ## Prepared material
 

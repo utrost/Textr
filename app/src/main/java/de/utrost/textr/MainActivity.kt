@@ -113,6 +113,8 @@ class MainActivity : ComponentActivity() {
         lineSpacing = effective.lineSpacing
     }
     private var pendingScroll = 0
+    // Generation-bound snapshot of the last visible reader before pause callbacks.
+    private var pausedReadingPosition: Pair<Int, Int>? = null
     private var formatOverride: FileKind? = null
     private var requestedMode: DisplayMode? = null
     private var homeShown = false
@@ -171,6 +173,7 @@ class MainActivity : ComponentActivity() {
         }
         setTheme(if (dark) R.style.Theme_Textr_Dark else R.style.Theme_Textr)
         super.onCreate(savedInstanceState)
+        ReadingCollections(this).reconcile()
         val barStyle = if (dark) SystemBarStyle.dark(Color.TRANSPARENT)
             else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
         enableEdgeToEdge(statusBarStyle = barStyle, navigationBarStyle = barStyle)
@@ -442,6 +445,7 @@ class MainActivity : ComponentActivity() {
             id = R.id.editor_resume; visibility = if (EditDraftStore(this@MainActivity).exists()) View.VISIBLE else View.GONE
         }
         body.addView(resumeDraftButton, LinearLayout.LayoutParams(-1, -2))
+        body.addView(button(R.string.collections) { startActivity(Intent(this, CollectionsActivity::class.java)) }.apply { id = R.id.collections })
         val recentHeader = row()
         recentHeader.addView(TextView(this).apply { text = getString(R.string.recent_files); textSize = 20f; setTextColor(foreground()) }, LinearLayout.LayoutParams(0, -2, 1f))
         val recents = repository.recentFiles().sortedWith(compareByDescending<RecentFile> { it.pinned }.thenByDescending { it.openedAt })
@@ -583,6 +587,7 @@ class MainActivity : ComponentActivity() {
             item(R.string.reopen_closed, openDocuments.hasClosed) { reopenClosed() }
             if (openDocuments.entries.isNotEmpty()) item(R.string.open_documents) { showDocuments() }
             item(R.string.bookmarks) { showBookmarks() }
+            item(R.string.collections) { startActivity(Intent(this@MainActivity, CollectionsActivity::class.java)) }
             item(R.string.settings) { showSettings() }
             if (homeShown) item(R.string.opening_help) { showOpeningHelp() }
             item(R.string.about) { showAbout() }
@@ -665,6 +670,9 @@ class MainActivity : ComponentActivity() {
         FileKind.DOCKERFILE -> "Dockerfile"
         FileKind.TYPESCRIPT -> "TypeScript"
         FileKind.TSX -> "TypeScript / TSX"
+        FileKind.JSON_LINES -> "JSON Lines / NDJSON"
+        FileKind.ASCIIDOC -> "AsciiDoc"
+        FileKind.RESTRUCTUREDTEXT -> "reStructuredText"
         else -> kind.name
     }
 
@@ -901,7 +909,7 @@ class MainActivity : ComponentActivity() {
             else -> return false
         }
         if (uri != null) {
-            openDocument(uri, intent.type, grantFlags = intent.flags)
+            openDocument(uri, intent.type, grantFlags = if (intent.getBooleanExtra(ReaderOpening.RETAIN_READ, false)) Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION else intent.flags)
         } else {
             val sharedHtml = intent.getStringExtra(Intent.EXTRA_HTML_TEXT)
             val sharedText = sharedHtml ?: intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString()
@@ -1917,7 +1925,10 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        rememberReading()
+        // Framework/view callbacks can change the old WebView while super saves it.
+        // Capture once beforehand for both reading metadata and activity recovery.
+        val savedScroll = checkpointPosition()
+        rememberReading(savedScroll)
         super.onSaveInstanceState(outState)
         outState.putBoolean("outputPending", outputs.status.phase == OutputPhase.PICKING)
         if (outputs.status.phase == OutputPhase.PICKING) {
@@ -1928,7 +1939,7 @@ class MainActivity : ComponentActivity() {
         // While loading, remember only a mode explicitly requested for this URI,
         // never the previous document's mode. Format changes request automatic mode.
         outState.putString("mode", if (document != null) mode.name else requestedMode?.name)
-        outState.putInt("scroll", readerPosition())
+        outState.putInt("scroll", savedScroll)
         outState.putString("query", searchField.text.toString())
         outState.putString("format", formatOverride?.name)
         outState.putString("encoding", encodingOverride?.name)
@@ -1945,10 +1956,12 @@ class MainActivity : ComponentActivity() {
         outState.putBundle("structure", structureDialog?.takeIf { it.isShowing }?.readingState() ?: pendingStructure)
     }
 
-    private fun rememberReading() {
+    private fun checkpointPosition() = pausedReadingPosition?.takeIf { it.first == generation }?.second ?: readerPosition()
+
+    private fun rememberReading(position: Int = checkpointPosition()) {
         val view = webView ?: return
         if (document != null && view.tag == true) {
-            val reading = ReadingState(mode, view.scrollY.coerceAtLeast(0), formatOverride, encodingOverride, csvOptions, readingProfile)
+            val reading = ReadingState(mode, position.coerceAtLeast(0), formatOverride, encodingOverride, csvOptions, readingProfile)
             session.original?.let { original ->
                 session.returnState = ReaderReturnState(document!!, original, currentUri?.toString(), reading,
                     searchField.text.toString().take(1000), searchRow.visibility == View.VISIBLE, pendingGrantFlags)
@@ -2006,8 +2019,15 @@ class MainActivity : ComponentActivity() {
         if (resumed && document != null && webView?.tag == true && !homeShown && preferences.getBoolean("keepAwake", false)) window.addFlags(flag)
         else window.clearFlags(flag)
     }
-    override fun onResume() { super.onResume(); resumed = true; updateScreenAwake() }
-    override fun onPause() { resumed = false; updateScreenAwake(); super.onPause() }
+    override fun onResume() {
+        super.onResume(); pausedReadingPosition = null; resumed = true; updateScreenAwake()
+    }
+    override fun onPause() {
+        // Android may clamp a ready WebView during pause, before state saving.
+        // Loading pages keep their pending position; newer renders invalidate this snapshot.
+        pausedReadingPosition = if (document != null && webView?.tag == true) generation to readerPosition() else null
+        resumed = false; updateScreenAwake(); super.onPause()
+    }
 
     // An unfinished WebView reports transient zero coordinates during recreation.
     private fun readerPosition() = (webView as? ReaderWebView)?.restoringPosition ?: webView?.takeIf { it.tag == true }?.scrollY ?: pendingScroll

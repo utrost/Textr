@@ -28,6 +28,10 @@ class EditorActivity : ReadingScreen() {
     private lateinit var find: Button
     private lateinit var resume: Button
     private lateinit var preview: Button
+    private lateinit var goLine: Button
+    private lateinit var indent: Button
+    private lateinit var unindent: Button
+    private lateinit var compare: Button
     private var draftPreview: DraftPreview? = null
     private var destroying = false
     private lateinit var retryRecovery: Button
@@ -71,12 +75,16 @@ class EditorActivity : ReadingScreen() {
         redo = button(R.string.editor_redo) { model.buffer?.redo(); renderBuffer(); model.changed() }.apply { id = R.id.editor_redo }
         find = button(R.string.editor_find) { showFind() }.apply { id = R.id.editor_find }
         preview = button(R.string.draft_preview) { showPreview() }.apply { id = R.id.preview_draft }
+        goLine = button(R.string.go_to_line) { showGoLine() }.apply { id = R.id.editor_go_line }
+        indent = button(R.string.editor_indent) { indent(false) }.apply { id = R.id.editor_indent }
+        unindent = button(R.string.editor_unindent) { indent(true) }.apply { id = R.id.editor_unindent }
+        compare = button(R.string.editor_compare) { compareDraft() }.apply { id = R.id.editor_compare }
         save = button(R.string.save_copy) { saveCopy() }.apply { id = R.id.editor_save }
         discard = button(R.string.editor_discard) {
             present(AlertDialog.Builder(this).setTitle(R.string.editor_discard).setMessage(R.string.editor_discard_help)
                 .setNegativeButton(R.string.cancel, null).setPositiveButton(R.string.editor_discard) { _, _ -> model.discard { if (it) finish() } }.create())
         }.apply { id = R.id.editor_discard }
-        for (button in listOf(undo, redo, find, preview, save, discard)) tools.addView(button, LinearLayout.LayoutParams(-2, -2))
+        for (button in listOf(undo, redo, find, preview, goLine, indent, unindent, compare, save, discard)) tools.addView(button, LinearLayout.LayoutParams(-2, -2))
         body.addView(HorizontalScrollView(this).apply { addView(tools) }, LinearLayout.LayoutParams(-1, -2))
         status = TextView(this).apply { id = R.id.editor_status; textSize = 13f; accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE; setPadding(0, dp(6), 0, dp(6)) }
         body.addView(status)
@@ -146,6 +154,8 @@ class EditorActivity : ReadingScreen() {
         editor.isEnabled = enabled; save.isEnabled = enabled; find.isEnabled = enabled; discard.isEnabled = enabled || (model.unavailable && model.recoveryFailed && !model.loading && !outputs.busy)
         preview.visibility = if (draft?.markdown == true) View.VISIBLE else View.GONE
         preview.isEnabled = enabled
+        listOf(goLine, indent, unindent).forEach { it.isEnabled = enabled }
+        compare.isEnabled = enabled && draft?.originalText != null
         undo.isEnabled = enabled && buffer?.canUndo == true; redo.isEnabled = enabled && buffer?.canRedo == true
         retryRecovery.visibility = if (model.recoveryFailed) View.VISIBLE else View.GONE
         retryRecovery.isEnabled = !model.loading && !outputs.busy
@@ -160,7 +170,7 @@ class EditorActivity : ReadingScreen() {
                 getString(if (model.recoveryFailed) R.string.editor_recovery_failed else if (model.checkpointRevision >= buffer.revision) R.string.editor_recovery_ready else if (!model.dirty && model.checkpointRevision < 0) R.string.editor_saved_recovery_removed else R.string.editor_recovery_pending)
             else -> getString(R.string.editor_loading)
         }
-        status.text = message
+        status.text = message + if (buffer != null && draft?.originalText == null) "\n" + getString(R.string.editor_compare_unavailable) else ""
         if (model.previewOpen && draftPreview == null && enabled && !destroying) showPreview()
         handleOutput(outputs.status)
         if (buffer != null && model.findState.open && draftPreview == null && dialog == null && !outputs.busy && !model.loading) showFind()
@@ -184,6 +194,42 @@ class EditorActivity : ReadingScreen() {
             model.previewScroll = scroll; draftPreview = null
             if (!destroying) model.previewOpen = false
         }.also { it.dialog.show() }
+    }
+
+    private fun captureSelection(): EditBuffer? = model.buffer?.also {
+        it.select(EditSelection(editor.selectionStart.coerceAtLeast(0), editor.selectionEnd.coerceAtLeast(0)))
+    }
+    private fun showCaret() {
+        editor.requestFocus()
+        editor.post { editor.bringPointIntoView(editor.selectionEnd.coerceAtLeast(0)) }
+    }
+    private fun indent(remove: Boolean) {
+        val buffer = captureSelection() ?: return
+        if (!EditorLines.indent(buffer, remove)) Toast.makeText(this, R.string.editor_limit, Toast.LENGTH_LONG).show()
+        else { renderBuffer(); model.changed(); showCaret() }
+    }
+    private fun showGoLine() {
+        val buffer = captureSelection() ?: return
+        val input = EditText(this).apply { id = R.id.editor_line_input; inputType = InputType.TYPE_CLASS_NUMBER; hint = getString(R.string.line_number); contentDescription = hint; isSingleLine = true }
+        val count = EditorLines.starts(buffer.text).size
+        val value = AlertDialog.Builder(this).setTitle(R.string.go_to_line).setMessage(getString(R.string.editor_line_help, count))
+            .setView(input).setNegativeButton(R.string.cancel, null).setPositiveButton(R.string.done, null).create()
+        present(value)
+        value.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            val line = input.text.toString().toIntOrNull()
+            if (line == null || !EditorLines.goTo(buffer, line)) input.error = getString(R.string.editor_line_help, count)
+            else { editor.setSelection(buffer.selection.end); model.saveSelection(buffer.selection); value.dismiss(); showCaret() }
+        }
+    }
+    private fun compareDraft() {
+        val buffer = captureSelection() ?: return
+        val draft = model.draft ?: return
+        val original = draft.originalText ?: return
+        val token = DraftComparisonInbox.put(draft.name, original, buffer.text, draft.sourceUri, draft.originalEncoding.charsetName, draft.originalBom, draft.encoding.charsetName, draft.bom) ?: run {
+            Toast.makeText(this, R.string.compare_limited, Toast.LENGTH_LONG).show(); return
+        }
+        model.editorScroll = editor.scrollY
+        startActivity(Intent(this, ComparisonActivity::class.java).putExtra("draftToken", token))
     }
 
     private fun saveCopy() {
@@ -246,10 +292,7 @@ class EditorActivity : ReadingScreen() {
                 val body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(20), dp(12), dp(20), dp(12)) }
                 body.addView(TextView(this).apply { text = getString(R.string.output_saved, value.name) + "\n\n" + value.target.toString() + "\n\n" + getString(R.string.editor_saved_access) })
                 if (!model.dirty) body.addView(button(R.string.editor_open_saved) {
-                    outputs.acknowledge()
-                    startActivity(Intent(Intent.ACTION_VIEW, value.target, this, MainActivity::class.java)
-                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_GRANT_READ_URI_PERMISSION))
-                    finish()
+                    if (ReaderOpening.open(this, value.target)) { outputs.acknowledge(); finish() }
                 }, LinearLayout.LayoutParams(-1, -2))
                 it.setMessage(null); it.setView(ScrollView(this).apply { addView(body) })
             }
@@ -339,7 +382,13 @@ class EditorActivity : ReadingScreen() {
     @android.annotation.SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN && event.isCtrlPressed && draftPreview == null && dialog == null && !outputs.busy && !model.loading) {
-            val action = when (event.keyCode) {
+            val action = if (event.isAltPressed) when (event.keyCode) {
+                KeyEvent.KEYCODE_G -> goLine
+                KeyEvent.KEYCODE_RIGHT_BRACKET -> indent
+                KeyEvent.KEYCODE_LEFT_BRACKET -> unindent
+                KeyEvent.KEYCODE_D -> compare
+                else -> null
+            } else when (event.keyCode) {
                 KeyEvent.KEYCODE_Z -> if (event.isShiftPressed) redo else undo
                 KeyEvent.KEYCODE_Y -> redo
                 KeyEvent.KEYCODE_F -> find

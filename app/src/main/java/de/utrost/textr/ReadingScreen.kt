@@ -38,6 +38,7 @@ abstract class ReadingScreen : ComponentActivity() {
             insets
         }
         setContentView(root)
+        root.post { root.requestApplyInsets() }
     }
     protected fun button(label: Int, action: () -> Unit) = Button(this).apply {
         setText(label); isAllCaps = false; minHeight = dp(48); setOnClickListener { action() }

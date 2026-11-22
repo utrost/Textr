@@ -11,3 +11,6 @@ local.properties
 signing.properties
 captures/
 .local/
+
+# Local Python tooling caches
+__pycache__/

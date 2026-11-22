@@ -56,3 +56,11 @@ See [reading extras](reading-extras.md) for the CSV subset, limits, delimiter/he
 ## Localized preview labels
 
 Markdown omission/untitled-heading labels, generated calendar field/time labels and generated CSV column headings follow the English/German app language. Source contents, supplied calendar values/time-zone identifiers, code and format names are not translated. The native **Accessible table…** option provides table and source access when WebView descendants are missing; see [behavior](reading-extras.md) and [investigation](csv-accessibility.md).
+
+## Focused source additions
+
+JSONL/NDJSON (`.jsonl`, `.ndjson`) stays source-first. **Structure** lists every physical line with exact source ranges: valid JSON record, invalid/over-limit record, or blank line. Scalars and duplicate object keys are accepted. Navigation is bounded to 256 Ki UTF-16 characters, 1,000 physical lines, 16,384 characters per record, depth 64 and 200,000 total parser tokens. A global limit disables optional navigation with an explanation while complete source stays available; a bad record remains explicitly listed. Known extensions take precedence over generic MIME types and format override remains available.
+
+AsciiDoc (`.adoc`, `.asciidoc`, `.asc`) and reStructuredText (`.rst`, `.rest`) offer bounded source highlighting for headings, comments, directives and common metadata. They do not render documents, resolve includes, expand macros or access resources. Long lines/limits use plain source fallback.
+
+Markdown previews and unsaved Markdown draft previews recognize `[ ]`, `[x]` and `[X]` task markers at the beginning of list items. A visible checked/unchecked text label supplements the symbol. Tasks are read-only: no checkbox input or script is added, and code blocks/malformed markers keep their original text. Human WebView spoken-feedback acceptance remains tracked separately.

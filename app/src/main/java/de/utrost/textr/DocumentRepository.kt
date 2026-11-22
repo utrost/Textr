@@ -226,7 +226,16 @@ class DocumentRepository(private val context: Context) {
         (old - references).forEach(::release)
     }
 
+    fun setCollectionReferences(references: Set<String>) {
+        val old = preferences.getStringSet("collections", emptySet()).orEmpty().toSet()
+        if (old == references) return
+        if (!preferences.edit().putStringSet("collections", references).commit()) return
+        (old - references).forEach(::release)
+    }
+
     private fun release(value: String) {
+        if (value in preferences.getStringSet("collections", emptySet()).orEmpty()) return
+        if (ReadingCollections(context).entries().any { collection -> collection.members.any { it.uri == value } }) return
         if (value in preferences.getStringSet("bookmarks", emptySet()).orEmpty()) return
         if (recentFiles().any { it.uri == value } || value in sessionReferences()) return
         val removed = preferences.getString("removed", null)

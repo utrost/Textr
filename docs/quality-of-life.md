@@ -1,6 +1,6 @@
 # Everyday reading conveniences
 
-Implemented on the quality-of-life branch for #101, #109 and #120–#125. These additions are not included in the immutable 0.3-alpha APK. See [validation](validation-quality-of-life.md) and the [roadmap](roadmap.md).
+Merged through PR #126 and included in the private 0.4-alpha candidate for #101, #109 and #120–#125. These additions are not included in the immutable 0.3-alpha APK. See [validation](validation-quality-of-life.md) and the [roadmap](roadmap.md).
 
 ## Find a recent file
 
@@ -36,7 +36,7 @@ Enable **Reading settings → Keep screen awake while reading** when following i
 
 ## Find selected text
 
-Long-press text in the reader and choose **Find selected text**, sometimes under the selection toolbar's overflow menu. It opens the existing **Search source** results with the exact selection and preserves case/whole-word options. Copy and Select all remain native actions. No clipboard round trip or JavaScript is used.
+Long-press text in the reader and choose **Find selected text**, sometimes under the selection toolbar's overflow menu. It opens the existing **Search source** results with the exact selection and preserves case/whole-word options. Tap the query to type with the software keyboard. Query/options stay in place as asynchronous results change. Copy and Select all remain native actions. No clipboard round trip or JavaScript is used.
 
 Search is literal against source. Preview text can differ from its markup—for example, styled text, normalized HTML whitespace or decoded entities—so a preview selection can have no exact source match. Whitespace-only selections and selections over the 1,000-character query budget are rejected without replacing the previous query. Queries stay session-only; reopening Search source after recreation retains the selected query.
 

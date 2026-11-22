@@ -1,0 +1,13 @@
+Textr liest Original-Textdokumente offline und ermöglicht das ausdrückliche Bearbeiten und Speichern separater TXT-/Markdown-Kopien. Ab Android 10. Ohne Konten, Werbung, Analysefunktionen oder eigene Internetberechtigung.
+
+Öffne Dateien über Androids Auswahl, „Öffnen mit“ oder „Teilen“. Lies Klartext, begrenzt hervorgehobenen Quelltext, Markdown-Aufgabenlisten, JSON-, Kalender- und CSV-Vorschauen oder eine sichere Markdown-Konvertierung lokaler HTML-Dateien. JSON Lines führt gültige, ungültige und leere Zeilen mit exakter Quelltextnavigation auf. AsciiDoc und reStructuredText bieten ausschließlich Quelltexthervorhebung.
+
+Suche im Quelltext oder starte eine Suche aus markiertem Text. Kopiere Quelltext oder konvertiertes Markdown, kehre nach Sprüngen zurück, öffne geschlossene Dokumente erneut, setze Lesezeichen, filtere den Verlauf und ordne Verweise benannten Sammlungen zu. Bis zu fünf Dokumente können geöffnet sein. Schrift, Umbruch, Darstellung und optionales Wachhalten des Displays sind einstellbar. Deutsche und englische Oberfläche.
+
+Bearbeite begrenzte TXT-/Markdown-Kopien mit Rückgängig/Wiederholen, Suchen/Ersetzen, Zeilensprung und Einrückung. Zeige ungespeichertes Markdown an, vergleiche es mit dem Ausgangstext und speichere eine neue Datei. Eine private Wiederherstellungsdatei behält Entwurf und Ausgangstext bis zum passenden Speichern oder ausdrücklichen Verwerfen. Originale werden nie überschrieben.
+
+Vergleiche zwei schreibgeschützte Momentaufnahmen, ignoriere wahlweise ASCII-Leerzeichen/Tabulatoren oder Zeilenenden und exportiere einen exakten UTF-8-Diff. Ansichtsfilter verändern gespeicherte Texte nicht.
+
+Dateigrenze: 5 MiB. Für Editor, Vorschau, Struktur und Diff gelten engere Grenzen. Vollständiger Quelltext bleibt verfügbar. Markdown-Bilder, eingebettetes HTML und entfernte Ressourcen werden blockiert. Externe Provider und angetippte Links haben eigene Netzwerk-/Datenschutzregeln. Textr verwaltet oder löscht keine Originaldateien und bearbeitet sie nicht direkt.
+
+GPL-3.0-only. Quellcode, Datenschutz und Hilfe: https://github.com/utrost/Textr

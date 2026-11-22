@@ -2,6 +2,10 @@ package de.utrost.textr
 
 /** Physical line ranges include their original terminators, with no synthetic EOF line. */
 data class SourceLine(val start: Int, val contentEnd: Int, val end: Int, val hash: Int)
+data class DiffOptions(val ignoreWhitespace: Boolean = false, val ignoreLineEndings: Boolean = false) {
+    val active get() = ignoreWhitespace || ignoreLineEndings
+}
+
 enum class DiffKind { SAME, DELETE, ADD }
 data class DiffRow(val kind: DiffKind, val left: Int? = null, val right: Int? = null)
 enum class DiffLimit { INPUT, LINES, LINE_LENGTH, DISTANCE, WORK }
@@ -21,36 +25,52 @@ object LineDiff {
     const val MAX_WORK = 2_000_000
     private class Limit(val reason: DiffLimit) : RuntimeException()
     private fun requireBudget(value: Boolean, limit: DiffLimit) { if (!value) throw Limit(limit) }
-    private fun split(text: String): List<SourceLine> = buildList {
+    private fun split(text: String, lfOnly: Boolean): List<SourceLine> = buildList {
         var start = 0
         while (start < text.length) {
             RenderPolicy.checkCancellation()
             requireBudget(size < MAX_LINES, DiffLimit.LINES)
             var end = start
             var hash = 0
-            while (end < text.length && text[end] !in "\r\n") {
+            while (end < text.length && text[end] != '\n' && (lfOnly || text[end] != '\r')) {
                 if (end % 1024 == 0) RenderPolicy.checkCancellation()
                 requireBudget(end - start < MAX_LINE_CHARS, DiffLimit.LINE_LENGTH)
                 hash = 31 * hash + text[end++].code
             }
             val contentEnd = end
-            if (text.getOrNull(end) == '\r') hash = 31 * hash + text[end++].code
+            if (!lfOnly && text.getOrNull(end) == '\r') hash = 31 * hash + text[end++].code
             if (text.getOrNull(end) == '\n') hash = 31 * hash + text[end++].code
             add(SourceLine(start, contentEnd, end, hash)); start = end
         }
     }
-    fun compare(left: TextDocument, right: TextDocument): LineDiffResult {
+    fun compare(left: TextDocument, right: TextDocument, options: DiffOptions = DiffOptions(), lfOnly: Boolean = false): LineDiffResult {
         RenderPolicy.checkCancellation()
         return try {
             requireBudget(left.bytes in 0..MAX_BYTES && right.bytes in 0..MAX_BYTES && left.text.length <= MAX_CHARS && right.text.length <= MAX_CHARS, DiffLimit.INPUT)
-            val a = split(left.text); val b = split(right.text)
+            val a = split(left.text, lfOnly); val b = split(right.text, lfOnly)
             var work = 0
             fun step() {
                 if (++work % 1024 == 0) RenderPolicy.checkCancellation()
                 requireBudget(work <= MAX_WORK, DiffLimit.WORK)
             }
+            fun keys(text: String, lines: List<SourceLine>): List<String>? = if (!options.active) null else lines.map { line ->
+                buildString {
+                    for (at in line.start until if (options.ignoreLineEndings) line.contentEnd else line.end) {
+                        step()
+                        val char = text[at]
+                        if (!options.ignoreWhitespace || char != ' ' && char != '\t') append(char)
+                    }
+                }
+            }
+            val leftKeys = keys(left.text, a); val rightKeys = keys(right.text, b)
             fun equal(x: Int, y: Int): Boolean {
                 step()
+                if (leftKeys != null && rightKeys != null) {
+                    val first = leftKeys[x]; val second = rightKeys[y]
+                    if (first.hashCode() != second.hashCode() || first.length != second.length) return false
+                    for (at in first.indices) { step(); if (first[at] != second[at]) return false }
+                    return true
+                }
                 val first = a[x]; val second = b[y]
                 if (first.hash != second.hash || first.end - first.start != second.end - second.start) return false
                 for (index in 0 until first.end - first.start) {
