@@ -15,7 +15,7 @@ Runtime dependencies are unchanged: AndroidX/Kotlin/coroutines (Apache-2.0), Com
 
 ## Android matrix and coverage
 
-Disposable API 29 (`emulator-5560`) and API 36 (`emulator-5562`) emulators use synthetic documents/providers. Local WebView providers are **74.0.3729.185** and **133.0.6943.137**, confirmed by `dumpsys webviewupdate`; neither is evidence about current stable WebView. The current suite has **163 device cases**, adding deterministic state-save, asynchronous-search-layout and real keyboard/typing regressions. The earlier matrices below contain 161 cases. No application assertion is skipped or disabled.
+Disposable API 29 (`emulator-5560`) and API 36 (`emulator-5562`) emulators use synthetic documents/providers. Local WebView providers are **74.0.3729.185** and **133.0.6943.137**, confirmed by `dumpsys webviewupdate`; neither is evidence about current stable WebView. The current suite has **164 device cases**, adding deterministic pause/state-save, asynchronous-search-layout and real keyboard/typing regressions. Earlier counts below belong to their recorded source revisions. No application assertion is skipped or disabled.
 
 The position-fixed full API 29 run passes **161/161** in **994.043 seconds**, followed by **10/10** repetitions of the unchanged window-transition test. Hosted run [44958947702](https://github.com/utrost/Textr/actions/runs/44958947702), source `1f7890fac6a245f30ff8e30d42b5d10186e0fdb9`, passes API 29 **161/161** and build/unit/lint; API 36 finishes **158/161** (no errors/skips), retaining two source-node failures and a search-option assertion. The newest cache-refresh probes and stronger option-click assertions require their own exact-head checks before packaging.
 
@@ -58,3 +58,12 @@ All 11 primary `reading-*` screenshots and inherited Fastlane home/settings shot
 - Final tagged-source fdroidserver clean build/scans and unsigned inspection.
 - Physical-provider/human TalkBack/foldable acceptance #56 and underlying/current-WebView investigation #59.
 - Account-dependent Play work #57, F-Droid eligibility/submission #66 and public APK/production-signing gate #13. Prepared files and private drafts do not authorize those publication steps.
+
+
+## Final pause-order follow-up
+
+Hosted [44964197795](https://github.com/utrost/Textr/actions/runs/44964197795), source `cd982dc`, passes **163/163 API 36** but API 29 finishes **162/163**, retaining the unchanged 600 → 0 window-transition assertion. The successful [preceding 162-case matrix](https://github.com/utrost/Textr/actions/runs/44962042632), source `0464fe9`, passes both APIs with zero failures/errors/skips (API 29: 1,066.968 seconds; API 36: 1,207.521 seconds). Neither run is represented as proof that every position-loss path is fixed. Packaging stops on the failed final matrix before any tag/draft is created.
+
+`stateSaveRetainsPositionBeforePauseCallbacks` independently reproduces a second loss path: framework pause callbacks clamp the ready old WebView before state saving starts. Before the fix, the lifecycle trace records pre-save scroll 0, saved scroll 0 and recreated scroll 0. Textr now retains the last visible position before pause callbacks, bound to the render generation; loading pages retain their pending position, new renders invalidate the snapshot and resume clears it. State saving uses that authoritative snapshot when available. This establishes the injected path, not the exact previous hosted callback order.
+
+All **six** focused layout/recreation cases pass on each API afterward (54.211 / 54.249 seconds), including both deterministic framework-callback regressions and the original window transitions. Build, 102 JVM tests and lint pass. The unchanged transition case now retains lifecycle/viewport/saved-position diagnostics without document contents. Final exact-source matrix contains **164 cases per API** and remains required before packaging.

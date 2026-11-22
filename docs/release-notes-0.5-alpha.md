@@ -4,7 +4,7 @@ Version code **5**, Android 10/API 29 and newer, target API 36. This candidate c
 
 ## New behavior
 
-Reading-position recovery now captures a snapshot before Android framework state-save callbacks can reset an old WebView, fixing a deterministically reproduced 600 → 0 path. Source-search controls also stay stationary as asynchronous result rows change, preventing the dialog from moving between option taps. Its query now connects correctly to the software keyboard.
+Reading-position recovery now captures a snapshot before Android framework pause/state-save callbacks can reset an old WebView, fixing a deterministically reproduced 600 → 0 path. Source-search controls also stay stationary as asynchronous result rows change, preventing the dialog from moving between option taps. Its query now connects correctly to the software keyboard.
 
 - Editor Go to line, selected-line indentation/unindentation and keyboard shortcuts, plus reliable **Open saved copy** after successful Save as.
 - Review the unsaved draft against its initial original snapshot. Display-only spaces/tabs and line-ending comparison filters remain separate from exact patch export.

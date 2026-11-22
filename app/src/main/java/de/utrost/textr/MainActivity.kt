@@ -113,6 +113,8 @@ class MainActivity : ComponentActivity() {
         lineSpacing = effective.lineSpacing
     }
     private var pendingScroll = 0
+    // Generation-bound snapshot of the last visible reader before pause callbacks.
+    private var pausedReadingPosition: Pair<Int, Int>? = null
     private var formatOverride: FileKind? = null
     private var requestedMode: DisplayMode? = null
     private var homeShown = false
@@ -1925,7 +1927,7 @@ class MainActivity : ComponentActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         // Framework/view callbacks can change the old WebView while super saves it.
         // Capture once beforehand for both reading metadata and activity recovery.
-        val savedScroll = readerPosition()
+        val savedScroll = pausedReadingPosition?.takeIf { it.first == generation }?.second ?: readerPosition()
         rememberReading(savedScroll)
         super.onSaveInstanceState(outState)
         outState.putBoolean("outputPending", outputs.status.phase == OutputPhase.PICKING)
@@ -2015,8 +2017,15 @@ class MainActivity : ComponentActivity() {
         if (resumed && document != null && webView?.tag == true && !homeShown && preferences.getBoolean("keepAwake", false)) window.addFlags(flag)
         else window.clearFlags(flag)
     }
-    override fun onResume() { super.onResume(); resumed = true; updateScreenAwake() }
-    override fun onPause() { resumed = false; updateScreenAwake(); super.onPause() }
+    override fun onResume() {
+        super.onResume(); pausedReadingPosition = null; resumed = true; updateScreenAwake()
+    }
+    override fun onPause() {
+        // Android may clamp a ready WebView during pause, before state saving.
+        // Loading pages keep their pending position; newer renders invalidate this snapshot.
+        pausedReadingPosition = if (document != null && webView?.tag == true) generation to readerPosition() else null
+        resumed = false; updateScreenAwake(); super.onPause()
+    }
 
     // An unfinished WebView reports transient zero coordinates during recreation.
     private fun readerPosition() = (webView as? ReaderWebView)?.restoringPosition ?: webView?.takeIf { it.tag == true }?.scrollY ?: pendingScroll

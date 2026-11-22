@@ -13,6 +13,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.*
 import org.junit.Assert.*
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -24,6 +25,31 @@ class FoldableLayoutTest {
     private fun uri(name: String) = Uri.parse("content://de.utrost.textr.test.documents/$name")
     private fun intent(name: String) = Intent(Intent.ACTION_VIEW, uri(name), context, MainActivity::class.java)
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+    private fun tracePosition(stage: String, activity: android.app.Activity, state: Bundle? = null) {
+        if (activity !is MainActivity) return
+        val reader = activity.findViewById<WebView>(R.id.reader)
+        android.util.Log.i("TextrPositionLifecycle", "$stage id=${System.identityHashCode(activity)} changing=${activity.isChangingConfigurations} saved=${state?.getInt("scroll", -1)} scroll=${reader?.scrollY} ready=${reader?.tag} content=${reader?.contentHeight} viewport=${reader?.width}x${reader?.height} widthDp=${activity.resources.configuration.screenWidthDp}")
+    }
+    private val positionTrace = object : android.app.Application.ActivityLifecycleCallbacks {
+        override fun onActivityCreated(activity: android.app.Activity, state: Bundle?) = tracePosition("created", activity, state)
+        override fun onActivityStarted(activity: android.app.Activity) = tracePosition("started", activity)
+        override fun onActivityResumed(activity: android.app.Activity) = tracePosition("resumed", activity)
+        override fun onActivityPrePaused(activity: android.app.Activity) = tracePosition("pre-pause", activity)
+        override fun onActivityPaused(activity: android.app.Activity) = tracePosition("paused", activity)
+        override fun onActivityPostPaused(activity: android.app.Activity) = tracePosition("post-pause", activity)
+        override fun onActivityStopped(activity: android.app.Activity) = tracePosition("stopped", activity)
+        override fun onActivityPreSaveInstanceState(activity: android.app.Activity, state: Bundle) = tracePosition("pre-save", activity, state)
+        override fun onActivitySaveInstanceState(activity: android.app.Activity, state: Bundle) = tracePosition("save-callback", activity, state)
+        override fun onActivityPostSaveInstanceState(activity: android.app.Activity, state: Bundle) = tracePosition("post-save", activity, state)
+        override fun onActivityDestroyed(activity: android.app.Activity) = tracePosition("destroyed", activity)
+    }
+    @Before fun observePositionLifecycle() {
+        (context.applicationContext as android.app.Application).registerActivityLifecycleCallbacks(positionTrace)
+    }
+    @After fun stopObservingPositionLifecycle() {
+        (context.applicationContext as android.app.Application).unregisterActivityLifecycleCallbacks(positionTrace)
+    }
 
     @Before fun reset() {
         context.getSharedPreferences("open_documents", 0).edit().clear().commit()
@@ -128,6 +154,42 @@ class FoldableLayoutTest {
             }
             assertEquals("[]", context.getSharedPreferences("open_documents", 0).getString("entries", ""))
         }
+    }
+
+    @Test fun stateSaveRetainsPositionBeforePauseCallbacks() = display {
+        val app = context.applicationContext as android.app.Application
+        var target: MainActivity? = null
+        var injected = false
+        val callbacks = object : android.app.Application.ActivityLifecycleCallbacks {
+            override fun onActivityPaused(activity: android.app.Activity) {
+                if (activity === target && !injected) {
+                    injected = true
+                    activity.findViewById<WebView>(R.id.reader).scrollTo(0, 0)
+                }
+            }
+            override fun onActivityCreated(activity: android.app.Activity, state: Bundle?) {}
+            override fun onActivityStarted(activity: android.app.Activity) {}
+            override fun onActivityResumed(activity: android.app.Activity) {}
+            override fun onActivityStopped(activity: android.app.Activity) {}
+            override fun onActivitySaveInstanceState(activity: android.app.Activity, state: Bundle) {}
+            override fun onActivityDestroyed(activity: android.app.Activity) {}
+        }
+        app.registerActivityLifecycleCallbacks(callbacks)
+        try {
+            ActivityScenario.launch<MainActivity>(intent("long.ini")).use { scenario ->
+                ready(scenario)
+                scenario.onActivity {
+                    target = it
+                    val reader = it.findViewById<WebView>(R.id.reader)
+                    reader.scrollTo(0, 600); assertEquals(600, reader.scrollY)
+                }
+                scenario.recreate(); ready(scenario)
+                scenario.onActivity {
+                    assertTrue("Injected a clamp during framework pause callbacks", injected)
+                    assertEquals("Keep the last visible position through pause and save", 600, it.findViewById<WebView>(R.id.reader).scrollY)
+                }
+            }
+        } finally { app.unregisterActivityLifecycleCallbacks(callbacks) }
     }
 
     @Test fun stateSaveCapturesPositionBeforeFrameworkViewCallbacks() = display {
@@ -260,6 +322,7 @@ class FoldableLayoutTest {
     private fun resize(scenario: ActivityScenario<MainActivity>, size: String, width: Int) {
         var previous: MainActivity? = null
         scenario.onActivity { previous = it }
+        scenario.onActivity { tracePosition("before-resize", it) }
         device.executeShellCommand("wm size $size")
         await {
             var changed = false
@@ -267,6 +330,7 @@ class FoldableLayoutTest {
             changed
         }
         ready(scenario)
+        scenario.onActivity { tracePosition("resize-ready", it) }
     }
     private fun sidebar(scenario: ActivityScenario<MainActivity>, visible: Boolean) = await {
         var matches = false
