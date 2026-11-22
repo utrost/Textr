@@ -112,8 +112,22 @@ class FoldableLayoutTest {
         context.contentResolver.call(uri("fold.json"), "replace", uri("fold.json").toString(), Bundle().apply { putString("text", text) })
         ActivityScenario.launch<MainActivity>(intent("fold.json")).use { scenario ->
             ready(scenario); sidebar(scenario, true)
-            click(By.res(context.packageName, "display_mode")); click(By.text("Plain text")); ready(scenario)
-            scenario.onActivity { it.findViewById<WebView>(R.id.reader).scrollTo(0, 600) }
+            click(By.res(context.packageName, "display_mode")); click(By.text("Plain text"))
+            // Input injection can return before Android 10 handles the mode click.
+            // The outgoing page can still be ready; require the requested mode too.
+            await {
+                var selected = false
+                scenario.onActivity {
+                    selected = it.findViewById<TextView>(R.id.display_mode).text.toString() == "Plain text" &&
+                        it.findViewById<WebView>(R.id.reader)?.tag == true
+                }
+                selected
+            }
+            scenario.onActivity {
+                val reader = it.findViewById<WebView>(R.id.reader)
+                reader.scrollTo(0, 600)
+                assertEquals("Established the position in the completed Plain text view", 600, reader.scrollY)
+            }
             resize(scenario, "600x1200", 400)
             sidebar(scenario, false)
             scenario.onActivity {
