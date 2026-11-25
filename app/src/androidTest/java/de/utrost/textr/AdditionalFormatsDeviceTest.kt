@@ -98,7 +98,7 @@ class AdditionalFormatsDeviceTest {
             scenario.onActivity { it.findViewById<EditText>(R.id.search_query).setText("Board meeting") }
             await { var count = ""; scenario.onActivity { count = it.findViewById<TextView>(R.id.search_count).text.toString() }; count == "1 / 1" }
             clickDescription("Close search")
-            click("Preview"); click("Plain text"); ready(scenario)
+            click("Preview"); click("Plain text"); ready(scenario, "Plain text")
             scenario.onActivity { assertEquals(calendar, ViewModelProvider(it)[ReaderSession::class.java].document!!.source.text) }
             scenario.recreate(); ready(scenario)
             scenario.onActivity {
@@ -123,8 +123,14 @@ class AdditionalFormatsDeviceTest {
         }
     }
 
-    private fun ready(scenario: ActivityScenario<MainActivity>) = await {
-        var ready = false; scenario.onActivity { ready = it.findViewById<WebView>(R.id.reader)?.tag == true }; ready
+    private fun ready(scenario: ActivityScenario<MainActivity>, mode: String? = null) = await {
+        // A ready outgoing preview does not establish that an injected mode click was handled.
+        var ready = false
+        scenario.onActivity {
+            ready = it.findViewById<WebView>(R.id.reader)?.tag == true &&
+                (mode == null || it.findViewById<TextView>(R.id.display_mode).text.toString() == mode)
+        }
+        ready
     }
     private fun click(text: String) {
         val node = device.wait(Until.findObject(By.text(java.util.regex.Pattern.compile(java.util.regex.Pattern.quote(text), java.util.regex.Pattern.CASE_INSENSITIVE))), 5000)
