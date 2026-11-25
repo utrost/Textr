@@ -4,11 +4,13 @@ Textr is an offline text reader and inspector for Android, with explicit editing
 
 **Android 10+ · Offline · English and German · GPL-3.0-only**
 
-**Private testing:** the verified private draft is **[0.5-alpha (code 5)](https://github.com/utrost/Textr/releases/tag/untagged-403cd7772a9feb20b00d)**, adding editor line actions, original/draft review, comparison filters and exact patch export, collections, JSONL navigation, markup highlighting, read-only Markdown tasks and verified draft-release tools. Earlier private drafts, including 0.4-alpha, remain immutable. See [release notes](docs/release-notes-0.5-alpha.md), [releases](https://github.com/utrost/Textr/releases) and the [roadmap](docs/roadmap.md); draft APK assets require repository write access.
+[![Android checks](https://github.com/utrost/Textr/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/utrost/Textr/actions/workflows/ci.yml)
 
-**Roadmap completion:** [PR #127](https://github.com/utrost/Textr/pull/127) contains the ten remaining feature/automation implementations, distribution preparation and updated documentation. See [validation](docs/validation-roadmap-completion.md) and the PR checks for exact-source evidence. The earlier eight QoL improvements are merged through [PR #126](https://github.com/utrost/Textr/pull/126). Physical-provider, human TalkBack and foldable acceptance remain open in [#56](https://github.com/utrost/Textr/issues/56), with the underlying [WebView accessibility investigation #59](https://github.com/utrost/Textr/issues/59).
+**Latest private testing release: [0.5-alpha · version code 5](https://github.com/utrost/Textr/releases/tag/untagged-403cd7772a9feb20b00d).** Repository maintainers can download the APK, matching source, checksums and signing records from the draft. It includes all ten roadmap additions and the earlier eight quality-of-life improvements. Read the [release notes](docs/release-notes-0.5-alpha.md) and [installation/upgrade guide](docs/installing.md). Public source is available to everyone; [build locally](#build-and-install) for a development APK.
 
-The source is public. Public APK distribution, production signing and store publication remain deferred. Draft release assets require repository write access; everyone can [build locally](#build-and-install).
+**Project status:** the feature roadmap is implemented and merged through [PR #127](https://github.com/utrost/Textr/pull/127). The accepted 0.5-alpha implementation passed **102 JVM tests, lint and 164 device tests on each of API 29 and 36**, plus fresh-install, 0.4-alpha upgrade and unsigned F-Droid build/scanning checks. See the [validation record](docs/validation-roadmap-completion.md) and [current CI](https://github.com/utrost/Textr/actions/workflows/ci.yml).
+
+The remaining [roadmap work](docs/roadmap.md) is physical-provider, spoken TalkBack and foldable acceptance ([#56](https://github.com/utrost/Textr/issues/56)), the [WebView accessibility investigation (#59)](https://github.com/utrost/Textr/issues/59), and distribution gates. Standard F-Droid signing is selected and prepared; external submission, public APK publication, production signing and Play publication remain deferred. Developer/privacy/support contact: **utrost**, through [Textr issues](https://github.com/utrost/Textr/issues).
 
 | Markdown preview | JavaScript source | Optional wide-screen sidebar |
 | --- | --- | --- |
@@ -38,7 +40,7 @@ The source is public. Public APK distribution, production signing and store publ
 - Compares bounded source snapshots with exact changes, optional whitespace/ending display filters, exact unified patch export, keyboard/copy actions and linked side-by-side views; compact/large-text windows use unified comparison.
 - Offers **Edit a copy…** for TXT/Markdown, with bounded undo/redo, literal find/replace, line/indentation actions, original/draft review, private recovery and explicit Save as with Open saved copy. See [editor limits and fidelity](docs/editing-copies.md).
 - Exports converted HTML reading content to a new UTF-8 Markdown file through [Save Markdown as](docs/save-as.md).
-- Remembers recent files and approximate reading positions. Pin recents, keep up to five documents open, and save up to 100 named bookmarks, and organize references in bounded [reading collections](docs/collections.md).
+- Remembers recent files and approximate reading positions. Pin recents, keep up to five documents open, save up to 100 named bookmarks, and organize references in bounded [reading collections](docs/collections.md).
 - Offers an optional file sidebar on sufficiently large windows, plus keyboard shortcuts. The sidebar stays off until you enable it.
 - Provides English and German controls, errors, preview labels and offline help, following the device/app language. Document contents are never translated.
 - Shows reading, preparation and layout stages, with cancellation and explanations when loading takes longer.
@@ -47,7 +49,7 @@ Opening a format does not guarantee highlighting. Generic configuration files us
 
 ## Quality-of-life additions
 
-The merged quality-of-life batch adds recent-file search/filtering, previous reading positions, Copy Markdown for HTML, unsaved Markdown preview, reopening closed documents, optional screen-awake reading, Find selected text and a last-save-location suggestion. See the [usage guide](docs/quality-of-life.md) and [validation](docs/validation-quality-of-life.md). These changes are in the private 0.4-alpha candidate; the ten roadmap additions require the 0.5-alpha source/candidate.
+The merged quality-of-life batch adds recent-file search/filtering, previous reading positions, Copy Markdown for HTML, unsaved Markdown preview, reopening closed documents, optional screen-awake reading, Find selected text and a last-save-location suggestion. See the [usage guide](docs/quality-of-life.md) and [validation](docs/validation-quality-of-life.md). All eight improvements are included in 0.5-alpha alongside the editor, comparison, collections and format additions shown above.
 
 ## Open a file
 
@@ -69,7 +71,7 @@ Read the [privacy policy](docs/privacy.md), also linked from **About Textr**. Mo
 
 ## Build and install
 
-Requirements: **JDK 17**, Android SDK **Platform 36** and **Build Tools 36.0.0**. Set `ANDROID_HOME`, or put `sdk.dir` in an untracked `local.properties`. Android Studio can import the project. The included Gradle wrapper downloads dependencies on the first build.
+Requirements: **JDK 17**, Android SDK **Platform 36** and **Build Tools 36.0.0**. Set `ANDROID_HOME`, or put `sdk.dir` in an untracked `local.properties`. Android Studio can import the project. Current main uses **Gradle 9.9.0 / Android Gradle Plugin 9.5.1**; the included wrapper verifies the distribution checksum and downloads dependencies on the first build. The immutable 0.5-alpha source tag retains its original toolchain.
 
 ```sh
 ./gradlew :app:assembleDebug
@@ -89,7 +91,7 @@ Use `gradlew.bat` on Windows. Debug builds use a development signing key and are
 
 - Automatic decoding supports UTF-8 and BOM-marked UTF-16. Explicit encoding choices also support Windows-1252, ISO-8859-1 and UTF-16 without a BOM.
 - Previews and highlighting have [bounded complexity and size](docs/formats.md); larger or invalid previews fall back to source. Large text files and long lines may display slowly.
-- Markdown images, raw embedded HTML and relative file links are unsupported. Local HTML conversion is available in 0.2-alpha; it never loads the original page or remote resources. Calendar recurrence is not expanded; no events or alarms are imported.
+- Markdown images, raw embedded HTML and relative file links are unsupported. Local HTML conversion never loads the original page or remote resources. Calendar recurrence is not expanded; no events or alarms are imported.
 - Search is literal, within one file; source results are capped at 200. Copy editing accepts at most 256 Ki characters, 10,000 lines and 4,096 characters per line; comparison has separate [input/work limits](docs/comparison.md). No in-place editing, file management, unbounded tabs, or huge-log support.
 - WebView 133 can omit CSV cells and source nodes. **⋮ → Accessible table… → Show source** provides a native compatibility route for bounded CSV documents. See [behavior and validation](docs/validation-reader-polish.md). Human spoken-feedback and physical foldable checks remain follow-ups.
 - Public APK release, real-device beta and optional Play distribution have separate remaining gates in the [roadmap](docs/roadmap.md).

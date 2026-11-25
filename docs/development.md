@@ -8,7 +8,7 @@ Use JDK 17, Android SDK Platform 36, and Build Tools 36.0.0. Configure `ANDROID_
 ./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug
 ```
 
-The Gradle wrapper pins version 9.3.1 and verifies its distribution checksum. Android Gradle Plugin 9.1.0 provides built-in Kotlin support. Production dependencies are pinned in `app/build.gradle.kts`. Initial dependency downloads require internet access on the build machine; the app has no network permission.
+The Gradle wrapper pins version 9.9.0 and verifies its distribution checksum. Android Gradle Plugin 9.5.1 provides built-in Kotlin support. Production dependencies are pinned in `app/build.gradle.kts`. Initial dependency downloads require internet access on the build machine; the app has no network permission.
 
 Install `app/build/outputs/apk/debug/app-debug.apk` with `adb install -r`. This is a development build using a local debug key. Owner-provided release signing is supported; see [release signing](releasing.md). No production signing credentials are committed.
 
@@ -43,7 +43,7 @@ Reports are generated under `app/build/reports/tests/`, `app/build/reports/andro
 
 Validation uses clean Android 10, 15, and 16 emulators (API 29, 35, and 36). The owner explicitly selected emulator validation because no physical device is available. That satisfies the original compatibility work; the later physical-device beta in #56 remains open before claiming provider, TalkBack or Magic V6 validation. CI runs build, unit tests, lint, and API 29/36 instrumentation for pull requests and the default branch.
 
-Current 0.2-alpha evidence is in [roadmap implementation validation](validation-roadmap-implementation.md): 86 JVM tests and 123 device tests per API 29/36 passed. Earlier [baseline](validation.md) and [reader UX](validation-reader-ux.md) records retain historical configurations and counts.
+The accepted 0.5-alpha implementation passes 102 JVM tests, lint and 164 device tests on each API 29/36; see [roadmap completion validation](validation-roadmap-completion.md). The immutable release tag uses Gradle 9.3.1 / AGP 9.1.0; current main has the toolchain stated above. [Android plugin compatibility](https://developer.android.com/build/releases/agp-9-5-0-release-notes) and [Gradle release notes](https://docs.gradle.org/9.9.0/release-notes.html) describe the updated build tools. Earlier [baseline](validation.md) and [reader UX](validation-reader-ux.md) records retain historical configurations and counts.
 
 ## Manual acceptance checklist
 
