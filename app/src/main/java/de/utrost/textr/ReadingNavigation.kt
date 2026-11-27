@@ -5,7 +5,10 @@ data class NavigationPosition(val mode: DisplayMode, val scroll: Int, val query:
 
 /** Session-only, bounded locations; no source contents or persisted search queries. */
 class ReadingNavigation {
-    private data class History(val fingerprint: String, val positions: ArrayDeque<NavigationPosition> = ArrayDeque())
+    private class History(val fingerprint: String) {
+        val previous = ArrayDeque<NavigationPosition>()
+        val next = ArrayDeque<NavigationPosition>()
+    }
     private val documents = linkedMapOf<String, History>()
     fun bind(key: String, fingerprint: String) {
         val previous = documents.remove(key)
@@ -13,12 +16,21 @@ class ReadingNavigation {
         while (documents.size > 5) documents.remove(documents.keys.first())
     }
     fun push(key: String, position: NavigationPosition) {
-        val positions = documents[key]?.positions ?: return
-        if (positions.lastOrNull() != position) positions.addLast(position)
-        while (positions.size > 20) positions.removeFirst()
+        val history = documents[key] ?: return
+        history.next.clear()
+        if (history.previous.lastOrNull() != position) history.previous.addLast(position)
+        if (history.previous.size > 20) history.previous.removeFirst()
     }
-    fun hasPrevious(key: String) = documents[key]?.positions?.isNotEmpty() == true
-    fun pop(key: String) = documents[key]?.positions?.removeLastOrNull()
+    fun hasPrevious(key: String) = documents[key]?.previous?.isNotEmpty() == true
+    fun hasNext(key: String) = documents[key]?.next?.isNotEmpty() == true
+    fun move(key: String, current: NavigationPosition, forward: Boolean): NavigationPosition? {
+        val history = documents[key] ?: return null
+        val from = if (forward) history.next else history.previous
+        val to = if (forward) history.previous else history.next
+        val destination = from.removeLastOrNull() ?: return null
+        to.addLast(current)
+        return destination
+    }
     fun clear(key: String) { documents.remove(key) }
 }
 

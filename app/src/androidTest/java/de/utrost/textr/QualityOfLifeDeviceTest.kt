@@ -68,15 +68,86 @@ class QualityOfLifeDeviceTest {
             device.findObject(By.clazz(EditText::class.java)).text = "300"
             click(R.string.go)
             ready(scenario); await { scroll(scenario) > before + 1000 }
+            val destination = scroll(scenario)
             scenario.recreate(); ready(scenario)
             menu(R.string.previous_position); ready(scenario)
             await { kotlin.math.abs(scroll(scenario) - before) <= 3 }
             scenario.onActivity { assertFalse(ViewModelProvider(it)[ReaderSession::class.java].navigation.hasPrevious(uri("navigation.txt").toString())) }
+            menu(R.string.next_position)
+            await { kotlin.math.abs(scroll(scenario) - destination) <= 3 }
+            menu(R.string.previous_position)
+            await { kotlin.math.abs(scroll(scenario) - before) <= 3 }
             context.contentResolver.call(uri("navigation.txt"), "replace", uri("navigation.txt").toString(), Bundle().apply { putString("text", "changed") })
             menu(R.string.reload); ready(scenario)
-            scenario.onActivity { assertFalse(ViewModelProvider(it)[ReaderSession::class.java].navigation.hasPrevious(uri("navigation.txt").toString())) }
+            scenario.onActivity {
+                val navigation = ViewModelProvider(it)[ReaderSession::class.java].navigation
+                assertFalse(navigation.hasPrevious(uri("navigation.txt").toString()))
+                assertFalse(navigation.hasNext(uri("navigation.txt").toString()))
+            }
         }
     }
+    @Test fun homeContinuesAtTheSavedPositionDespitePinnedOlderFile() {
+        val first = uri("older.txt")
+        repository.remember(first, "older.txt")
+        assertTrue(repository.togglePin(first.toString()))
+        val text = (1..400).joinToString("\n") { "Line $it" }
+        launch("resume.txt", text).use { scenario ->
+            ready(scenario)
+            scenario.onActivity { it.findViewById<WebView>(R.id.reader).scrollTo(0, 650) }
+            val before = scroll(scenario)
+            assertTrue(before > 0)
+            device.findObject(By.desc(context.getString(R.string.back_to_files))).click()
+            await { device.hasObject(By.res(context.packageName, "continue_reading").textContains("resume.txt")) }
+            val current = repository.recentFiles().single { it.name == "resume.txt" }
+            assertTrue((current.progress ?: -1) in 1..99)
+            scenario.onActivity { it.findViewById<Button>(R.id.continue_reading).performClick() }
+            ready(scenario)
+            await { kotlin.math.abs(scroll(scenario) - before) <= 3 }
+        }
+    }
+
+    @Test fun readerAddsCurrentFileToExistingAndNewCollections() {
+        val store = ReadingCollections(context)
+        val existing = store.create("Reader shortcuts QA")!!
+        try {
+            launch("collect.txt", "Reference-only fixture").use { scenario ->
+                ready(scenario)
+                menu(R.string.add_to_collection)
+                device.wait(Until.findObject(By.text("Reader shortcuts QA")), 5000).click()
+                await { store.entries().first { it.id == existing }.members.singleOrNull()?.uri == uri("collect.txt").toString() }
+                menu(R.string.add_to_collection)
+                click(R.string.collection_create)
+                device.wait(Until.findObject(By.clazz(EditText::class.java)), 5000).text = "Reader shortcuts QA new"
+                click(R.string.collection_create)
+                await { store.entries().firstOrNull { it.name == "Reader shortcuts QA new" }?.members?.singleOrNull()?.uri == uri("collect.txt").toString() }
+            }
+        } finally {
+            store.delete(existing)
+            store.entries().firstOrNull { it.name == "Reader shortcuts QA new" }?.let { store.delete(it.id) }
+        }
+    }
+
+    @Test fun readerWrapTogglePersistsWithoutChangingGlobalTypography() {
+        val preferences = context.getSharedPreferences("reading", 0)
+        preferences.edit().putInt("fontSize", 20).commit()
+        launch("wrap.txt", (1..400).joinToString("\n") { "Line $it" }).use { scenario ->
+            ready(scenario)
+            scenario.onActivity { it.findViewById<WebView>(R.id.reader).scrollTo(0, 650) }
+            val before = scroll(scenario)
+            menu(R.string.disable_line_wrap)
+            await { repository.readingState(uri("wrap.txt")).profile?.wrap == false }
+            ready(scenario)
+            assertEquals(before, scroll(scenario))
+            scenario.recreate()
+            ready(scenario)
+            menu(R.string.enable_line_wrap)
+            await { repository.readingState(uri("wrap.txt")).profile?.wrap == true }
+            assertTrue(repository.readingState(uri("wrap.txt")).profile!!.inheritTypography)
+            assertEquals(20, preferences.getInt("fontSize", 16))
+            assertTrue(preferences.getBoolean("wrap", true))
+        }
+    }
+
     @Test fun copyMarkdownUsesConversionAndCopyAllStillUsesHtml() {
         val source = "<h1>Heading</h1><p>Grüße &amp; 🚀 <strong>bold</strong></p>"
         launch("copy.html", source).use { scenario ->

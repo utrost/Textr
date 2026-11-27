@@ -375,4 +375,14 @@
     <string name="collection_limit">Einen eindeutigen, nicht leeren Namen mit höchstens 80 Zeichen verwenden. Grenzen: 20 Sammlungen, 30 Verweise pro Sammlung, insgesamt 200 Zuordnungen; keine doppelten Verweise.</string>
     <string name="editor_compare_unavailable">Die Ausgangsmomentaufnahme fehlt in diesem älteren Wiederherstellungsentwurf. Der Vergleich ist deaktiviert; der Provider wird nicht still neu eingelesen.</string>
     <string name="saved_copy_unavailable">Dieser Verweis kann hier nicht geöffnet werden. Mit Datei öffnen erneut auswählen. Ein abgeschlossener Speichervorgang bleibt erfolgreich.</string>
+    <string name="continue_reading">Weiterlesen</string>
+    <string name="continue_reading_file">Weiterlesen: %1$s</string>
+    <string name="continue_reading_progress">Etwa %1$d%% gelesen</string>
+    <string name="next_position">Nächste Leseposition</string>
+    <string name="enable_line_wrap">Zeilenumbruch einschalten</string>
+    <string name="disable_line_wrap">Zeilenumbruch ausschalten</string>
+    <string name="add_to_collection">Zur Sammlung hinzufügen…</string>
+    <string name="collection_added">Zur Sammlung hinzugefügt</string>
+    <string name="collection_cannot_add">Dieses Dokument kann keiner Sammlung hinzugefügt werden. Es ist möglicherweise bereits enthalten oder ein Sammlungslimit wurde erreicht.</string>
+    <string name="collection_choose_create">Erstelle eine Sammlung für dieses Dokument.</string>
 </resources>

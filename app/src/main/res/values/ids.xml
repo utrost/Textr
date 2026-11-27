@@ -76,4 +76,5 @@
     <item name="collection_create" type="id" />
     <item name="collection_add" type="id" />
     <item name="collection_done" type="id" />
+    <item name="continue_reading" type="id" />
 </resources>

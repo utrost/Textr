@@ -47,3 +47,11 @@ The integration uses Android's `PROCESS_TEXT` action. WebView must support that 
 After successful editor **Save as** or HTML **Save Markdown as**, the next system picker receives the last successful destination document URI as an initial-location hint. Android/providers may navigate to its parent, ignore the hint or fall back if it is unavailable. You still choose and confirm every destination; Textr does not derive filesystem paths from provider URIs.
 
 Cancellation, rejected targets and failed/partial writes do not replace the previous hint. **Reading settings → Forget last save location** removes it. This preference contains one opaque URI, survives process recreation, and is excluded from backup with other app data. It retains no output write grant and stores no output content. Physical/cloud-provider behavior remains part of [private beta #56](https://github.com/utrost/Textr/issues/56).
+
+## Reader shortcuts
+
+- **Continue reading** on Home opens the latest successfully opened recent file. Above the filtered and pinned Recents list, the shortcut shows the filename and an approximate saved percentage when available. It follows the same access and position recovery rules as opening that recent file.
+- **Add to collection…** files the current document from the reader. Choose a collection with space or create one with the current document as its first member. Existing members are omitted from the chooser.
+- **Next reading position** returns to a location after using **Previous reading position**. A fresh jump replaces the forward path. Both directions share the existing session limit of 20 stored locations per document.
+- **Turn on/off line wrapping** changes wrapping for the current file in source views and restores its approximate scroll position after reflow. If the file follows global typography, size, font and spacing still follow global defaults. **Use global reading defaults** also resets the wrapping override.
+- The save picker suggests names such as `meeting-notes-copy.md`, `article.md` and `config-changes.patch`. Suggestions use display names and can be edited before saving.

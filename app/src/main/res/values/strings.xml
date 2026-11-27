@@ -381,4 +381,14 @@ Document switching follows alphabetical filename order. Shortcuts leave text fie
     <string name="collection_limit">Use a unique, nonempty name up to 80 characters. Limits: 20 collections, 30 references per collection, 200 memberships total; no duplicate references.</string>
     <string name="editor_compare_unavailable">The original editing snapshot is unavailable in this older recovery draft. Comparison is disabled; the provider is never silently reread.</string>
     <string name="saved_copy_unavailable">Cannot open this reference here. Use Open file to select it again. Any completed save remains successful.</string>
+    <string name="continue_reading">Continue reading</string>
+    <string name="continue_reading_file">Continue reading: %1$s</string>
+    <string name="continue_reading_progress">About %1$d%% read</string>
+    <string name="next_position">Next reading position</string>
+    <string name="enable_line_wrap">Turn on line wrapping</string>
+    <string name="disable_line_wrap">Turn off line wrapping</string>
+    <string name="add_to_collection">Add to collection…</string>
+    <string name="collection_added">Added to collection</string>
+    <string name="collection_cannot_add">No collection can accept this document. It may already be included, or a collection limit has been reached.</string>
+    <string name="collection_choose_create">Create a collection to add this document.</string>
 </resources>
