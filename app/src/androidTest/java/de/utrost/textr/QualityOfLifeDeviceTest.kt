@@ -116,9 +116,9 @@ class QualityOfLifeDeviceTest {
                 device.wait(Until.findObject(By.text("Reader shortcuts QA")), 5000).click()
                 await { store.entries().first { it.id == existing }.members.singleOrNull()?.uri == uri("collect.txt").toString() }
                 menu(R.string.add_to_collection)
-                click(R.string.collection_create)
+                device.wait(Until.findObject(By.res("android", "button3")), 5000).click()
                 device.wait(Until.findObject(By.clazz(EditText::class.java)), 5000).text = "Reader shortcuts QA new"
-                click(R.string.collection_create)
+                device.wait(Until.findObject(By.res("android", "button1")), 5000).click()
                 await { store.entries().firstOrNull { it.name == "Reader shortcuts QA new" }?.members?.singleOrNull()?.uri == uri("collect.txt").toString() }
             }
         } finally {
