@@ -51,6 +51,8 @@ Opening a format does not guarantee highlighting. Generic configuration files us
 
 The merged quality-of-life batch adds recent-file search/filtering, previous reading positions, Copy Markdown for HTML, unsaved Markdown preview, reopening closed documents, optional screen-awake reading, Find selected text and a last-save-location suggestion. See the [usage guide](docs/quality-of-life.md) and [validation](docs/validation-quality-of-life.md). All eight improvements are included in 0.5-alpha alongside the editor, comparison, collections and format additions shown above.
 
+Current main also adds Continue reading from Home, direct collection filing, forward reading history, a per-document wrap toggle and editable export filename suggestions. See [reader shortcuts](docs/quality-of-life.md#reader-shortcuts).
+
 ## Open a file
 
 Use **Open file** on the home screen, or choose Textr from another app’s **Open with** or **Share** action. Tap the display-mode button to change views; **⋮** contains file actions, reading settings, bookmarks and About.

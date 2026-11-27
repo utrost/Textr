@@ -257,10 +257,9 @@ class EditorActivity : ReadingScreen() {
                 fun begin() {
                     model.format(selected, bom.isChecked)
                     val value = model.draft ?: return
-                    val leaf = value.name.substringAfterLast('/').substringAfterLast('\\').replace(Regex("[\\p{Cntrl}/\\\\]"), "_").take(120)
-                    val extension = if (leaf.substringAfterLast('.', "").lowercase() in setOf("md", "markdown", "mdown")) "md" else "txt"
-                    val name = leaf.substringBeforeLast('.', leaf).ifBlank { "document" } + "-copy.$extension"
-                    val intent = outputs.begin(OutputRequest(name, if (extension == "md") "text/markdown" else "text/plain", model.buffer!!.text,
+                    val name = OutputNames.copy(value.name, value.markdown)
+                    val mime = if (value.markdown) "text/markdown" else "text/plain"
+                    val intent = outputs.begin(OutputRequest(name, mime, model.buffer!!.text,
                         value.sourceUri, value.encoding, value.bom, value.id, model.buffer!!.revision))
                     try { picker.launch(intent) } catch (_: android.content.ActivityNotFoundException) { outputs.pickerUnavailable() } catch (_: SecurityException) { outputs.pickerUnavailable() }
                 }

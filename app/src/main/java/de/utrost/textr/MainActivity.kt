@@ -106,9 +106,10 @@ class MainActivity : ComponentActivity() {
     private var lineSpacing = 160
 
     private fun applyReadingProfile() {
-        val effective = readingProfile ?: ReadingProfile.defaults(preferences)
+        val defaults = ReadingProfile.defaults(preferences)
+        val effective = readingProfile?.takeUnless { it.inheritTypography } ?: defaults
         fontSize = effective.fontSize
-        wrap = effective.wrap
+        wrap = readingProfile?.wrap ?: defaults.wrap
         readingFont = effective.font
         lineSpacing = effective.lineSpacing
     }
@@ -441,6 +442,17 @@ class MainActivity : ComponentActivity() {
         val body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(24), dp(24), dp(24), dp(24)) }
         body.addView(TextView(this).apply { text = getString(R.string.home_description); textSize = 18f; setTextColor(foreground()) })
         body.addView(button(R.string.open_file) { openPicker() }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(24); bottomMargin = dp(32) })
+        val recents = repository.recentFiles().sortedWith(compareByDescending<RecentFile> { it.pinned }.thenByDescending { it.openedAt })
+        recents.maxByOrNull { it.openedAt }?.let { recent ->
+            val caption = getString(R.string.continue_reading_file, recent.name) +
+                (recent.progress?.let { "\n" + getString(R.string.continue_reading_progress, it) } ?: "")
+            body.addView(button(R.string.continue_reading, caption) { openDocument(Uri.parse(recent.uri)) }.apply {
+                id = R.id.continue_reading
+                contentDescription = caption
+                maxLines = 4
+                ellipsize = android.text.TextUtils.TruncateAt.END
+            }, LinearLayout.LayoutParams(-1, -2))
+        }
         resumeDraftButton = button(R.string.editor_resume) { startActivity(Intent(this, EditorActivity::class.java)) }.apply {
             id = R.id.editor_resume; visibility = if (EditDraftStore(this@MainActivity).exists()) View.VISIBLE else View.GONE
         }
@@ -448,7 +460,6 @@ class MainActivity : ComponentActivity() {
         body.addView(button(R.string.collections) { startActivity(Intent(this, CollectionsActivity::class.java)) }.apply { id = R.id.collections })
         val recentHeader = row()
         recentHeader.addView(TextView(this).apply { text = getString(R.string.recent_files); textSize = 20f; setTextColor(foreground()) }, LinearLayout.LayoutParams(0, -2, 1f))
-        val recents = repository.recentFiles().sortedWith(compareByDescending<RecentFile> { it.pinned }.thenByDescending { it.openedAt })
         body.addView(recentHeader)
         if (recents.isEmpty()) body.addView(TextView(this).apply {
             text = getString(R.string.empty_history); textSize = 16f; setTextColor(foreground()); setPadding(0, dp(16), 0, 0)
@@ -549,7 +560,7 @@ class MainActivity : ComponentActivity() {
                 item(R.string.open_file) { openPicker() }
                 val ready = document != null && webView?.tag == true
                 item(R.string.copy_all, ready) { copyAll() }
-                item(R.string.previous_position, ready && session.navigation.hasPrevious(documentKey())) { previousPosition() }
+                item(R.string.previous_position, ready && session.navigation.hasPrevious(documentKey())) { moveReadingPosition(forward = false) }
                 if (document?.source?.kind == FileKind.HTML) item(R.string.copy_markdown, ready && document?.convertedMarkdown != null) {
                     document?.convertedMarkdown?.let { copyText(it, R.string.copy_markdown) }
                 }
@@ -589,10 +600,70 @@ class MainActivity : ComponentActivity() {
             item(R.string.bookmarks) { showBookmarks() }
             item(R.string.collections) { startActivity(Intent(this@MainActivity, CollectionsActivity::class.java)) }
             item(R.string.settings) { showSettings() }
+            if (!homeShown) {
+                val ready = document != null && webView?.tag == true
+                item(R.string.next_position, ready && session.navigation.hasNext(documentKey())) { moveReadingPosition(forward = true) }
+                item(R.string.add_to_collection, ready && currentUri != null) { addCurrentToCollection() }
+                if (mode != DisplayMode.PREVIEW) {
+                    item(if (wrap) R.string.disable_line_wrap else R.string.enable_line_wrap, ready) { toggleLineWrap() }
+                }
+            }
             if (homeShown) item(R.string.opening_help) { showOpeningHelp() }
             item(R.string.about) { showAbout() }
             show()
         }
+    }
+
+    private fun toggleLineWrap() {
+        if (document == null || webView?.tag != true || mode == DisplayMode.PREVIEW) return
+        val profile = readingProfile ?: ReadingProfile(inheritTypography = true)
+        readingProfile = profile.copy(wrap = !wrap)
+        applyReadingProfile()
+        rememberReading()
+        render()
+    }
+
+    private fun addCurrentToCollection() {
+        val uri = currentUri ?: return
+        val name = document?.source?.name ?: return
+        if (webView?.tag != true) return
+        val store = ReadingCollections(this)
+        val member = CollectionMember(uri.toString(), name)
+        val collections = store.entries()
+        val available = collections.filter { collection ->
+            collection.members.size < ReadingCollections.MAX_MEMBERS && collection.members.none { it.uri == member.uri }
+        }
+        val space = collections.sumOf { it.members.size } < ReadingCollections.MAX_TOTAL
+        fun result(added: Boolean) {
+            Toast.makeText(this, if (added) R.string.collection_added else R.string.collection_cannot_add, Toast.LENGTH_SHORT).show()
+        }
+        fun createCollection() {
+            val field = EditText(this).apply {
+                hint = getString(R.string.collection_name)
+                isSingleLine = true
+                filters = arrayOf(android.text.InputFilter.LengthFilter(ReadingCollections.MAX_NAME))
+            }
+            val dialog = AlertDialog.Builder(this).setTitle(R.string.collection_create).setView(field)
+                .setNegativeButton(R.string.cancel, null).setPositiveButton(R.string.collection_create, null).create()
+            dialog.present()
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                if (store.create(field.text.toString(), member) == null) field.error = getString(R.string.collection_limit)
+                else { dialog.dismiss(); result(true) }
+            }
+        }
+        val canCreate = space && collections.size < ReadingCollections.MAX_COLLECTIONS
+        if (!space || available.isEmpty() && !canCreate) {
+            result(false)
+            return
+        }
+        val chooser = AlertDialog.Builder(this).setTitle(R.string.add_to_collection)
+            .setNegativeButton(R.string.cancel, null)
+        if (available.isEmpty()) chooser.setMessage(R.string.collection_choose_create)
+        else chooser.setItems(available.map { it.name }.toTypedArray()) { _, index ->
+            result(store.add(available[index].id, member))
+        }
+        if (canCreate) chooser.setNeutralButton(R.string.collection_create) { _, _ -> createCollection() }
+        chooser.create().present()
     }
 
     private fun copyAll() {
@@ -804,8 +875,7 @@ class MainActivity : ComponentActivity() {
         val markdown = prepared.convertedMarkdown ?: return
         if (outputs.busy || webView?.tag != true) return
         val sourceUri = currentUri?.toString()
-        val leaf = prepared.source.name.substringAfterLast('/').substringAfterLast('\\')
-        val name = leaf.substringBeforeLast('.', leaf).replace(Regex("[\\p{Cntrl}/\\\\]"), "_").take(120).ifBlank { "document" } + ".md"
+        val name = OutputNames.markdown(prepared.source.name)
         AlertDialog.Builder(this).setTitle(R.string.html_export).setMessage(R.string.html_export_help)
             .setNegativeButton(R.string.cancel, null).setPositiveButton(R.string.choose_destination) { _, _ ->
                 if (!canInteract() || outputs.busy) return@setPositiveButton
@@ -1570,11 +1640,11 @@ class MainActivity : ComponentActivity() {
     }
 
     @Suppress("DEPRECATION")
-    private fun readingFraction(): Double {
+    private fun readingFraction(position: Int? = null): Double {
         val view = webView ?: return 0.0
-        if (!view.canScrollVertically(1)) return 1.0
+        if ((position == null || position == view.scrollY) && !view.canScrollVertically(1)) return 1.0
         val bottom = (view.contentHeight * view.scale).toInt() - view.height
-        return if (bottom <= 0) 1.0 else (view.scrollY.toDouble() / bottom).coerceIn(0.0, 1.0)
+        return if (bottom <= 0) 1.0 else ((position ?: view.scrollY).toDouble() / bottom).coerceIn(0.0, 1.0)
     }
 
     private fun updateProgress() {
@@ -1966,7 +2036,9 @@ class MainActivity : ComponentActivity() {
                 session.returnState = ReaderReturnState(document!!, original, currentUri?.toString(), reading,
                     searchField.text.toString().take(1000), searchRow.visibility == View.VISIBLE, pendingGrantFlags)
             }
-            currentUri?.let { repository.saveReadingState(it, reading) }
+            val csvTable = document?.source?.kind == FileKind.CSV && mode == DisplayMode.PREVIEW
+            val progress = if (csvTable) null else (readingFraction(position) * 100).toInt()
+            currentUri?.let { repository.saveReadingState(it, reading, progress) }
             openDocuments.entries.find { it.key == (currentUri?.toString() ?: "shared-text") }?.let {
                 it.reading = reading
                 it.query = searchField.text.toString().take(1000)
@@ -1992,13 +2064,18 @@ class MainActivity : ComponentActivity() {
     private fun documentKey() = currentUri?.toString() ?: "shared-text"
     private fun rememberPosition() {
         if (document == null || webView?.tag != true) return
-        session.navigation.push(documentKey(), NavigationPosition(mode, readerPosition(), searchField.text.toString().take(SourceSearch.MAX_QUERY),
-            searchRow.visibility == View.VISIBLE, openDocuments.entries.find { it.key == documentKey() }?.sourceSearch ?: SourceSearchOptions()))
+        session.navigation.push(documentKey(), navigationPosition())
     }
+    private fun navigationPosition() = NavigationPosition(
+        mode, readerPosition(), searchField.text.toString().take(SourceSearch.MAX_QUERY),
+        searchRow.visibility == View.VISIBLE,
+        openDocuments.entries.find { it.key == documentKey() }?.sourceSearch ?: SourceSearchOptions()
+    )
     private fun findNext(forward: Boolean) { rememberPosition(); (webView as? ReaderWebView)?.cancelFindRestore(); webView?.findNext(forward) }
-    private fun previousPosition() {
+    private fun moveReadingPosition(forward: Boolean) {
         val prepared = document ?: return
-        val position = session.navigation.pop(documentKey()) ?: return
+        if (webView?.tag != true) return
+        val position = session.navigation.move(documentKey(), navigationPosition(), forward) ?: return
         mode = position.mode.takeIf { it in prepared.modes } ?: prepared.defaultMode
         anchor = null; sourceMatch = null; targetLine = 0
         pendingScroll = position.scroll

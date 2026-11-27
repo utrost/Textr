@@ -54,7 +54,7 @@ class ComparisonActivity : ReadingScreen() {
         restoreRight = savedInstanceState?.getInt("scrollRight", -1) ?: -1
         restoreTop = savedInstanceState?.getInt("scrollTop", 0) ?: 0
         build()
-        if (savedInstanceState?.getBoolean("outputPending") == true) outputs.restorePending("changes.patch", null)
+        if (savedInstanceState?.getBoolean("outputPending") == true) outputs.restorePending(savedInstanceState.getString("outputName") ?: OutputNames.patch(null), null)
         if (!model.initialized) {
             model.initialized = true
             if (savedInstanceState != null) model.restore(savedInstanceState)
@@ -197,7 +197,7 @@ class ComparisonActivity : ReadingScreen() {
         }
         status.text = (if (model.changedSources) getString(R.string.compare_changed) + "\n" else "") + message + if (model.options.active) "\n" + getString(R.string.compare_filters_active) else ""
         model.takeExport()?.let { patch ->
-            try { outputPicker.launch(outputs.begin(OutputRequest("changes.patch", "text/x-diff", patch, model.leftRef?.uri,
+            try { outputPicker.launch(outputs.begin(OutputRequest(OutputNames.patch(model.leftRef?.name), "text/x-diff", patch, model.leftRef?.uri,
                 protectedSources = model.protectedSources()))) }
             catch (_: android.content.ActivityNotFoundException) { outputs.pickerUnavailable() }
             catch (_: SecurityException) { outputs.pickerUnavailable() }
@@ -303,7 +303,10 @@ class ComparisonActivity : ReadingScreen() {
     override fun onStart() { super.onStart(); model.listener = ::refresh; outputs.listener = { refresh() }; refresh() }
     override fun onStop() { model.listener = null; outputs.listener = null; super.onStop() }
     override fun onSaveInstanceState(outState: Bundle) {
-        if (outputs.status.phase == OutputPhase.PICKING) outState.putBoolean("outputPending", true)
+        if (outputs.status.phase == OutputPhase.PICKING) {
+            outState.putBoolean("outputPending", true)
+            outState.putString("outputName", outputs.status.name)
+        }
         model.save(outState); outState.putBoolean("pickingLeft", pickingLeft)
         rows.getOrNull(list.firstVisiblePosition)?.let { outState.putInt("scrollLeft", it.left ?: -1); outState.putInt("scrollRight", it.right ?: -1) }
         outState.putInt("scrollTop", list.getChildAt(0)?.top ?: 0)

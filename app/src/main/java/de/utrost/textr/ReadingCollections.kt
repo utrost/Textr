@@ -31,11 +31,13 @@ class ReadingCollections(private val context: Context) {
     private fun validUri(value: String) = value.length <= 4096 && Uri.parse(value).scheme in setOf("content", "file")
     private fun validName(name: String, oldId: String? = null) = name.trim().length in 1..MAX_NAME &&
         name.none { it.isISOControl() } && entries().none { it.id != oldId && it.name.equals(name.trim(), ignoreCase = true) }
-    fun create(name: String): String? {
+    fun create(name: String, member: CollectionMember? = null): String? {
         val old = entries()
         if (old.size >= MAX_COLLECTIONS || !validName(name)) return null
+        if (member != null && (!validUri(member.uri) || old.sumOf { it.members.size } >= MAX_TOTAL)) return null
         val id = UUID.randomUUID().toString()
-        return if (save(old + ReadingCollection(id, name.trim(), emptyList()))) id else null
+        val members = listOfNotNull(member?.copy(name = member.name.take(256)))
+        return if (save(old + ReadingCollection(id, name.trim(), members))) id else null
     }
     fun rename(id: String, name: String): Boolean {
         if (!validName(name, id) || entries().none { it.id == id }) return false

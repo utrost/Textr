@@ -13,7 +13,7 @@ import android.system.StructPollfd
 import java.io.FilterInputStream
 
 data class ReadingState(val mode: DisplayMode? = null, val scroll: Int = 0, val format: FileKind? = null, val encoding: TextEncoding? = null, val csv: CsvOptions = CsvOptions(), val profile: ReadingProfile? = null)
-data class RecentFile(val uri: String, val name: String, val openedAt: Long, val reading: ReadingState = ReadingState(), val pinned: Boolean = false, val knownFormat: FileKind? = null)
+data class RecentFile(val uri: String, val name: String, val openedAt: Long, val reading: ReadingState = ReadingState(), val pinned: Boolean = false, val knownFormat: FileKind? = null, val progress: Int? = null)
 
 class DocumentRepository(private val context: Context) {
     private val resolver = context.contentResolver
@@ -109,14 +109,15 @@ class DocumentRepository(private val context: Context) {
                 DisplayMode.entries.find { it.name == entry.optString("mode") },
                 entry.optInt("scroll", 0).coerceAtLeast(0),
                 FileKind.entries.find { it.name == entry.optString("format") },
-                TextEncoding.entries.find { it.name == entry.optString("encoding") }, csvOptions(entry), ReadingProfile.fromJson(entry.optJSONObject("profile"))), entry.optBoolean("pinned"), FileKind.entries.find { it.name == entry.optString("knownFormat") })
+                TextEncoding.entries.find { it.name == entry.optString("encoding") }, csvOptions(entry), ReadingProfile.fromJson(entry.optJSONObject("profile"))), entry.optBoolean("pinned"), FileKind.entries.find { it.name == entry.optString("knownFormat") },
+                entry.optInt("progress", -1).takeIf { it in 0..100 })
         }
     } catch (_: org.json.JSONException) { emptyList() }
 
     fun remember(uri: Uri, name: String, knownFormat: FileKind? = null) {
         val previous = recentFiles()
         val old = previous.find { it.uri == uri.toString() }
-        val updated = bounded(listOf(RecentFile(uri.toString(), name, System.currentTimeMillis(), old?.reading ?: ReadingState(), old?.pinned ?: false, knownFormat ?: old?.knownFormat)) +
+        val updated = bounded(listOf(RecentFile(uri.toString(), name, System.currentTimeMillis(), old?.reading ?: ReadingState(), old?.pinned ?: false, knownFormat ?: old?.knownFormat, old?.progress)) +
             previous.filterNot { it.uri == uri.toString() })
         save(updated)
         previous.filter { old -> updated.none { it.uri == old.uri } }.forEach { release(it.uri) }
@@ -124,9 +125,9 @@ class DocumentRepository(private val context: Context) {
 
     fun readingState(uri: Uri): ReadingState = recentFiles().find { it.uri == uri.toString() }?.reading ?: ReadingState()
 
-    fun saveReadingState(uri: Uri, state: ReadingState) {
+    fun saveReadingState(uri: Uri, state: ReadingState, progress: Int? = null) {
         // Updating state must never resurrect an entry the user removed or change recency.
-        save(recentFiles().map { if (it.uri == uri.toString()) it.copy(reading = state) else it })
+        save(recentFiles().map { if (it.uri == uri.toString()) it.copy(reading = state, progress = progress) else it })
     }
 
     fun remove(uri: String) {
@@ -146,6 +147,7 @@ class DocumentRepository(private val context: Context) {
         files.forEach { file ->
             array.put(JSONObject().put("uri", file.uri).put("name", file.name).put("openedAt", file.openedAt).apply {
                 if (file.pinned) put("pinned", true)
+                file.progress?.let { put("progress", it) }
                 file.knownFormat?.let { put("knownFormat", it.name) }
                 if (file.reading != ReadingState()) {
                     put("mode", file.reading.mode?.name)

@@ -7,10 +7,11 @@ import org.json.JSONObject
 enum class ReadingFont(val css: String) { SANS("sans-serif"), SERIF("serif"), MONOSPACE("monospace") }
 
 data class ReadingProfile(val fontSize: Int = 16, val wrap: Boolean = true,
-    val font: ReadingFont = ReadingFont.SANS, val lineSpacing: Int = 160) {
+    val font: ReadingFont = ReadingFont.SANS, val lineSpacing: Int = 160,
+    val inheritTypography: Boolean = false) {
     init { require(fontSize in 12..28); require(lineSpacing in 120..220) }
     fun json(): JSONObject = JSONObject().put("fontSize", fontSize).put("wrap", wrap)
-        .put("font", font.name).put("lineSpacing", lineSpacing)
+        .put("font", font.name).put("lineSpacing", lineSpacing).put("inheritTypography", inheritTypography)
     fun save(preferences: SharedPreferences) = preferences.edit().putInt("fontSize", fontSize)
         .putBoolean("wrap", wrap).putString("font", font.name).putInt("lineSpacing", lineSpacing).apply()
     companion object {
@@ -21,6 +22,6 @@ data class ReadingProfile(val fontSize: Int = 16, val wrap: Boolean = true,
         fun fromJson(value: JSONObject?) = value?.let { ReadingProfile(
             it.optInt("fontSize", 16).coerceIn(12, 28), it.optBoolean("wrap", true),
             ReadingFont.entries.find { font -> font.name == it.optString("font") } ?: ReadingFont.SANS,
-            it.optInt("lineSpacing", 160).coerceIn(120, 220)) }
+            it.optInt("lineSpacing", 160).coerceIn(120, 220), it.optBoolean("inheritTypography")) }
     }
 }
